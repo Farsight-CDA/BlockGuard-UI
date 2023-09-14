@@ -1,5 +1,4 @@
 <script lang="ts">
-	import { onMount } from "svelte";
 	import CreateWalletModal from "./CreateWalletModal.svelte";
 	import ImportWalletModal from "./ImportWalletModal.svelte";
 

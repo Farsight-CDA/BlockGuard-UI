@@ -6,7 +6,7 @@
 	import { onMount } from "svelte";
 
     onMount(() => {
-        if ($NATIVE_API == null) {
+        if (NATIVE_API == null) {
             goto("/error");
         }
 
@@ -18,6 +18,4 @@
     });
 </script>
 
-<div class="w-full h-full flex justify-center items-center">
-    <LoadingSpinner class="lg:w-1/12 w-1/6"></LoadingSpinner>
-</div>
+

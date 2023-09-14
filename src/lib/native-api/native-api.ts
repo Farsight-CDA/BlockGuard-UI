@@ -1,16 +1,18 @@
 import { writable } from "svelte/store";
 
 export interface NativeAPIs {
-    loadFile(path: string, content: string): Promise<string>;
+    loadFile(path: string): Promise<string | null>;
     saveFile(path: string, content: string): Promise<void>;
 }
 
-export const NATIVE_API = writable<NativeAPIs>(null!);
+export var NATIVE_API: NativeAPIs = null!;
 
-export function initializeNativeAPI() {
+export async function initializeNativeAPI() {
     //ToDo: Have runtime polyfill this
-    NATIVE_API.set({
-        loadFile: null!,
-        saveFile: null!,
-    });
+    NATIVE_API = {
+        loadFile: (path) => Promise.resolve(localStorage.getItem(path)),
+        saveFile: (path, content) => Promise.resolve(localStorage.setItem(path, content)),
+    };
+    
+    return true;
 }

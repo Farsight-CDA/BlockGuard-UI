@@ -2,12 +2,33 @@
 	import { onMount } from "svelte";
     import "../app.css";
     import Logo from "@static/logo.webp"
-	import { initializeNativeAPI } from "$lib/native-api/native-api";
+	import { NATIVE_API, initializeNativeAPI } from "$lib/native-api/native-api";
 	import { initializeWallet } from "$lib/wallet/wallet";
+	import { WALLET, initializeGlobalConfig } from "$lib/configuration/configuration";
+	import { goto } from "$app/navigation";
+	import LoadingSpinner from "$lib/components/LoadingSpinner.svelte";
 
-    onMount(() => {
-        initializeNativeAPI();
-        initializeWallet();
+    var initialized: boolean = false;
+
+    onMount(async () => {
+        const nativeApiWorks = await initializeNativeAPI();
+        const globalConfigWorks = await initializeGlobalConfig();
+        const walletWorks = await initializeWallet();
+
+        setTimeout(() => {
+            if (!nativeApiWorks) {
+                goto("/error");
+            }
+            else {
+                if (!walletWorks) {
+                    goto("/setup");
+                } else {
+                    goto("/dashboard");
+                }
+            }
+
+            initialized = true;
+        }, 250);
     });
 </script>
 
@@ -19,7 +40,13 @@
         </div>
     </nav>
     <main class="bg-black h-full overflow-y-auto overflow-x-hidden p-3 flex flex-col items-center">
-        <slot />
+        {#if !initialized}
+            <div class="w-full h-full flex justify-center items-center">
+                <LoadingSpinner class="lg:w-1/12 w-1/6"></LoadingSpinner>
+            </div>
+        {:else}
+            <slot />
+        {/if}
     </main>
     
 </div>
