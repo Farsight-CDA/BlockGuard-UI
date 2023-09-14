@@ -1,14 +1,25 @@
 import { NATIVE_API } from "$lib/native-api/native-api";
 import { writable } from "svelte/store";
 import { DirectSecp256k1HdWallet } from "@cosmjs/proto-signing"
-import { SigningStargateClient } from "@cosmjs/stargate" 
-import { Registry, type EncodeObject } from "@cosmjs/proto-signing";
-import { getAkashTypeRegistry } from "@akashnetwork/akashjs/build/stargate";
+import { GasPrice, SigningStargateClient, defaultRegistryTypes } from "@cosmjs/stargate" 
+import { Registry } from "@cosmjs/proto-signing";
+import { getAkashTypeRegistry, messages } from "@akashnetwork/akashjs/build/stargate"
+
+import { base64ToUInt } from "$lib/utils/utils";
+import { toBase64 } from "pvutils"
+import type { pems } from "@akashnetwork/akashjs/build/certificates";
+
+//Necessary for type registrations!
+import cert from "@akashnetwork/akashjs/build/protobuf/akash/cert/v1beta3/cert"
 
 export interface Wallet {
     getAddress(): string;
     getMnemonic(): string;
-    messageTx(message: EncodeObject): Promise<void>;
+    
+    getBalance(): Promise<number>;
+
+    broadcastCertificate(
+        { csr, publicKey }: pems): Promise<void>;
 }
 
 const WALLET_STORAGE_FILE = "wallet.json";
@@ -28,7 +39,7 @@ export async function initializeWallet() {
     
     WALLET.set(cosmJSWallet);
     wallet = cosmJSWallet;
-    
+
     return true;
 }
 
@@ -86,10 +97,46 @@ class CosmJSWallet implements Wallet {
         this.client = null!;
     }
 
+    createStarGateMessage(message: messages, messageBody: any) {
+        return {
+          message: {
+            typeUrl: message,
+            value: messageBody,
+          },
+          fee: {
+            amount: [
+              {
+                denom: "uakt",
+                amount: "2500",
+              },
+            ],
+            gas: "100000",
+          },
+        };
+      }
+
+    async broadcastCertificate({ csr, publicKey }: pems): Promise<void> {  
+        const encodedCsr = base64ToUInt(toBase64(csr!));
+        const encdodedPublicKey = base64ToUInt(toBase64(publicKey!));
+        
+        const message = this.createStarGateMessage(messages.MsgCreateCertificate, {
+            owner: this.address,
+            cert: encodedCsr,
+            pubkey: encdodedPublicKey,
+        });
+
+        await this.client.signAndBroadcast(this.address, [message.message], message.fee);
+    }
+
     async initialize(): Promise<void> {
         this.address = (await this.wallet.getAccounts())[0].address;
+        const registry = new Registry([
+            ...getAkashTypeRegistry(),
+        ]);
+
         this.client = await SigningStargateClient.connectWithSigner(this.rpcUrl, this.wallet, {
-            registry: new Registry(getAkashTypeRegistry()) as any
+            registry: registry,
+            gasPrice: GasPrice.fromString("25uakt")
         });
     }
 
@@ -105,8 +152,8 @@ class CosmJSWallet implements Wallet {
         return this.rpcUrl;
     }
 
-    async messageTx(message: EncodeObject): Promise<void> {
-        await this.client.signAndBroadcast(this.address, [message], "auto", "blockguard");
+    async getBalance(): Promise<number> {
+        return parseInt((await this.client.getBalance(this.address, "uakt")).amount) / 1000000;
     }
 
     async serialize(password: string) {
