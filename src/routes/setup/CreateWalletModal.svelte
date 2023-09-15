@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { goto } from "$app/navigation";
-	import { generateMnemonics, setWallet } from "$lib/wallet/wallet";
+	import { generateMnemonics, setNewWallet } from "$lib/wallet/wallet";
 	import { scale } from "svelte/transition";
 
     let dialogElement: HTMLDialogElement;
@@ -20,8 +20,8 @@
     }
 
     async function triggerSaveAndGoToApp() {
-        await setWallet(generatedMnemonics!);
-        goto("/dashboard");
+        await setNewWallet(generatedMnemonics!);
+        goto("/app");
     }
 
     function dialogClickHandler(e: MouseEvent) {

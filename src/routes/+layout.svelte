@@ -2,9 +2,10 @@
 	import { onMount } from "svelte";
     import "../app.css";
     import Logo from "@static/logo.webp"
-	import { NATIVE_API, initializeNativeAPI } from "$lib/native-api/native-api";
+    import Gear from "@static/gear.svg"
+	import { initializeNativeAPI } from "$lib/native-api/native-api";
 	import { initializeWallet } from "$lib/wallet/wallet";
-	import { WALLET, initializeGlobalConfig } from "$lib/configuration/configuration";
+	import { initializeGlobalConfig } from "$lib/configuration/configuration";
 	import { goto } from "$app/navigation";
 	import LoadingSpinner from "$lib/components/LoadingSpinner.svelte";
 
@@ -23,7 +24,7 @@
                 if (!walletWorks) {
                     goto("/setup");
                 } else {
-                    goto("/dashboard");
+                    goto("/app");
                 }
             }
 
@@ -33,11 +34,16 @@
 </script>
 
 <div class="flex flex-col h-full w-full">
-    <nav class="bg-gray-900 py-2 px-3">
+    <nav class="bg-gray-900 py-2 px-3 flex flex-row justify-between">
         <div class="flex flex-row gap-3 items-center">
             <img src="{Logo}" alt="" class="h-12">
             <h1 class="font-bold text-xl">BlockGuard</h1>
         </div>
+
+        <button>
+            <img src="{Gear}" class="h-12 invert" alt="Settings">
+        </button>
+
     </nav>
     <main class="bg-black h-full overflow-y-auto overflow-x-hidden p-3 flex flex-col items-center">
         {#if !initialized}

@@ -13,7 +13,7 @@
         if ($WALLET == null) {
             goto("/setup");
         } else {
-            goto("/dashboard");
+            goto("/app");
         }
     });
 </script>
