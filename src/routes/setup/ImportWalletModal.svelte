@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { goto } from "$app/navigation";
+	import { setNewWallet } from "$lib/wallet/wallet";
 	import { scale } from "svelte/transition";
 
     let dialogElement: HTMLDialogElement;
@@ -13,6 +15,14 @@
         isOpen = true;
         dialogElement.showModal();
         
+    }
+
+    function triggerSaveAndGoToApp() {
+        if (hasEnteredValidMnemonics) {
+            setNewWallet(mnemonics!);
+        }
+
+        goto("/app");
     }
 
     function dialogClickHandler(e: MouseEvent) {
@@ -33,7 +43,7 @@
 
         <textarea class="bg-slate-700 p-2" bind:value={mnemonics} />
 
-        <button disabled={!hasEnteredValidMnemonics} class="px-2 py-1" 
+        <button disabled={!hasEnteredValidMnemonics} class="px-2 py-1" on:click={triggerSaveAndGoToApp}
             class:bg-green-500={hasEnteredValidMnemonics} class:bg-gray-800={!hasEnteredValidMnemonics}>Go to App</button>
     </div>
     {/if}

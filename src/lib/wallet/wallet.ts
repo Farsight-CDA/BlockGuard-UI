@@ -5,11 +5,13 @@ import { DirectSecp256k1HdWallet } from "@cosmjs/proto-signing"
 import type { pems } from "@playwo/akashjs/build/certificates";
 import { CosmJSWallet } from "./cosmjs-wallet";
 import type { Certificate } from "@playwo/akashjs/build/protobuf/akash/cert/v1beta3/cert"
+import type { MsgCreateDeployment } from "@playwo/akashjs/build/protobuf/akash/deployment/v1beta3/deploymentmsg";
+import type { QueryDeploymentResponse, QueryDeploymentsResponse } from "@playwo/akashjs/build/protobuf/akash/deployment/v1beta3/query";
 
 //Necessary for type registrations!
 import cert from "@playwo/akashjs/build/protobuf/akash/cert/v1beta3/cert"
 import deply from "@playwo/akashjs/build/protobuf/akash/deployment/v1beta3/deployment"
-import type { MsgCreateDeployment } from "@playwo/akashjs/build/protobuf/akash/deployment/v1beta3/deploymentmsg";
+
 
 export interface Wallet {
     getAddress(): string;
@@ -17,6 +19,8 @@ export interface Wallet {
 
     certificate: Writable<CertificateInfo | null>;
     balance: Writable<number>;
+
+    getDeployments(): Promise<QueryDeploymentResponse[]>;
 
     broadcastCertificate(
         { csr, publicKey }: pems): Promise<void>;
@@ -60,6 +64,8 @@ async function storeCurrentWallet() {
 }
 
 export async function setNewWallet(mnemonic: string) {
+    
+
     const hdWallet = await DirectSecp256k1HdWallet.fromMnemonic(mnemonic, { prefix: "akash" });
     const cosmJSWallet = new CosmJSWallet(hdWallet, 'https://akash-rpc.polkachu.com:443', null);
     await cosmJSWallet.initialize();
