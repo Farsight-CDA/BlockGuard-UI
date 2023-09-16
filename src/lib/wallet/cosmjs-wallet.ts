@@ -1,19 +1,20 @@
 import type { CertificateInfo, Wallet } from "./wallet";
 
 import { DirectSecp256k1HdWallet } from "@cosmjs/proto-signing"
-import type { SigningStargateClient, ProtobufRpcClient } from "@cosmjs/stargate" 
+import type { SigningStargateClient, ProtobufRpcClient } from "@playwo/akashjs/node_modules/@cosmjs/stargate" 
 import { messages } from "@playwo/akashjs/build/stargate"
 import { getQueryClient, getMsgClient } from "@playwo/akashjs/build/rpc/index"
 import { base64ToUInt } from "$lib/utils/utils";
 import { toBase64 } from "pvutils"
-import type { pems } from "@playwo/akashjs/build/certificates";
 import { writable, type Writable } from "svelte/store";
 import { MsgCloseDeployment, type MsgCreateDeployment } from "@playwo/akashjs/build/protobuf/akash/deployment/v1beta3/deploymentmsg";
-import { QueryClientImpl as DeploymentQueryClient, QueryDeploymentResponse, QueryDeploymentsResponse } from "@playwo/akashjs/build/protobuf/akash/deployment/v1beta3/query";
+import { QueryClientImpl as DeploymentQueryClient, QueryDeploymentResponse } from "@playwo/akashjs/build/protobuf/akash/deployment/v1beta3/query";
+import { QueryClientImpl as MarketQueryClient, QueryBidsRequest } from "@playwo/akashjs/build/protobuf/akash/market/v1beta3/query";
 import { MsgCreateCertificate } from "@playwo/akashjs/build/protobuf/akash/cert/v1beta1/cert";
 import { QueryDeploymentsRequest } from "@playwo/akashjs/build/protobuf/akash/deployment/v1beta3/query"
-import { DeployedRemote } from "$lib/types/types";
+import { DeployedRemote, DeploymentBid } from "$lib/types/types";
 import { Deployment_State } from "@playwo/akashjs/build/protobuf/akash/deployment/v1beta3/deployment";
+import { Bid_State } from "@playwo/akashjs/build/protobuf/akash/market/v1beta3/bid";
 
 interface StoredWallet {
     mnemonics: string;
@@ -87,6 +88,19 @@ export class CosmJSWallet implements Wallet {
         this.blockTimestampCache.set(height, date);
         return date;
     }
+
+    async getDeploymentBids(dseq: number): Promise<DeploymentBid[]> {
+        const res = await new MarketQueryClient(this.queryClient)
+        .Bids(QueryBidsRequest.fromPartial({
+            filters: {
+                dseq: dseq,
+                owner: this.address,
+                state: Bid_State[Bid_State.open]
+            }
+        }));
+
+        return res.bids.map(b => DeploymentBid.fromBidResponse(b));
+    }
     
     //Transactions
 
@@ -128,14 +142,13 @@ export class CosmJSWallet implements Wallet {
     }
 
     private async loadCurrentDeployments(): Promise<QueryDeploymentResponse[]> {
-        const request = QueryDeploymentsRequest.fromPartial({
+        const res = await new DeploymentQueryClient(this.queryClient)
+        .Deployments(QueryDeploymentsRequest.fromPartial({
             filters: {
                 owner: this.address,
                 state: Deployment_State[Deployment_State.active]
             }
-        })
-
-        const res = await new DeploymentQueryClient(this.queryClient).Deployments(request);
+        }));
         return res.deployments;
     }
 
@@ -179,7 +192,7 @@ export class CosmJSWallet implements Wallet {
         this.balance.set(newBalance);
 
         const newDeployments = await this.loadCurrentDeployments();
-        this.remotes.set(newDeployments.map(d => DeployedRemote.fromDeploymentInfo(d)));
+        this.remotes.set(newDeployments.map(d => DeployedRemote.fromDeploymentResponse(d)));
     }
 
     dispose() {
