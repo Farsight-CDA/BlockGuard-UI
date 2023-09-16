@@ -7,6 +7,8 @@
     import node from "node:crypto"
 	import { base64ToUInt } from "$lib/utils/utils";
     import { toBase64 } from "pvutils"
+	import type { DeployedRemote } from "$lib/types/types";
+	import type { Writable } from "svelte/store";
 
     let dialogElement: HTMLDialogElement;
     var isOpen: boolean = false;
@@ -29,7 +31,7 @@
             depositor: wallet.getAddress(),
             id: {
                 owner: wallet.getAddress(),
-                dseq: 2
+                dseq: 5
             },
             groups: sdl.v3Groups()
         });

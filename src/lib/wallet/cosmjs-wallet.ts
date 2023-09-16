@@ -2,8 +2,7 @@ import type { CertificateInfo, Wallet } from "./wallet";
 
 import { DirectSecp256k1HdWallet } from "@cosmjs/proto-signing"
 import type { SigningStargateClient, ProtobufRpcClient } from "@cosmjs/stargate" 
-import { Registry } from "@cosmjs/proto-signing";
-import { getAkashTypeRegistry, messages } from "@playwo/akashjs/build/stargate"
+import { messages } from "@playwo/akashjs/build/stargate"
 import { getQueryClient, getMsgClient } from "@playwo/akashjs/build/rpc/index"
 import { base64ToUInt } from "$lib/utils/utils";
 import { toBase64 } from "pvutils"
@@ -13,6 +12,8 @@ import type { MsgCreateDeployment } from "@playwo/akashjs/build/protobuf/akash/d
 import { QueryClientImpl as DeploymentQueryClient, QueryDeploymentResponse, QueryDeploymentsResponse } from "@playwo/akashjs/build/protobuf/akash/deployment/v1beta3/query";
 import { MsgCreateCertificate } from "@playwo/akashjs/build/protobuf/akash/cert/v1beta1/cert";
 import { QueryDeploymentsRequest } from "@playwo/akashjs/build/protobuf/akash/deployment/v1beta3/query"
+import { DeployedRemote } from "$lib/types/types";
+import { Deployment_State } from "@playwo/akashjs/build/protobuf/akash/deployment/v1beta3/deployment";
 
 interface StoredWallet {
     mnemonics: string;
@@ -36,6 +37,9 @@ export class CosmJSWallet implements Wallet {
     public certificate: Writable<CertificateInfo | null>;
     private _certificate: CertificateInfo | null;
     public balance: Writable<number>;
+    public remotes: Writable<DeployedRemote[]>;
+
+    private blockTimestampCache: Map<number, Date>;
 
     constructor(wallet: DirectSecp256k1HdWallet, rpcUrl: string, certificate: CertificateInfo | null) {
         this.wallet = wallet;
@@ -46,11 +50,15 @@ export class CosmJSWallet implements Wallet {
         this.queryClient = null!;
         this.initialized = false;
 
-        this.refreshTimeout = setInterval(this.refresh.bind(this), 3000);
-
         this._certificate = certificate;
         this.certificate = writable<CertificateInfo | null>(certificate);
         this.balance = writable<number>(0);
+        this.remotes = writable<DeployedRemote[]>([]);
+
+        this.blockTimestampCache = new Map<number, Date>();
+
+        this.refreshTimeout = setInterval(this.refresh.bind(this), 3000);
+        console.log("ADDED - " + this.refreshTimeout)
     }
     
 //Getters
@@ -67,17 +75,19 @@ export class CosmJSWallet implements Wallet {
         return this.rpcUrl;
     }
 
-    async getDeployments(): Promise<QueryDeploymentResponse[]> {
-        const request = QueryDeploymentsRequest.fromPartial({
-            filters: {
-                owner: this.address
-            }
-        })
+    async getBlockTimestamp(height: number): Promise<Date> {
+        var date = this.blockTimestampCache.get(height);
 
-        const res = await new DeploymentQueryClient(this.queryClient).Deployments(request);
-        return res.deployments;
+        if (date != null) {
+            return date;
+        }
+
+        const block = await this.msgClient.getBlock(height);
+        date = new Date(block.header.time);
+        this.blockTimestampCache.set(height, date);
+        return date;
     }
-
+    
     //Transactions
 
     async broadcastCertificate({ csr, publicKey }: pems): Promise<void> {  
@@ -115,13 +125,22 @@ export class CosmJSWallet implements Wallet {
         return parseInt((await this.msgClient.getBalance(this.address, "uakt")).amount) / 1000000;
     }
 
+    private async loadCurrentDeployments(): Promise<QueryDeploymentResponse[]> {
+        const request = QueryDeploymentsRequest.fromPartial({
+            filters: {
+                owner: this.address,
+                state: Deployment_State[Deployment_State.active]
+            }
+        })
+
+        const res = await new DeploymentQueryClient(this.queryClient).Deployments(request);
+        return res.deployments;
+    }
+
     //Lifetime
 
     async initialize(): Promise<void> {
         this.address = (await this.wallet.getAccounts())[0].address;
-        const registry = new Registry([
-            ...getAkashTypeRegistry(),
-        ]);
 
         this.msgClient = await getMsgClient(this.rpcUrl, this.wallet);
         this.queryClient = await getQueryClient(this.rpcUrl);
@@ -137,9 +156,13 @@ export class CosmJSWallet implements Wallet {
 
         const newBalance = await this.loadCurrentBalance();
         this.balance.set(newBalance);
+
+        const newDeployments = await this.loadCurrentDeployments();
+        this.remotes.set(newDeployments.map(d => DeployedRemote.fromDeploymentInfo(d)));
     }
 
     dispose() {
+        console.log("Cleared - " + this.refreshTimeout);
         clearInterval(this.refreshTimeout);
     }
 

@@ -11,16 +11,18 @@ import type { QueryDeploymentResponse, QueryDeploymentsResponse } from "@playwo/
 //Necessary for type registrations!
 import cert from "@playwo/akashjs/build/protobuf/akash/cert/v1beta3/cert"
 import deply from "@playwo/akashjs/build/protobuf/akash/deployment/v1beta3/deployment"
-
+import type { DeployedRemote } from "$lib/types/types";
 
 export interface Wallet {
     getAddress(): string;
     getMnemonic(): string;
 
+    getBlockTimestamp(height: number): Promise<Date>;
+
     certificate: Writable<CertificateInfo | null>;
     balance: Writable<number>;
-
-    getDeployments(): Promise<QueryDeploymentResponse[]>;
+    
+    remotes: Writable<DeployedRemote[]>;
 
     broadcastCertificate(
         { csr, publicKey }: pems): Promise<void>;
@@ -52,6 +54,13 @@ export async function initializeWallet() {
     wallet = cosmJSWallet;
 
     return true;
+}
+
+export function disposeWallet() {
+    wallet?.dispose();
+
+    WALLET.set(null);
+    wallet = null;
 }
 
 async function storeCurrentWallet() {

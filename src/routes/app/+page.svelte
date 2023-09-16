@@ -1,12 +1,15 @@
 <script lang="ts">
 	import { WALLET, type Wallet } from "$lib/wallet/wallet";
-	import { onMount } from "svelte";
 	import AddLocationModal from "./AddLocationModal.svelte";
 	import StatusLamps from "./StatusLamps.svelte";
-
+	import type { DeployedRemote } from "$lib/types/types";
+	import type { Writable } from "svelte/store";
 
     var wallet: Wallet;
     $: wallet = $WALLET!;
+
+    var remotes: Writable<DeployedRemote[]>;
+    $: remotes = $WALLET?.remotes!;
 
     let openAddActiveLocationModal: (() => void);
 
@@ -35,7 +38,7 @@
             <thead>
                 <tr>
                     <th>
-                        Location
+                        Id
                     </th>
                     <th>
                         Age
@@ -46,7 +49,26 @@
                 </tr>
         
             </thead>
-            <tbody>
+            <tbody class="text-center">
+                {#each $remotes as remote}
+                    <tr>
+                        <td>
+                            {remote.id}
+                        </td>
+                        <td>
+                            {#await wallet.getBlockTimestamp(remote.createdAtHeight)}
+                                ...
+                            {:then timestamp} 
+                                {Math.round((new Date().getTime() - timestamp.getTime()) / 60000)} mins
+                            {/await}
+                            
+                        </td>
+                        <td>
+                            <button>Close</button>
+                        </td>
+                    </tr>    
+
+                {/each}
             </tbody>
         </table>
     </div>

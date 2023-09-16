@@ -1,10 +1,10 @@
 <script lang="ts">
-	import { onMount } from "svelte";
+	import { onDestroy, onMount } from "svelte";
     import "../app.css";
     import Logo from "@static/logo.webp"
     import Gear from "@static/gear.svg"
 	import { initializeNativeAPI } from "$lib/native-api/native-api";
-	import { initializeWallet } from "$lib/wallet/wallet";
+	import { WALLET, disposeWallet, initializeWallet } from "$lib/wallet/wallet";
 	import { initializeGlobalConfig } from "$lib/configuration/configuration";
 	import { goto } from "$app/navigation";
 	import LoadingSpinner from "$lib/components/LoadingSpinner.svelte";
@@ -31,6 +31,10 @@
             initialized = true;
         }, 250);
     });
+
+    onDestroy(() => {
+        disposeWallet();
+    })
 </script>
 
 <div class="flex flex-col h-full w-full">
