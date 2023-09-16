@@ -8,7 +8,7 @@ import { base64ToUInt } from "$lib/utils/utils";
 import { toBase64 } from "pvutils"
 import type { pems } from "@playwo/akashjs/build/certificates";
 import { writable, type Writable } from "svelte/store";
-import type { MsgCreateDeployment } from "@playwo/akashjs/build/protobuf/akash/deployment/v1beta3/deploymentmsg";
+import { MsgCloseDeployment, type MsgCreateDeployment } from "@playwo/akashjs/build/protobuf/akash/deployment/v1beta3/deploymentmsg";
 import { QueryClientImpl as DeploymentQueryClient, QueryDeploymentResponse, QueryDeploymentsResponse } from "@playwo/akashjs/build/protobuf/akash/deployment/v1beta3/query";
 import { MsgCreateCertificate } from "@playwo/akashjs/build/protobuf/akash/cert/v1beta1/cert";
 import { QueryDeploymentsRequest } from "@playwo/akashjs/build/protobuf/akash/deployment/v1beta3/query"
@@ -90,28 +90,30 @@ export class CosmJSWallet implements Wallet {
     
     //Transactions
 
-    async broadcastCertificate({ csr, publicKey }: pems): Promise<void> {  
+    async broadcastCertificate(csr: string, publicKey: string): Promise<void> {  
         const encodedCsr = base64ToUInt(toBase64(csr!));
         const encdodedPublicKey = base64ToUInt(toBase64(publicKey!));
         
-        const message = createStarGateMessage(messages.MsgCreateCertificate, 
+        await this.sendTransaction(messages.MsgCreateCertificate, 
             MsgCreateCertificate.fromPartial({
                 owner: this.address,
                 cert: encodedCsr,
                 pubkey: encdodedPublicKey,
             }));
-
-        await this.msgClient.signAndBroadcast(this.address, [message.message], message.fee);
     }
 
     async createDeplyoment(msg: MsgCreateDeployment): Promise<void> {
-        const message = createStarGateMessage(messages.MsgCreateDeployment, msg);
-        const gas = Math.ceil(1.50 * await this.msgClient.simulate(this.address, [message.message], message.memo));
-        
-        message.fee.gas = gas.toString();
-        message.fee.amount[0].amount = Math.ceil(GAS_PRICE * gas).toString();
+        await this.sendTransaction(messages.MsgCreateDeployment, msg);
+    }
 
-        await this.msgClient.signAndBroadcast(this.address, [message.message], message.fee, message.memo);
+    async closeDeployment(dseq: number): Promise<void> {
+        await this.sendTransaction(messages.MsgCloseDeployment, 
+            MsgCloseDeployment.fromPartial({
+                id: {
+                    owner: this.address,
+                    dseq: dseq
+                }
+            }), 4);
     }
 
     //Internal
@@ -135,6 +137,25 @@ export class CosmJSWallet implements Wallet {
 
         const res = await new DeploymentQueryClient(this.queryClient).Deployments(request);
         return res.deployments;
+    }
+
+    private async sendTransaction(type: messages, messageBody: any, gasMultiplicator: number = 1.5) {
+        const message = {
+            typeUrl: type,
+            value: messageBody,
+        };
+        const memo = "BlockGuard";
+        const gas = Math.ceil(gasMultiplicator * await this.msgClient.simulate(this.address, [message], memo));
+        await this.msgClient.signAndBroadcast(this.address, [message], 
+            {
+                amount: [
+                    {
+                        denom: "uakt",
+                        amount: `${Math.ceil(GAS_PRICE * gas)}`,
+                    },
+                ],
+                gas: `${gas}`,
+            }, memo);
     }
 
     //Lifetime
@@ -194,21 +215,3 @@ export class CosmJSWallet implements Wallet {
     }
 }
 
-function createStarGateMessage(message: messages, messageBody: any) {
-    return {
-        message: {
-            typeUrl: message,
-            value: messageBody,
-        },
-        fee: {
-            amount: [
-                {
-                denom: "uakt",
-                amount: "2500",
-                },
-            ],
-            gas: "100000",
-        },
-        memo: "BlockGuard"
-    };
-}

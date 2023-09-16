@@ -45,7 +45,7 @@
 
     async function triggerUpdateCertificate() {
         const cert = await createCertificate(wallet.getAddress());
-        await wallet.broadcastCertificate(cert);
+        await wallet.broadcastCertificate(cert.csr, cert.publicKey);
 
         await setNewCertificate(cert.csr, cert.publicKey, cert.privateKey);
     }

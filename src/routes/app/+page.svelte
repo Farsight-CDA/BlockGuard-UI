@@ -16,6 +16,10 @@
     function handleAddActiveLocation() {
         openAddActiveLocationModal();
     }
+
+    async function triggerCloseDeployment(dseq: number) {
+        await wallet.closeDeployment(dseq);
+    }
 </script>
 
 <AddLocationModal bind:open={openAddActiveLocationModal}></AddLocationModal>
@@ -64,7 +68,7 @@
                             
                         </td>
                         <td>
-                            <button>Close</button>
+                            <button on:click={() => triggerCloseDeployment(remote.id)}>Close</button>
                         </td>
                     </tr>    
 

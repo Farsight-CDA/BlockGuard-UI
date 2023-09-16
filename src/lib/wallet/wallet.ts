@@ -24,10 +24,9 @@ export interface Wallet {
     
     remotes: Writable<DeployedRemote[]>;
 
-    broadcastCertificate(
-        { csr, publicKey }: pems): Promise<void>;
-
-    createDeplyoment(msg: MsgCreateDeployment): Promise<void> 
+    broadcastCertificate(csr: string, publicKey: string): Promise<void>;
+    createDeplyoment(msg: MsgCreateDeployment): Promise<void>;
+    closeDeployment(dseq: number): Promise<void>;
 }
 export interface CertificateInfo {
     csr: string;
