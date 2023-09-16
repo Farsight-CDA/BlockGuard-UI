@@ -31,7 +31,7 @@
             depositor: wallet.getAddress(),
             id: {
                 owner: wallet.getAddress(),
-                dseq: 5
+                dseq: Math.round(Math.random() * 100000000)
             },
             groups: sdl.v3Groups()
         });
