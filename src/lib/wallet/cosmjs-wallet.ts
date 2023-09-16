@@ -10,11 +10,13 @@ import { writable, type Writable } from "svelte/store";
 import { MsgCloseDeployment, type MsgCreateDeployment } from "@playwo/akashjs/build/protobuf/akash/deployment/v1beta3/deploymentmsg";
 import { QueryClientImpl as DeploymentQueryClient, QueryDeploymentResponse } from "@playwo/akashjs/build/protobuf/akash/deployment/v1beta3/query";
 import { QueryClientImpl as MarketQueryClient, QueryBidsRequest } from "@playwo/akashjs/build/protobuf/akash/market/v1beta3/query";
+import { QueryClientImpl as ProviderQueryClient, QueryProviderRequest } from "@playwo/akashjs/build/protobuf/akash/provider/v1beta3/query"
 import { MsgCreateCertificate } from "@playwo/akashjs/build/protobuf/akash/cert/v1beta1/cert";
 import { QueryDeploymentsRequest } from "@playwo/akashjs/build/protobuf/akash/deployment/v1beta3/query"
-import { DeployedRemote, DeploymentBid } from "$lib/types/types";
+import { DeployedRemote, DeploymentBid, ProviderDetails } from "$lib/types/types";
 import { Deployment_State } from "@playwo/akashjs/build/protobuf/akash/deployment/v1beta3/deployment";
 import { Bid_State } from "@playwo/akashjs/build/protobuf/akash/market/v1beta3/bid";
+import { ProviderInfo } from "@playwo/akashjs/build/protobuf/akash/provider/v1beta3/provider";
 
 interface StoredWallet {
     mnemonics: string;
@@ -41,6 +43,7 @@ export class CosmJSWallet implements Wallet {
     public remotes: Writable<DeployedRemote[]>;
 
     private blockTimestampCache: Map<number, Date>;
+    private providerDetailsCache: Map<string, ProviderDetails>;
 
     constructor(wallet: DirectSecp256k1HdWallet, rpcUrl: string, certificate: CertificateInfo | null) {
         this.wallet = wallet;
@@ -57,6 +60,7 @@ export class CosmJSWallet implements Wallet {
         this.remotes = writable<DeployedRemote[]>([]);
 
         this.blockTimestampCache = new Map<number, Date>();
+        this.providerDetailsCache = new Map<string, ProviderDetails>();
 
         this.refreshTimeout = setInterval(this.refresh.bind(this), 3000);
         console.log("ADDED - " + this.refreshTimeout)
@@ -102,6 +106,23 @@ export class CosmJSWallet implements Wallet {
         return res.bids.map(b => DeploymentBid.fromBidResponse(b));
     }
     
+    async getProviderDetails(provider: string): Promise<ProviderDetails> {
+        var details = this.providerDetailsCache.get(provider);
+
+        if (details != null) {
+            return details;
+        }
+
+        const res = await new ProviderQueryClient(this.queryClient)
+        .Provider(QueryProviderRequest.fromPartial({
+            owner: provider
+        }));
+
+        details = ProviderDetails.fromProvider(res.provider!);
+        this.providerDetailsCache.set(provider, details);
+        return details;
+    }
+
     //Transactions
 
     async broadcastCertificate(csr: string, publicKey: string): Promise<void> {  
@@ -127,7 +148,7 @@ export class CosmJSWallet implements Wallet {
                     owner: this.address,
                     dseq: dseq
                 }
-            }), 4);
+            }));
     }
 
     //Internal
@@ -152,7 +173,7 @@ export class CosmJSWallet implements Wallet {
         return res.deployments;
     }
 
-    private async sendTransaction(type: messages, messageBody: any, gasMultiplicator: number = 1.5) {
+    private async sendTransaction(type: messages, messageBody: any, gasMultiplicator: number = 1.35) {
         const message = {
             typeUrl: type,
             value: messageBody,

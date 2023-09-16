@@ -4,23 +4,26 @@
 	import { MsgCreateDeployment } from "@playwo/akashjs/build/protobuf/akash/deployment/v1beta3/deploymentmsg";
     import HelloWorldSDL from "@static/hello-world.txt"
 	import { SDL } from "@playwo/akashjs/build/sdl";
-    import node from "node:crypto"
-	import { base64ToUInt } from "$lib/utils/utils";
-    import { toBase64 } from "pvutils"
-	import type { DeployedRemote } from "$lib/types/types";
-	import type { Writable } from "svelte/store";
+	import type { DeployedRemote, DeploymentBid } from "$lib/types/types";
+	import { onDestroy } from "svelte";
+
 
     let dialogElement: HTMLDialogElement;
     var isOpen: boolean = false;
 
+    var refreshInterval: NodeJS.Timeout;
+
     var wallet: Wallet;
     $: wallet = $WALLET!;
+
+    var bids: DeploymentBid[] | null = null;
 
     async function trigger() {
         const res = await fetch(HelloWorldSDL)
         const sdlText = await (res).text();
 
         const sdl = SDL.fromString(sdlText, "beta3");
+        const dseq = Math.round(Math.random() * 100000000);
 
         const msg = MsgCreateDeployment.fromPartial({
             deposit: {
@@ -31,12 +34,14 @@
             depositor: wallet.getAddress(),
             id: {
                 owner: wallet.getAddress(),
-                dseq: Math.round(Math.random() * 100000000)
+                dseq: dseq
             },
             groups: sdl.v3Groups()
         });
 
-        await wallet.createDeplyoment(msg)
+        await wallet.createDeplyoment(msg);
+
+        refreshInterval = setInterval(async () => bids = await wallet.getDeploymentBids(dseq), 2000);        
     }
 
     export const open = function open() {
@@ -45,6 +50,10 @@
 
 
     }
+
+    onDestroy(() => {
+        clearInterval(refreshInterval);
+    }); 
 
     function dialogClickHandler(e: MouseEvent) {
         if (e.target === dialogElement) {
@@ -63,6 +72,54 @@
         1. <button on:click={trigger}>Create Deployment</button>
 
         2. Select Location
+
+        <table>
+            <thead>
+                <tr>
+                    <th>
+                        Location
+                    </th>
+                    <th>
+                        Provider
+                    </th>
+                    <th>
+                        Price
+                    </th>
+                    <th>
+                        Speed
+                    </th>
+                </tr>
+            </thead>
+            <tbody class="text-center">
+                {#if bids != null}
+                    {#each bids as bid}
+                        <!-- svelte-ignore empty-block -->
+                        {#await wallet.getProviderDetails(bid.provider)}
+                        {:then details} 
+                            <tr>
+                                <td>
+                                    {details.region} ({details.country}, {details.city})
+                                </td>
+                                <td>
+                                    {details.organization} {details.website}
+                                <td>
+                                    {bid.price} uakt / block
+                                </td>
+                                <td>
+                                    <p>DOWN: {details.networkDownload}</p>
+                                    <p>UP: {details.networkUpload}</p>
+                                </td>
+                            </tr>
+
+                        {/await}
+
+                    {/each}
+                {/if}
+            </tbody>
+        </table>
+
+
+
     </div>
     {/if}
 </dialog>
