@@ -1,22 +1,37 @@
 import type { Deployment_State } from "@playwo/akashjs/build/protobuf/akash/deployment/v1beta3/deployment";
 import type { QueryDeploymentResponse } from "@playwo/akashjs/build/protobuf/akash/deployment/v1beta3/query";
-import type { QueryBidResponse } from "@playwo/akashjs/build/protobuf/akash/market/v1beta3/query";
+import type { QueryBidResponse, QueryLeaseResponse } from "@playwo/akashjs/build/protobuf/akash/market/v1beta3/query";
 import type { Bid_State } from "@playwo/akashjs/build/protobuf/akash/market/v1beta3/bid";
 import type { Provider } from "@playwo/akashjs/build/protobuf/akash/provider/v1beta3/provider";
 import type { Attribute } from "@playwo/akashjs/build/protobuf/akash/base/v1beta3/attribute";
 
-export interface DeployedRemote {
-    id: number;
+export interface DeploymentDetails {
+    dseq: number;
     createdAtHeight: number;
     state: Deployment_State;
 }
-export const DeployedRemote = {
+export const DeploymentDetails = {
     fromDeploymentResponse(response: QueryDeploymentResponse) {
         return {
-            id: response.deployment!.deploymentId!.dseq.toNumber(),
+            dseq: response.deployment!.deploymentId!.dseq.toNumber(),
             createdAtHeight: response.deployment!.createdAt.toNumber(),
             state: response.deployment!.state
-        } satisfies DeployedRemote;
+        } satisfies DeploymentDetails;
+    }
+}
+
+export interface LeaseDetails {
+    dseq: number;
+    createdAtHeight: number;
+    provider: string;
+}
+export const LeaseDetails = {
+    fromLeaseResponse(response: QueryLeaseResponse) {
+        return {
+            dseq: response.lease!.leaseId!.dseq.toNumber(),
+            createdAtHeight: response.lease!.createdAt.toNumber(),
+            provider: response.lease!.leaseId!.provider
+        } satisfies LeaseDetails;
     }
 }
 
@@ -24,13 +39,18 @@ export interface DeploymentBid {
     provider: string;
     createdAtHeight: number;
     price: number;
+
+    oseq: number;
+    gseq: number;
 }
 export const DeploymentBid = {
     fromBidResponse(response: QueryBidResponse) {
         return {
             createdAtHeight: response.bid!.createdAt.toNumber(),
             provider: response.bid!.bidId!.provider,
-            price: parseFloat(response.bid!.price!.amount)
+            price: parseFloat(response.bid!.price!.amount),
+            oseq: response.bid!.bidId!.oseq,
+            gseq: response.bid!.bidId!.gseq
         } satisfies DeploymentBid;
     }
 }

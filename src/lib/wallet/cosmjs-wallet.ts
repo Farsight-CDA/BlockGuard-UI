@@ -9,14 +9,15 @@ import { toBase64 } from "pvutils"
 import { writable, type Writable } from "svelte/store";
 import { MsgCloseDeployment, type MsgCreateDeployment } from "@playwo/akashjs/build/protobuf/akash/deployment/v1beta3/deploymentmsg";
 import { QueryClientImpl as DeploymentQueryClient, QueryDeploymentResponse } from "@playwo/akashjs/build/protobuf/akash/deployment/v1beta3/query";
-import { QueryClientImpl as MarketQueryClient, QueryBidsRequest } from "@playwo/akashjs/build/protobuf/akash/market/v1beta3/query";
+import { QueryClientImpl as MarketQueryClient, QueryBidsRequest, QueryLeaseResponse, QueryLeasesRequest } from "@playwo/akashjs/build/protobuf/akash/market/v1beta3/query";
 import { QueryClientImpl as ProviderQueryClient, QueryProviderRequest } from "@playwo/akashjs/build/protobuf/akash/provider/v1beta3/query"
 import { MsgCreateCertificate } from "@playwo/akashjs/build/protobuf/akash/cert/v1beta1/cert";
 import { QueryDeploymentsRequest } from "@playwo/akashjs/build/protobuf/akash/deployment/v1beta3/query"
-import { DeployedRemote, DeploymentBid, ProviderDetails } from "$lib/types/types";
+import { DeploymentBid, ProviderDetails, LeaseDetails, DeploymentDetails } from "$lib/types/types";
 import { Deployment_State } from "@playwo/akashjs/build/protobuf/akash/deployment/v1beta3/deployment";
 import { Bid_State } from "@playwo/akashjs/build/protobuf/akash/market/v1beta3/bid";
 import { ProviderInfo } from "@playwo/akashjs/build/protobuf/akash/provider/v1beta3/provider";
+import { Lease_State, MsgCreateLease } from "@playwo/akashjs/build/protobuf/akash/market/v1beta3/lease";
 
 interface StoredWallet {
     mnemonics: string;
@@ -40,7 +41,9 @@ export class CosmJSWallet implements Wallet {
     public certificate: Writable<CertificateInfo | null>;
     private _certificate: CertificateInfo | null;
     public balance: Writable<number>;
-    public remotes: Writable<DeployedRemote[]>;
+
+    public deployments: Writable<DeploymentDetails[]>;
+    public leases: Writable<LeaseDetails[]>;
 
     private blockTimestampCache: Map<number, Date>;
     private providerDetailsCache: Map<string, ProviderDetails>;
@@ -57,7 +60,8 @@ export class CosmJSWallet implements Wallet {
         this._certificate = certificate;
         this.certificate = writable<CertificateInfo | null>(certificate);
         this.balance = writable<number>(0);
-        this.remotes = writable<DeployedRemote[]>([]);
+        this.deployments = writable<DeploymentDetails[]>([]);
+        this.leases = writable<LeaseDetails[]>([]);
 
         this.blockTimestampCache = new Map<number, Date>();
         this.providerDetailsCache = new Map<string, ProviderDetails>();
@@ -151,6 +155,19 @@ export class CosmJSWallet implements Wallet {
             }));
     }
 
+    async createLease(dseq: number, gseq: number, oseq: number, provider: string): Promise<void> {
+        await this.sendTransaction(messages.MsgCreateLease, 
+            MsgCreateLease.fromPartial({
+                bidId: {
+                    dseq: dseq,
+                    gseq: gseq,
+                    oseq: oseq,
+                    provider: provider,
+                    owner: this.address
+                }
+            }));
+    }
+
     //Internal
 
     setCertificate(certificate: CertificateInfo) {
@@ -171,6 +188,17 @@ export class CosmJSWallet implements Wallet {
             }
         }));
         return res.deployments;
+    }
+
+    private async loadCurrentLeases(): Promise<QueryLeaseResponse[]> {
+        const res = await new MarketQueryClient(this.queryClient)
+        .Leases(QueryLeasesRequest.fromPartial({
+            filters: {
+                owner: this.address,
+                state: Lease_State[Lease_State.active]
+            }
+        }));
+        return res.leases;
     }
 
     private async sendTransaction(type: messages, messageBody: any, gasMultiplicator: number = 1.35) {
@@ -213,7 +241,10 @@ export class CosmJSWallet implements Wallet {
         this.balance.set(newBalance);
 
         const newDeployments = await this.loadCurrentDeployments();
-        this.remotes.set(newDeployments.map(d => DeployedRemote.fromDeploymentResponse(d)));
+        this.deployments.set(newDeployments.map(d => DeploymentDetails.fromDeploymentResponse(d)));
+
+        const newLeases = await this.loadCurrentLeases();
+        this.leases.set(newLeases.map(l => LeaseDetails.fromLeaseResponse(l)));
     }
 
     dispose() {

@@ -6,7 +6,7 @@ import type { pems } from "@playwo/akashjs/build/certificates";
 import { CosmJSWallet } from "./cosmjs-wallet";
 import type { Certificate } from "@playwo/akashjs/build/protobuf/akash/cert/v1beta3/cert"
 import type { MsgCreateDeployment } from "@playwo/akashjs/build/protobuf/akash/deployment/v1beta3/deploymentmsg";
-import type { DeployedRemote, DeploymentBid, ProviderDetails } from "$lib/types/types";
+import type { DeploymentDetails, DeploymentBid, ProviderDetails, LeaseDetails } from "$lib/types/types";
 
 //Necessary for type registrations!
 import cert from "@playwo/akashjs/build/protobuf/akash/cert/v1beta3/cert"
@@ -23,11 +23,13 @@ export interface Wallet {
     certificate: Writable<CertificateInfo | null>;
     balance: Writable<number>;
     
-    remotes: Writable<DeployedRemote[]>;
+    deployments: Writable<DeploymentDetails[]>;
+    leases: Writable<LeaseDetails[]>;
 
     broadcastCertificate(csr: string, publicKey: string): Promise<void>;
     createDeplyoment(msg: MsgCreateDeployment): Promise<void>;
     closeDeployment(dseq: number): Promise<void>;
+    createLease(dseq: number, gseq: number, oseq: number, provider: string): Promise<void>;
 }
 export interface CertificateInfo {
     csr: string;

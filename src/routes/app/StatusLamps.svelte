@@ -10,7 +10,7 @@
     var certificate = wallet.certificate;
 
     const READY_BALANCE = 10;
-    const WARNING_BALANCE = 5.5;
+    const WARNING_BALANCE = 5.1;
 
     $: adapterStatus = getAdapaterStatus();
     var adapterStatus = getAdapaterStatus();

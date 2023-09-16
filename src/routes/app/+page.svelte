@@ -2,23 +2,26 @@
 	import { WALLET, type Wallet } from "$lib/wallet/wallet";
 	import AddLocationModal from "./AddLocationModal.svelte";
 	import StatusLamps from "./StatusLamps.svelte";
-	import type { DeployedRemote } from "$lib/types/types";
+	import type { DeploymentDetails, LeaseDetails } from "$lib/types/types";
 	import type { Writable } from "svelte/store";
+	import ActiveLocationRow from "./ActiveLocationRow.svelte";
 
     var wallet: Wallet;
     $: wallet = $WALLET!;
 
-    var remotes: Writable<DeployedRemote[]>;
-    $: remotes = $WALLET?.remotes!;
+    var balance: Writable<number>;
+    $: balance = $WALLET!.balance;
+
+    var deployments: Writable<DeploymentDetails[]>;
+    $: deployments = $WALLET!.deployments;
+
+    var leases: Writable<LeaseDetails[]>;
+    $: leases = $WALLET!.leases;
 
     let openAddActiveLocationModal: (() => void);
 
     function handleAddActiveLocation() {
         openAddActiveLocationModal();
-    }
-
-    async function triggerCloseDeployment(dseq: number) {
-        await wallet.closeDeployment(dseq);
     }
 </script>
 
@@ -36,13 +39,13 @@
     <div class="w-5/6 xl:w-1/3 bg-neutral-900 rounded-md flex flex-col justify-center p-4 gap-2">
         <h2 class="text-xl font-bold">Active Locations</h2>
     
-        <button class="bg-blue-500 rounded-md px-4 py-1" on:click={handleAddActiveLocation}>Add</button>
+        <button disabled={$balance < 5.1} class="bg-blue-500 rounded-md px-4 py-1" on:click={handleAddActiveLocation}>Add</button>
     
         <table>
             <thead>
                 <tr>
                     <th>
-                        Id
+                        Location
                     </th>
                     <th>
                         Age
@@ -54,24 +57,13 @@
         
             </thead>
             <tbody class="text-center">
-                {#each $remotes as remote}
-                    <tr>
-                        <td>
-                            {remote.id}
-                        </td>
-                        <td>
-                            {#await wallet.getBlockTimestamp(remote.createdAtHeight)}
-                                ...
-                            {:then timestamp} 
-                                {Math.round((new Date().getTime() - timestamp.getTime()) / 60000)} mins
-                            {/await}
-                            
-                        </td>
-                        <td>
-                            <button on:click={() => triggerCloseDeployment(remote.id)}>Close</button>
-                        </td>
-                    </tr>    
-
+                {#each $leases as lease}
+                    <ActiveLocationRow dseq={lease.dseq} provider={lease.provider} createdAtHeight={lease.createdAtHeight}></ActiveLocationRow>
+                {/each}
+                {#each $deployments as deployment}
+                    {#if $leases.find(x => x.dseq == deployment.dseq) == null}
+                        <ActiveLocationRow dseq={deployment.dseq} createdAtHeight={deployment.createdAtHeight}></ActiveLocationRow>
+                    {/if}
                 {/each}
             </tbody>
         </table>
