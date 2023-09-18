@@ -6,7 +6,6 @@
 	import { SDL } from '@playwo/akashjs/build/sdl';
 	import type { DeploymentBid } from '$lib/types/types';
 	import LoadingSpinner from '$lib/components/LoadingSpinner.svelte';
-	import { onMount } from 'svelte';
 
 	enum Progress {
 		None,
@@ -116,6 +115,8 @@
 		progress = Progress.Accepting;
 		await wallet.createLease(dseq, bid.gseq, bid.oseq, bid.provider);
 		progress = Progress.SubmittingManifest;
+		//Wait for provider to have block
+		await new Promise((resolve) => setTimeout(resolve, 6500));
 		await wallet.submitManifest(dseq, bid.provider, sdl);
 		progress = Progress.Completed;
 		close();

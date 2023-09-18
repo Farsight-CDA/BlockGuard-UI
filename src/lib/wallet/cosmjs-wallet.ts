@@ -206,16 +206,17 @@ export class CosmJSWallet implements Wallet {
 	async submitManifest(dseq: number, provider: string, sdl: SDL): Promise<boolean> {
 		const providerDetails = await this.getProviderDetails(provider);
 
-		const attempt = NATIVE_API.mtlsFetch(
-			'POST',
-			new URL(`deployment/${dseq}/manifest`, providerDetails.hostUri).href,
-			sdl.manifestSortedJSON(),
-			this._certificate!.csr,
-			this._certificate!.privkey
-		);
+		const attempt = () =>
+			NATIVE_API.mtlsFetch(
+				'PUT',
+				new URL(`deployment/${dseq}/manifest`, providerDetails.hostUri).href,
+				sdl.manifestSortedJSON(),
+				this._certificate!.csr,
+				this._certificate!.privkey
+			);
 
 		try {
-			const result = await retry(attempt, [1000, 3000, 5000]);
+			await retry(attempt, [1000, 3000, 5000]);
 			return true;
 		} catch (error) {
 			return false;

@@ -7,7 +7,7 @@ export interface NativeAPIs {
 	mtlsFetch<T>(
 		method: HttpMethod,
 		url: string,
-		body: any,
+		body: string,
 		csr: string,
 		privateKey: string
 	): Promise<T>;
