@@ -15,8 +15,7 @@ export interface NativeAPIs {
 
 export var NATIVE_API: NativeAPIs = null!;
 
-export async function initializeNativeAPI() {
-	//ToDo: Have runtime polyfill this
+export var initializeNativeAPI = async () => {
 	NATIVE_API = {
 		loadFile: (path) => Promise.resolve(localStorage.getItem(path)),
 		saveFile: (path, content) => Promise.resolve(localStorage.setItem(path, content)),
@@ -24,4 +23,4 @@ export async function initializeNativeAPI() {
 	};
 
 	return true;
-}
+};
