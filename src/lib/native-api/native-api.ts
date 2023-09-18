@@ -1,18 +1,27 @@
-import { writable } from "svelte/store";
+import type { HttpMethod } from '@sveltejs/kit';
+import { writable } from 'svelte/store';
 
 export interface NativeAPIs {
-    loadFile(path: string): Promise<string | null>;
-    saveFile(path: string, content: string): Promise<void>;
+	loadFile(path: string): Promise<string | null>;
+	saveFile(path: string, content: string): Promise<void>;
+	mtlsFetch<T>(
+		method: HttpMethod,
+		url: string,
+		body: any,
+		csr: string,
+		privateKey: string
+	): Promise<T>;
 }
 
 export var NATIVE_API: NativeAPIs = null!;
 
 export async function initializeNativeAPI() {
-    //ToDo: Have runtime polyfill this
-    NATIVE_API = {
-        loadFile: (path) => Promise.resolve(localStorage.getItem(path)),
-        saveFile: (path, content) => Promise.resolve(localStorage.setItem(path, content)),
-    };
-    
-    return true;
+	//ToDo: Have runtime polyfill this
+	NATIVE_API = {
+		loadFile: (path) => Promise.resolve(localStorage.getItem(path)),
+		saveFile: (path, content) => Promise.resolve(localStorage.setItem(path, content)),
+		mtlsFetch: async (method, url, body, csr, privateKey) => null!
+	};
+
+	return true;
 }
