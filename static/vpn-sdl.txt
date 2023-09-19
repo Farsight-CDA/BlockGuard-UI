@@ -3,23 +3,25 @@ version: "2.0"
 
 services:
   softether:
-    image: andrey01/softether:4.38-9760-2
+    image: siomiz/softethervpn
     expose:
       - port: 443
         as: 443
         to:
           - global: true
+    env:
+      - USERS=admin:notreallyasecretpassword
 
 profiles:
   compute:
     softether:
       resources:
         cpu:
-          units: 1.0
+          units: 0.8
         memory:
           size: 512Mi
         storage:
-          size: 512Mi
+          size: 1Gi
         gpu:
           units: 0
   placement:
