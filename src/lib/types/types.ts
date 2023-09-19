@@ -25,6 +25,8 @@ export const DeploymentDetails = {
 
 export interface LeaseDetails {
 	dseq: number;
+	gseq: number;
+	oseq: number;
 	createdAtHeight: number;
 	provider: string;
 }
@@ -32,6 +34,8 @@ export const LeaseDetails = {
 	fromLeaseResponse(response: QueryLeaseResponse) {
 		return {
 			dseq: response.lease!.leaseId!.dseq.toNumber(),
+			gseq: response.lease!.leaseId!.gseq,
+			oseq: response.lease!.leaseId!.oseq,
 			createdAtHeight: response.lease!.createdAt.toNumber(),
 			provider: response.lease!.leaseId!.provider
 		} satisfies LeaseDetails;
