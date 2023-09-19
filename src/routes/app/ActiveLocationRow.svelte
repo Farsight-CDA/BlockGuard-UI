@@ -42,7 +42,7 @@
 			{#await wallet.getProviderLeaseStatus(dseq, gseq, oseq, `${provider}`)}
 				...
 			{:then leaseStatus}
-				<p>{JSON.stringify(leaseStatus)}</p>
+				<p>{`${leaseStatus.forwardedPorts[0].host}:${leaseStatus.forwardedPorts[0].port}`}</p>
 			{/await}
 		{:else}
 			<p>Not Connected</p>
