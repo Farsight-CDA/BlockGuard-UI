@@ -24,3 +24,10 @@ export var initializeNativeAPI = async () => {
 
 	return true;
 };
+
+export function setNativeAPIInitializer(getNativeAPI: () => Promise<NativeAPIs>) {
+	initializeNativeAPI = async () => {
+		NATIVE_API = await getNativeAPI();
+		return true;
+	};
+}
