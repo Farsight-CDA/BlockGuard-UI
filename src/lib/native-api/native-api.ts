@@ -11,6 +11,8 @@ export interface NativeAPIs {
 		csr: string,
 		privateKey: string
 	): Promise<T>;
+	vpnClientStatus(): Promise<string>;
+	connectVPN(host: string, username: string, password: string): Promise<void>;
 }
 
 export var NATIVE_API: NativeAPIs = null!;
