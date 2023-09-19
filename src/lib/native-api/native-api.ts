@@ -15,15 +15,7 @@ export interface NativeAPIs {
 
 export var NATIVE_API: NativeAPIs = null!;
 
-export var initializeNativeAPI = async () => {
-	NATIVE_API = {
-		loadFile: (path) => Promise.resolve(localStorage.getItem(path)),
-		saveFile: (path, content) => Promise.resolve(localStorage.setItem(path, content)),
-		mtlsFetch: async (method, url, body, csr, privateKey) => null!
-	};
-
-	return true;
-};
+export var initializeNativeAPI: () => Promise<boolean> = () => Promise.reject('Not Implemented');
 
 export function setNativeAPIInitializer(getNativeAPI: () => Promise<NativeAPIs>) {
 	initializeNativeAPI = async () => {
