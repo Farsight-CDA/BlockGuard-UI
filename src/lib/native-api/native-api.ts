@@ -1,6 +1,8 @@
 import type { HttpMethod } from '@sveltejs/kit';
 import { writable } from 'svelte/store';
 
+export type VPNClientStatus = 'Offline' | 'Running';
+
 export interface NativeAPIs {
 	loadFile(path: string): Promise<string | null>;
 	saveFile(path: string, content: string): Promise<void>;
@@ -11,7 +13,7 @@ export interface NativeAPIs {
 		csr: string,
 		privateKey: string
 	): Promise<T>;
-	vpnClientStatus(): Promise<string>;
+	vpnClientStatus(): Promise<VPNClientStatus>;
 	connectVPN(host: string, username: string, password: string): Promise<void>;
 }
 

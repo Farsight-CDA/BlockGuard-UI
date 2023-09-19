@@ -51,6 +51,7 @@
 		{/if}
 	</td>
 	<td>
+		<button>Connect</button>
 		<button on:click={() => triggerCloseDeployment(dseq)}>Close</button>
 	</td>
 </tr>
