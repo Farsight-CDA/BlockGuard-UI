@@ -10,7 +10,8 @@ import type {
 	DeploymentDetails,
 	DeploymentBid,
 	ProviderDetails,
-	LeaseDetails
+	LeaseDetails,
+	ProviderLeaseStatus
 } from '$lib/types/types';
 
 //Necessary for type registrations!
@@ -37,6 +38,12 @@ export interface Wallet {
 	closeDeployment(dseq: number): Promise<void>;
 	createLease(dseq: number, gseq: number, oseq: number, provider: string): Promise<void>;
 	submitManifest(dseq: number, provider: string, sdl: SDL): Promise<boolean>;
+	getProviderLeaseStatus(
+		dseq: number,
+		gseq: number,
+		oseq: number,
+		provider: string
+	): Promise<ProviderLeaseStatus>;
 }
 export interface CertificateInfo {
 	csr: string;

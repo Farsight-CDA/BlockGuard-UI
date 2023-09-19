@@ -32,7 +32,7 @@ function retryHandler(fn: any, delay: number, notify: ErrorHandler) {
 }
 
 export function retry<T>(attempt: () => Promise<T>, delays: number[], notify = noop) {
-	const addRetry = (promise: Promise<any>, delay: number) =>
+	const addRetry = (promise: Promise<T>, delay: number) =>
 		promise.catch(retryHandler(attempt, delay, notify));
 
 	return delays.reduce(addRetry, attempt());

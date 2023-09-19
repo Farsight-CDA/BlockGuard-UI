@@ -30,7 +30,13 @@ import {
 } from '@playwo/akashjs/build/protobuf/akash/provider/v1beta3/query';
 import { MsgCreateCertificate } from '@playwo/akashjs/build/protobuf/akash/cert/v1beta1/cert';
 import { QueryDeploymentsRequest } from '@playwo/akashjs/build/protobuf/akash/deployment/v1beta3/query';
-import { DeploymentBid, ProviderDetails, LeaseDetails, DeploymentDetails } from '$lib/types/types';
+import {
+	DeploymentBid,
+	ProviderDetails,
+	LeaseDetails,
+	DeploymentDetails,
+	ProviderLeaseStatus
+} from '$lib/types/types';
 import { Deployment_State } from '@playwo/akashjs/build/protobuf/akash/deployment/v1beta3/deployment';
 import { Bid_State } from '@playwo/akashjs/build/protobuf/akash/market/v1beta3/bid';
 import {
@@ -201,7 +207,7 @@ export class CosmJSWallet implements Wallet {
 		);
 	}
 
-	// Other
+	// Provider
 
 	async submitManifest(dseq: number, provider: string, sdl: SDL): Promise<boolean> {
 		const providerDetails = await this.getProviderDetails(provider);
@@ -220,6 +226,31 @@ export class CosmJSWallet implements Wallet {
 			return true;
 		} catch (error) {
 			return false;
+		}
+	}
+
+	async getProviderLeaseStatus(
+		dseq: number,
+		gseq: number,
+		oseq: number,
+		provider: string
+	): Promise<ProviderLeaseStatus> {
+		const providerDetails = await this.getProviderDetails(provider);
+
+		const attempt = () =>
+			NATIVE_API.mtlsFetch<ProviderLeaseStatusResponse>(
+				'POST',
+				new URL(`lease/${dseq}/${gseq}/${oseq}/status`, providerDetails.hostUri).href,
+				'',
+				this._certificate!.csr,
+				this._certificate!.privkey
+			);
+
+		try {
+			const response = await retry(attempt, [1000, 3000, 5000]);
+			return ProviderLeaseStatus.fromResponse(response);
+		} catch (error) {
+			throw Error('Contacting Provider Failed');
 		}
 	}
 

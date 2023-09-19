@@ -93,6 +93,26 @@ export const ProviderDetails = {
 	}
 };
 
+export interface ProviderLeaseStatus {
+	forwardedPorts: ProviderLeasePort[];
+}
+export interface ProviderLeasePort {
+	host: string;
+	port: number;
+	externalPort: number;
+	proto: string;
+	name: string;
+}
+export const ProviderLeaseStatus = {
+	fromResponse(response: ProviderLeaseStatusResponse) {
+		const serviceNames = Object.keys(response.services);
+
+		return {
+			forwardedPorts: serviceNames.flatMap((name) => response.forwarded_ports[name])
+		} satisfies ProviderLeaseStatus;
+	}
+};
+
 function tryFindAttribute(attributes: Attribute[], names: string[]) {
 	for (var i = 0; i < names.length; i++) {
 		const name = names[i];
