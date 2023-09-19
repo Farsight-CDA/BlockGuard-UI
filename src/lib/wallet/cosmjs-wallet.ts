@@ -239,7 +239,7 @@ export class CosmJSWallet implements Wallet {
 
 		const attempt = () =>
 			NATIVE_API.mtlsFetch<ProviderLeaseStatusResponse>(
-				'POST',
+				'GET',
 				new URL(`lease/${dseq}/${gseq}/${oseq}/status`, providerDetails.hostUri).href,
 				'',
 				this._certificate!.csr,
@@ -250,7 +250,7 @@ export class CosmJSWallet implements Wallet {
 			const response = await retry(attempt, [1000, 3000, 5000]);
 			return ProviderLeaseStatus.fromResponse(response);
 		} catch (error) {
-			throw Error('Contacting Provider Failed');
+			throw Error(`Contacting Provider Failed: ${error}`);
 		}
 	}
 
