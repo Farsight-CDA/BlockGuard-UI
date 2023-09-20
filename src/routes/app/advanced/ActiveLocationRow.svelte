@@ -1,5 +1,7 @@
 <script lang="ts">
 	import { NATIVE_API } from '$lib/native-api/native-api';
+	import type { ProviderLeaseStatus } from '$lib/types/types';
+	import { VPN_MANAGER } from '$lib/vpn-manager/vpn-manager';
 	import { type Wallet, WALLET } from '$lib/wallet/wallet';
 
 	export let dseq: number;
@@ -16,8 +18,14 @@
 		await wallet.closeDeployment(dseq);
 	}
 
-	async function triggerConnectVPN(host: string) {
-		await NATIVE_API.connectVPN(host, 'admin', 'notreallyasecretpassword');
+	async function triggerConnectVPN(
+		dseq: number,
+		leaseStatus: ProviderLeaseStatus
+	) {
+		await VPN_MANAGER.connectVPNToLease(
+			dseq,
+			`${leaseStatus.forwardedPorts[0].host}:${leaseStatus.forwardedPorts[0].externalPort}`
+		);
 	}
 </script>
 
@@ -57,11 +65,8 @@
 			</td>
 
 			<td>
-				<button
-					on:click={() =>
-						triggerConnectVPN(
-							`${leaseStatus.forwardedPorts[0].host}:${leaseStatus.forwardedPorts[0].externalPort}`
-						)}>Connect</button
+				<button on:click={() => triggerConnectVPN(dseq, leaseStatus)}
+					>Connect</button
 				>
 				<button on:click={() => triggerCloseDeployment(dseq)}>Close</button>
 			</td>

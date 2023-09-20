@@ -1,3 +1,4 @@
+import type { ConnectionStatus as VPNConnectionStatus } from '$lib/vpn-manager/types';
 import type { HttpMethod } from '@sveltejs/kit';
 import { writable } from 'svelte/store';
 
@@ -16,6 +17,7 @@ export interface NativeAPIs {
 	vpnClientStatus(): Promise<VPNClientStatus>;
 	connectVPN(host: string, username: string, password: string): Promise<void>;
 	disconnectVPN(): Promise<void>;
+	getConnectionStatus(): Promise<VPNConnectionStatus>;
 }
 
 export var NATIVE_API: NativeAPIs = null!;
@@ -37,10 +39,10 @@ setNativeAPIInitializer(async () => {
 		loadFile: (path) => Promise.resolve(localStorage.getItem(path)),
 		saveFile: (path, content) =>
 			Promise.resolve(localStorage.setItem(path, content)),
-		mtlsFetch: (method, url, body, csr, privateKey) =>
-			Promise.resolve(5 as any),
+		mtlsFetch: (method, url, body, csr, privateKey) => Promise.resolve(null!),
 		vpnClientStatus: () => Promise.resolve('Running'),
 		connectVPN: (host, username, password) => Promise.resolve(),
-		disconnectVPN: () => Promise.resolve()
+		disconnectVPN: () => Promise.resolve(),
+		getConnectionStatus: () => Promise.resolve('Connected')
 	} satisfies NativeAPIs;
 });

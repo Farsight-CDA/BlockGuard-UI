@@ -1,21 +1,23 @@
 <script lang="ts">
-	import { goto } from "$app/navigation";
-	import LoadingSpinner from "$lib/components/LoadingSpinner.svelte";
-	import { NATIVE_API } from "$lib/native-api/native-api";
-	import { WALLET, initializeWallet } from "$lib/wallet/wallet";
-	import { onMount } from "svelte";
+	import { goto } from '$app/navigation';
+	import { GLOBAL_CONFIG } from '$lib/configuration/configuration';
+	import { NATIVE_API } from '$lib/native-api/native-api';
+	import { WALLET } from '$lib/wallet/wallet';
+	import { onMount } from 'svelte';
 
-    onMount(() => {
-        if (NATIVE_API == null) {
-            goto("/error");
-        }
+	onMount(async () => {
+		if (NATIVE_API == null) {
+			await goto('/error');
+		}
 
-        if ($WALLET == null) {
-            goto("/setup");
-        } else {
-            goto("/app");
-        }
-    });
+		if ($WALLET == null) {
+			await goto('/setup');
+		} else {
+			if ($GLOBAL_CONFIG?.useAdvancedMode) {
+				await goto('/app/advanced');
+			} else {
+				await goto('/app/simple');
+			}
+		}
+	});
 </script>
-
-
