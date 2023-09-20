@@ -6,6 +6,7 @@
 	import type { Writable } from 'svelte/store';
 	import ActiveLocationRow from './ActiveLocationRow.svelte';
 	import { VPN_MANAGER } from '$lib/vpn-manager/vpn-manager';
+	import DeadDeploymentTable from './DeadDeploymentTable.svelte';
 
 	var wallet: Wallet;
 	$: wallet = $WALLET!;
@@ -32,18 +33,6 @@
 	<div class="w-5/6 xl:w-1/3">
 		<StatusLamps></StatusLamps>
 	</div>
-
-	{#if $VPN_MANAGER.isActive}
-		<div
-			class="w-5/6 xl:w-1/3 bg-neutral-900 rounded-md flex flex-col justify-center p-4 gap-2"
-		>
-			<h2 class="text-xl font-bold">Active Connection</h2>
-
-			<p>{$VPN_MANAGER.connection.dseq} - {$VPN_MANAGER.connection.status}</p>
-
-			<button on:click={VPN_MANAGER.closeVPNConnection}>Disconnect</button>
-		</div>
-	{/if}
 
 	<div
 		class="w-5/6 xl:w-1/3 bg-neutral-900 rounded-md flex flex-col justify-center p-4 gap-4"
@@ -75,15 +64,11 @@
 						createdAtHeight={lease.createdAtHeight}
 					></ActiveLocationRow>
 				{/each}
-				{#each $deployments as deployment}
-					{#if $leases.find((x) => x.dseq == deployment.dseq) == null}
-						<ActiveLocationRow
-							dseq={deployment.dseq}
-							createdAtHeight={deployment.createdAtHeight}
-						></ActiveLocationRow>
-					{/if}
-				{/each}
 			</tbody>
 		</table>
+
+		<h2 class="text-xl font-bold">Inactive Deployments</h2>
+
+		<DeadDeploymentTable></DeadDeploymentTable>
 	</div>
 </div>

@@ -98,7 +98,6 @@ export class CosmJSWallet implements Wallet {
 		this.providerDetailsCache = new Map<string, ProviderDetails>();
 
 		this.refreshTimeout = setInterval(this.refresh.bind(this), 3000);
-		console.log('ADDED - ' + this.refreshTimeout);
 	}
 
 	//Getters
