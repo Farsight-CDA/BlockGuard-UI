@@ -18,7 +18,7 @@
 		(x) => $leases.find((y) => y.dseq == x.dseq) == null
 	);
 
-	var isCloseActionRunning: { [dseq: number]: boolean };
+	var isCloseActionRunning: { [dseq: number]: boolean } = {};
 
 	async function triggerCloseDeployment(dseq: number) {
 		try {
