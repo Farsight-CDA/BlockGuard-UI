@@ -87,12 +87,19 @@ export const ProviderDetails = {
 
 			host: tryFindAttribute(provider.attributes, ['host']),
 			organization: tryFindAttribute(provider.attributes, ['organization']),
-			region: tryFindAttribute(provider.attributes, ['region', 'location-region']),
+			region: tryFindAttribute(provider.attributes, [
+				'region',
+				'location-region'
+			]),
 			country: tryFindAttribute(provider.attributes, ['country']),
 			city: tryFindAttribute(provider.attributes, ['city']),
 
-			networkUpload: tryParseFloat(tryFindAttribute(provider.attributes, ['network_upload'])),
-			networkDownload: tryParseFloat(tryFindAttribute(provider.attributes, ['network_download']))
+			networkUpload: tryParseFloat(
+				tryFindAttribute(provider.attributes, ['network_upload'])
+			),
+			networkDownload: tryParseFloat(
+				tryFindAttribute(provider.attributes, ['network_download'])
+			)
 		} satisfies ProviderDetails;
 	}
 };
@@ -112,7 +119,9 @@ export const ProviderLeaseStatus = {
 		const serviceNames = Object.keys(response.services);
 
 		return {
-			forwardedPorts: serviceNames.flatMap((name) => response.forwarded_ports[name])
+			forwardedPorts: serviceNames.flatMap(
+				(name) => response.forwarded_ports[name]
+			)
 		} satisfies ProviderLeaseStatus;
 	}
 };
@@ -120,7 +129,9 @@ export const ProviderLeaseStatus = {
 function tryFindAttribute(attributes: Attribute[], names: string[]) {
 	for (var i = 0; i < names.length; i++) {
 		const name = names[i];
-		const val = attributes.find((x) => x.key.toUpperCase() == name.toUpperCase())?.value;
+		const val = attributes.find(
+			(x) => x.key.toUpperCase() == name.toUpperCase()
+		)?.value;
 
 		if (val != null) {
 			return val;

@@ -192,7 +192,12 @@ export class CosmJSWallet implements Wallet {
 		);
 	}
 
-	async createLease(dseq: number, gseq: number, oseq: number, provider: string): Promise<void> {
+	async createLease(
+		dseq: number,
+		gseq: number,
+		oseq: number,
+		provider: string
+	): Promise<void> {
 		await this.sendTransaction(
 			messages.MsgCreateLease,
 			MsgCreateLease.fromPartial({
@@ -209,7 +214,11 @@ export class CosmJSWallet implements Wallet {
 
 	// Provider
 
-	async submitManifest(dseq: number, provider: string, sdl: SDL): Promise<boolean> {
+	async submitManifest(
+		dseq: number,
+		provider: string,
+		sdl: SDL
+	): Promise<boolean> {
 		const providerDetails = await this.getProviderDetails(provider);
 
 		const attempt = () =>
@@ -240,7 +249,8 @@ export class CosmJSWallet implements Wallet {
 		const attempt = () =>
 			NATIVE_API.mtlsFetch<ProviderLeaseStatusResponse>(
 				'GET',
-				new URL(`lease/${dseq}/${gseq}/${oseq}/status`, providerDetails.hostUri).href,
+				new URL(`lease/${dseq}/${gseq}/${oseq}/status`, providerDetails.hostUri)
+					.href,
 				'',
 				this._certificate!.csr,
 				this._certificate!.privkey
@@ -262,7 +272,10 @@ export class CosmJSWallet implements Wallet {
 	}
 
 	private async loadCurrentBalance(): Promise<number> {
-		return parseInt((await this.msgClient.getBalance(this.address, 'uakt')).amount) / 1000000;
+		return (
+			parseInt((await this.msgClient.getBalance(this.address, 'uakt')).amount) /
+			1000000
+		);
 	}
 
 	private async loadCurrentDeployments(): Promise<QueryDeploymentResponse[]> {
@@ -289,14 +302,19 @@ export class CosmJSWallet implements Wallet {
 		return res.leases;
 	}
 
-	private async sendTransaction(type: messages, messageBody: any, gasMultiplicator: number = 1.35) {
+	private async sendTransaction(
+		type: messages,
+		messageBody: any,
+		gasMultiplicator: number = 1.35
+	) {
 		const message = {
 			typeUrl: type,
 			value: messageBody
 		};
 		const memo = 'BlockGuard';
 		const gas = Math.ceil(
-			gasMultiplicator * (await this.msgClient.simulate(this.address, [message], memo))
+			gasMultiplicator *
+				(await this.msgClient.simulate(this.address, [message], memo))
 		);
 		await this.msgClient.signAndBroadcast(
 			this.address,
@@ -335,7 +353,9 @@ export class CosmJSWallet implements Wallet {
 		this.balance.set(newBalance);
 
 		const newDeployments = await this.loadCurrentDeployments();
-		this.deployments.set(newDeployments.map((d) => DeploymentDetails.fromDeploymentResponse(d)));
+		this.deployments.set(
+			newDeployments.map((d) => DeploymentDetails.fromDeploymentResponse(d))
+		);
 
 		const newLeases = await this.loadCurrentLeases();
 		this.leases.set(newLeases.map((l) => LeaseDetails.fromLeaseResponse(l)));
@@ -352,7 +372,10 @@ export class CosmJSWallet implements Wallet {
 		const storedWallet = {
 			mnemonics: this.wallet.mnemonic,
 			rpcEndpoint: this.rpcUrl,
-			certificate: this._certificate != null ? (JSON.stringify(this._certificate) as string) : null
+			certificate:
+				this._certificate != null
+					? (JSON.stringify(this._certificate) as string)
+					: null
 		} satisfies StoredWallet;
 
 		return JSON.stringify(storedWallet);
@@ -361,15 +384,22 @@ export class CosmJSWallet implements Wallet {
 	static async deserialize(content: string) {
 		const storedWallet = JSON.parse(content) as StoredWallet;
 
-		const hdWallet = await DirectSecp256k1HdWallet.fromMnemonic(storedWallet.mnemonics, {
-			prefix: 'akash'
-		});
+		const hdWallet = await DirectSecp256k1HdWallet.fromMnemonic(
+			storedWallet.mnemonics,
+			{
+				prefix: 'akash'
+			}
+		);
 		const certificate =
 			storedWallet.certificate != null
 				? (JSON.parse(storedWallet.certificate) as CertificateInfo)
 				: null;
 
-		const cosmJsWallet = new CosmJSWallet(hdWallet, storedWallet.rpcEndpoint, certificate);
+		const cosmJsWallet = new CosmJSWallet(
+			hdWallet,
+			storedWallet.rpcEndpoint,
+			certificate
+		);
 		await cosmJsWallet.initialize();
 		return cosmJsWallet;
 	}

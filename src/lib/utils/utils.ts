@@ -15,7 +15,10 @@ function noop<T>(result: T) {
 	return result;
 }
 
-export function schedule<TFn extends AsyncFunction>(timeout: number, action: TFn) {
+export function schedule<TFn extends AsyncFunction>(
+	timeout: number,
+	action: TFn
+) {
 	return new Promise<ReturnType<TFn>>((resolve, reject) => {
 		const fire = () => action().then(resolve, reject);
 		setTimeout(fire, timeout);
@@ -31,7 +34,11 @@ function retryHandler(fn: any, delay: number, notify: ErrorHandler) {
 	};
 }
 
-export function retry<T>(attempt: () => Promise<T>, delays: number[], notify = noop) {
+export function retry<T>(
+	attempt: () => Promise<T>,
+	delays: number[],
+	notify = noop
+) {
 	const addRetry = (promise: Promise<T>, delay: number) =>
 		promise.catch(retryHandler(attempt, delay, notify));
 
