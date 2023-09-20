@@ -36,7 +36,12 @@ export interface Wallet {
 	broadcastCertificate(csr: string, publicKey: string): Promise<void>;
 	createDeplyoment(msg: MsgCreateDeployment): Promise<void>;
 	closeDeployment(dseq: number): Promise<void>;
-	createLease(dseq: number, gseq: number, oseq: number, provider: string): Promise<void>;
+	createLease(
+		dseq: number,
+		gseq: number,
+		oseq: number,
+		provider: string
+	): Promise<void>;
 	submitManifest(dseq: number, provider: string, sdl: SDL): Promise<boolean>;
 	getProviderLeaseStatus(
 		dseq: number,
@@ -88,9 +93,24 @@ async function storeCurrentWallet() {
 	NATIVE_API.saveFile(WALLET_STORAGE_FILE, encodedWallet);
 }
 
+export async function deleteCurrentWallet() {
+	if (wallet == null) {
+		throw 'Failed to delete wallet, none is currently set!';
+	}
+
+	NATIVE_API.clearFile(WALLET_STORAGE_FILE);
+	disposeWallet();
+}
+
 export async function setNewWallet(mnemonic: string) {
-	const hdWallet = await DirectSecp256k1HdWallet.fromMnemonic(mnemonic, { prefix: 'akash' });
-	const cosmJSWallet = new CosmJSWallet(hdWallet, 'https://akash-rpc.polkachu.com:443', null);
+	const hdWallet = await DirectSecp256k1HdWallet.fromMnemonic(mnemonic, {
+		prefix: 'akash'
+	});
+	const cosmJSWallet = new CosmJSWallet(
+		hdWallet,
+		'https://akash-rpc.polkachu.com:443',
+		null
+	);
 	await cosmJSWallet.initialize();
 
 	WALLET.set(cosmJSWallet);
@@ -98,7 +118,11 @@ export async function setNewWallet(mnemonic: string) {
 	await storeCurrentWallet();
 }
 
-export async function setNewCertificate(csr: string, pubkey: string, privkey: string) {
+export async function setNewCertificate(
+	csr: string,
+	pubkey: string,
+	privkey: string
+) {
 	wallet?.setCertificate({
 		csr: csr,
 		pubkey: pubkey,
