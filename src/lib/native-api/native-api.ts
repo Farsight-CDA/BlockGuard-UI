@@ -7,6 +7,7 @@ export type VPNClientStatus = 'Offline' | 'Running';
 export interface NativeAPIs {
 	loadFile(path: string): Promise<string | null>;
 	saveFile(path: string, content: string): Promise<void>;
+	clearFile(path: string): Promise<void>;
 	mtlsFetch<T>(
 		method: HttpMethod,
 		url: string,
@@ -39,6 +40,7 @@ setNativeAPIInitializer(async () => {
 		loadFile: (path) => Promise.resolve(localStorage.getItem(path)),
 		saveFile: (path, content) =>
 			Promise.resolve(localStorage.setItem(path, content)),
+		clearFile: (path) => Promise.resolve(localStorage.removeItem(path)),
 		mtlsFetch: (method, url, body, csr, privateKey) => Promise.resolve(null!),
 		vpnClientStatus: () => Promise.resolve('Running'),
 		connectVPN: (host, username, password) => Promise.resolve(),
