@@ -26,10 +26,10 @@
 </script>
 
 <div
-	class="flex flex-col gap-1 justify-center items-center bg-neutral-900 rounded-md p-2"
+	class="flex flex-col gap-3 justify-between items-center bg-neutral-900 rounded-md p-2 text-center"
 >
 	<button
-		class="w-5/6 aspect-square rounded-full flex justify-center items-center"
+		class="w-1/2 sm:w-7/12 aspect-square rounded-full flex justify-center items-center"
 		on:click={triggerForwardClick}
 		on:keydown={() => {}}
 		disabled={!clickable}
@@ -45,5 +45,5 @@
 			<p>{value}</p>
 		{/if}
 	</button>
-	<p>{name}</p>
+	<h4 class="font-bold">{name}</h4>
 </div>

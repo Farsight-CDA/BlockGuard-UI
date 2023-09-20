@@ -95,12 +95,12 @@
 
 <FundWalletModal bind:open={openFundWalletModal}></FundWalletModal>
 
-<div class="grid grid-cols-3 gap-6">
+<div class="grid grid-cols-2 sm:grid-cols-3 gap-6 auto-rows-fr">
 	<StatusLamp name="VPN Client" status={vpnClientStatus} />
 	<StatusLamp
 		name="Funds"
 		status={fundsStatus}
-		value={$balance}
+		value={Math.round(100 * $balance) / 100}
 		on:click={openFundWalletModal}
 		clickable={true}
 	/>
