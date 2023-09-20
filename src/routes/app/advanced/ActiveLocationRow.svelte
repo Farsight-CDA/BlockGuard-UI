@@ -70,6 +70,11 @@
 				>
 				<button on:click={() => triggerCloseDeployment(dseq)}>Close</button>
 			</td>
+		{:catch}
+			<td><p>Not Connected</p></td>
+			<td>
+				<button on:click={() => triggerCloseDeployment(dseq)}>Close</button>
+			</td>
 		{/await}
 	{:else}
 		<td><p>Not Connected</p></td>
