@@ -12,10 +12,32 @@ export function useVPNConnectionManager() {
 		isActive: false
 	});
 
-	setInterval(refreshStatus, 3000);
+	const refreshInterval = setInterval(refreshStatus, 3000);
 
 	async function refreshStatus() {
 		const connectionStatus = await NATIVE_API.getConnectionStatus();
+		var shouldKill = false;
+
+		update((prev) => {
+			if (prev.isActive) {
+				prev.connection.status = connectionStatus.status;
+			} else {
+				shouldKill = true;
+			}
+			return prev;
+		});
+
+		if (
+			(connectionStatus.status == 'Connected' ||
+				connectionStatus.status == 'Connecting') &&
+			shouldKill
+		) {
+			await closeVPNConnection();
+		}
+	}
+
+	function dispose() {
+		clearInterval(refreshInterval);
 	}
 
 	async function connectVPNToLease(dseq: number, host: string) {
@@ -53,6 +75,7 @@ export function useVPNConnectionManager() {
 	return {
 		subscribe,
 		connectVPNToLease,
-		closeVPNConnection
+		closeVPNConnection,
+		dispose
 	};
 }

@@ -1,4 +1,4 @@
-import type { ConnectionStatus as VPNConnectionStatus } from '$lib/vpn-manager/types';
+import type { VPNConnectionStatus } from '$lib/vpn-manager/types';
 import type { HttpMethod } from '@sveltejs/kit';
 import { writable } from 'svelte/store';
 
@@ -45,6 +45,7 @@ setNativeAPIInitializer(async () => {
 		vpnClientStatus: () => Promise.resolve('Running'),
 		connectVPN: (host, username, password) => Promise.resolve(),
 		disconnectVPN: () => Promise.resolve(),
-		getConnectionStatus: () => Promise.resolve('Connected')
+		getConnectionStatus: () =>
+			Promise.resolve({ status: 'Offline', incomingBytes: 0, outgoingBytes: 0 })
 	} satisfies NativeAPIs;
 });

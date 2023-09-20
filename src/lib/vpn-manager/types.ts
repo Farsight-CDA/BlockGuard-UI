@@ -1,8 +1,15 @@
-export type ConnectionStatus =
+type ConnectionStatus =
 	| 'Connected'
 	| 'Connecting'
 	| 'Disconnecting'
+	| 'Offline'
 	| 'Failed';
+
+export interface VPNConnectionStatus {
+	status: ConnectionStatus;
+	incomingBytes: number;
+	outgoingBytes: number;
+}
 
 interface VPNConnection {
 	dseq: number;
