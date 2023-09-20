@@ -9,6 +9,7 @@
 </script>
 
 <script lang="ts">
+	import LoadingSpinner from '$lib/components/LoadingSpinner.svelte';
 	import { createEventDispatcher } from 'svelte';
 
 	export let name: string;
@@ -24,7 +25,9 @@
 	}
 </script>
 
-<div class="flex flex-col gap-1 justify-center items-center bg-neutral-900 rounded-md p-2">
+<div
+	class="flex flex-col gap-1 justify-center items-center bg-neutral-900 rounded-md p-2"
+>
 	<button
 		class="w-5/6 aspect-square rounded-full flex justify-center items-center"
 		on:click={triggerForwardClick}
@@ -36,7 +39,9 @@
 		class:bg-green-500={status == StatusLampStatus.Ready}
 		class:bg-red-400={status == StatusLampStatus.ActionRequired}
 	>
-		{#if value != null}
+		{#if status == StatusLampStatus.Loading}
+			<LoadingSpinner></LoadingSpinner>
+		{:else if value != null}
 			<p>{value}</p>
 		{/if}
 	</button>
