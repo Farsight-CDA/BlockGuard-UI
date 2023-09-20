@@ -108,8 +108,7 @@
 		name="Certificate"
 		status={certificateStatus}
 		on:click={triggerUpdateCertificate}
-		clickable={true ||
-			(certificateStatus != StatusLampStatus.Ready &&
-				!certificationCreationPending)}
+		clickable={certificateStatus != StatusLampStatus.Ready &&
+			!certificationCreationPending}
 	/>
 </div>
