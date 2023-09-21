@@ -65,19 +65,18 @@
 		}
 	}
 
-	let count = 0;
-	let configuration = false;
+	let isConfirmed = false;
+	let showConfirmation = false;
 
 	async function logout() {
-		console.log('div');
-		configuration = true;
-		if (count > 0) {
+		showConfirmation = true;
+		if (isConfirmed) {
 			sidebarTranslate = 0;
 			await goto('/setup');
 			await wallet.initialize();
 		}
 		setTimeout(() => {
-			count++;
+			isConfirmed = true;
 		}, 1000);
 	}
 </script>
@@ -127,12 +126,9 @@
 		>
 			{#if $wallet != null}
 				<button on:click={logout} class="bg-red-600 p-3 rounded-md"
-					>{configuration ? 'are you sure?' : 'log out'}</button
+					>{showConfirmation ? 'You sure?' : 'Log Out'}</button
 				>
 			{/if}
-			<button on:click={logout} class="bg-red-600 p-3 rounded-md"
-				>{configuration ? 'are you sure?' : 'log out'}</button
-			>
 		</div>
 	{/if}
 </div>
