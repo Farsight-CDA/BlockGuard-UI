@@ -9,7 +9,7 @@ import {
 } from '$lib/types/types';
 import { base64ToUInt, retry } from '$lib/utils/utils';
 import { DirectSecp256k1HdWallet } from '@cosmjs/proto-signing';
-import { MsgCreateCertificate } from '@playwo/akashjs/build/protobuf/akash/cert/v1beta1/cert';
+import { MsgCreateCertificate } from '@playwo/akashjs/build/protobuf/akash/cert/v1beta3/cert';
 import { Deployment_State } from '@playwo/akashjs/build/protobuf/akash/deployment/v1beta3/deployment';
 import {
 	MsgCloseDeployment,
