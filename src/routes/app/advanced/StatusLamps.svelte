@@ -1,8 +1,8 @@
 <script lang="ts">
 	import type { VPNClientStatus } from '$lib/native-api/native-api';
-	import { useVPNClientStatus } from '$lib/vpn-manager/client-status';
-	import type { VPNConnectionInfo } from '$lib/vpn-manager/types';
-	import { useVPNConnection } from '$lib/vpn-manager/vpn-connection';
+	import { useVPNClientStatus } from '$lib/vpn/client-status';
+	import type { VPNConnectionInfo } from '$lib/vpn/types';
+	import { useVPNConnection } from '$lib/vpn/vpn-connection';
 	import type { CertificateInfo } from '$lib/wallet/types';
 	import { useRequiredWallet } from '$lib/wallet/wallet';
 	import { createCertificate } from '@playwo/akashjs/build/certificates';

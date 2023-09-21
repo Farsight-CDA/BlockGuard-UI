@@ -1,3 +1,4 @@
+import { GLOBAL_CONFIG } from '$lib/configuration/configuration';
 import { NATIVE_API } from '$lib/native-api/native-api';
 import {
 	DeploymentBid,
@@ -43,12 +44,11 @@ import type {
 } from '@playwo/akashjs/node_modules/@cosmjs/stargate';
 import { toBase64 } from 'pvutils';
 import { Semaphore } from 'semaphore-promise';
-import { writable, type Writable } from 'svelte/store';
+import { get, writable, type Unsubscriber, type Writable } from 'svelte/store';
 import type { CertificateInfo, Wallet } from './types';
 
 interface StoredWallet {
 	mnemonics: string;
-	rpcEndpoint: string;
 	certificate: string | null;
 }
 
@@ -56,52 +56,55 @@ const GAS_PRICE = 2500 / 100000;
 
 export class CosmJSWallet implements Wallet {
 	private wallet: DirectSecp256k1HdWallet;
-	private address: string;
+	private address: string = null!;
+
+	private msgClient: SigningStargateClient = null!;
+	private queryClient: ProtobufRpcClient = null!;
 	private rpcUrl: string;
 
-	private msgClient: SigningStargateClient;
-	private queryClient: ProtobufRpcClient;
-
-	private initialized: boolean;
-	private refreshTimeout: NodeJS.Timeout;
-
-	public certificate: Writable<CertificateInfo | null>;
+	public certificate: Writable<CertificateInfo | null> =
+		writable<CertificateInfo | null>(null);
 	private _certificate: CertificateInfo | null;
-	public balance: Writable<number>;
+	public balance: Writable<number> = writable(0);
 
-	public deployments: Writable<DeploymentDetails[]>;
-	public leases: Writable<LeaseDetails[]>;
+	public deployments: Writable<DeploymentDetails[]> = writable();
+	public leases: Writable<LeaseDetails[]> = writable();
 
-	private blockTimestampCache: Map<number, Date>;
-	private providerDetailsCache: Map<string, ProviderDetails>;
+	private blockTimestampCache: Map<number, Date> = new Map();
+	private providerDetailsCache: Map<string, ProviderDetails> = new Map();
 
-	private txSemaphore: Semaphore;
+	private txSemaphore: Semaphore = new Semaphore(1);
+
+	private initialized: boolean = false;
+	private refreshTimeout: NodeJS.Timeout = setInterval(
+		this.refresh.bind(this),
+		3000
+	);
+	private configUnsubscriber: Unsubscriber;
 
 	constructor(
 		wallet: DirectSecp256k1HdWallet,
-		rpcUrl: string,
 		certificate: CertificateInfo | null
 	) {
 		this.wallet = wallet;
-		this.address = null!;
-		this.rpcUrl = rpcUrl;
-
-		this.msgClient = null!;
-		this.queryClient = null!;
-		this.initialized = false;
 
 		this._certificate = certificate;
-		this.certificate = writable<CertificateInfo | null>(certificate);
-		this.balance = writable<number>(0);
-		this.deployments = writable<DeploymentDetails[]>([]);
-		this.leases = writable<LeaseDetails[]>([]);
+		this.certificate.set(certificate);
 
-		this.blockTimestampCache = new Map<number, Date>();
-		this.providerDetailsCache = new Map<string, ProviderDetails>();
+		const currentRPCUrl = get(GLOBAL_CONFIG)?.rpcUrl;
+		if (currentRPCUrl == null) {
+			throw Error('GLOBAL_CONFIG must be initialized before Wallet');
+		}
+		this.rpcUrl = currentRPCUrl;
 
-		this.txSemaphore = new Semaphore(1);
+		this.configUnsubscriber = GLOBAL_CONFIG.subscribe(async (config) => {
+			if (config == null) {
+				throw Error('GLOBAL_CONFIG must be initialized before Wallet');
+			}
 
-		this.refreshTimeout = setInterval(this.refresh.bind(this), 3000);
+			this.rpcUrl = config.rpcUrl;
+			await this.initializeClients();
+		});
 	}
 
 	//Getters
@@ -112,10 +115,6 @@ export class CosmJSWallet implements Wallet {
 
 	getMnemonic(): string {
 		return this.wallet.mnemonic;
-	}
-
-	getRPCUrl(): string {
-		return this.rpcUrl;
 	}
 
 	async getBlockTimestamp(height: number): Promise<Date> {
@@ -350,12 +349,14 @@ export class CosmJSWallet implements Wallet {
 
 	async initialize(): Promise<void> {
 		this.address = (await this.wallet.getAccounts())[0].address;
-
-		this.msgClient = await getMsgClient(this.rpcUrl, this.wallet);
-		this.queryClient = await getQueryClient(this.rpcUrl);
-
+		await this.initializeClients();
 		this.initialized = true;
 		await this.refresh();
+	}
+
+	async initializeClients() {
+		this.msgClient = await getMsgClient(this.rpcUrl, this.wallet);
+		this.queryClient = await getQueryClient(this.rpcUrl);
 	}
 
 	async refresh() {
@@ -377,6 +378,7 @@ export class CosmJSWallet implements Wallet {
 
 	dispose() {
 		clearInterval(this.refreshTimeout);
+		this.configUnsubscriber();
 	}
 
 	//Serialization
@@ -384,7 +386,6 @@ export class CosmJSWallet implements Wallet {
 	async serialize() {
 		const storedWallet = {
 			mnemonics: this.wallet.mnemonic,
-			rpcEndpoint: this.rpcUrl,
 			certificate:
 				this._certificate != null
 					? (JSON.stringify(this._certificate) as string)
@@ -408,11 +409,7 @@ export class CosmJSWallet implements Wallet {
 				? (JSON.parse(storedWallet.certificate) as CertificateInfo)
 				: null;
 
-		const cosmJsWallet = new CosmJSWallet(
-			hdWallet,
-			storedWallet.rpcEndpoint,
-			certificate
-		);
+		const cosmJsWallet = new CosmJSWallet(hdWallet, certificate);
 		await cosmJsWallet.initialize();
 		return cosmJsWallet;
 	}

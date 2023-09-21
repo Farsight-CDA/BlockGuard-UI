@@ -1,6 +1,6 @@
 <script lang="ts">
 	import type { ProviderLeaseStatus } from '$lib/types/types';
-	import { useVPNConnection } from '$lib/vpn-manager/vpn-connection';
+	import { useVPNConnection } from '$lib/vpn/vpn-connection';
 	import { useRequiredWallet } from '$lib/wallet/wallet';
 
 	export let dseq: number;

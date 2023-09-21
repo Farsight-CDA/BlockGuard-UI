@@ -3,6 +3,7 @@ import { writable } from 'svelte/store';
 
 export interface GlobalConfig {
 	useAdvancedMode: boolean;
+	rpcUrl: string;
 }
 
 const CONFIG_STORAGE_FILE = 'config.json';
@@ -23,5 +24,6 @@ export async function initializeGlobalConfig() {
 }
 
 const DEFAULT_GLOBAL_CONFIG = {
-	useAdvancedMode: true
+	useAdvancedMode: true,
+	rpcUrl: ''
 } satisfies GlobalConfig;

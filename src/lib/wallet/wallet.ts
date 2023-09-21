@@ -5,6 +5,7 @@ import { CosmJSWallet } from './cosmjs-wallet';
 
 //Necessary for type registrations!
 import type { Wallet } from './types';
+import { GLOBAL_CONFIG } from '$lib/configuration/configuration';
 
 const WALLET_STORAGE_FILE = 'wallet.json';
 
@@ -81,11 +82,7 @@ function createWalletStore() {
 		const hdWallet = await DirectSecp256k1HdWallet.fromMnemonic(mnemonic, {
 			prefix: 'akash'
 		});
-		const cosmJSWallet = new CosmJSWallet(
-			hdWallet,
-			'https://akash-rpc.polkachu.com:443',
-			null
-		);
+		const cosmJSWallet = new CosmJSWallet(hdWallet, null);
 		await cosmJSWallet.initialize();
 
 		set(cosmJSWallet);
