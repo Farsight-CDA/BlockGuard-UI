@@ -3,9 +3,9 @@
 	import Modal from '$lib/components/Modal.svelte';
 	import type { DeploymentBid } from '$lib/types/types';
 	import { useRequiredWallet } from '$lib/wallet/wallet';
+	import VpnSdlUrl from '$static/vpn-sdl.txt';
 	import { MsgCreateDeployment } from '@playwo/akashjs/build/protobuf/akash/deployment/v1beta3/deploymentmsg';
 	import { SDL } from '@playwo/akashjs/build/sdl';
-	import VpnSdlUrl from '@static/vpn-sdl.txt';
 	import { scale } from 'svelte/transition';
 
 	enum Progress {

@@ -8,7 +8,7 @@ const config = {
 	kit: {
 		adapter: adapter(),
 		alias: {
-			'@static/*': 'static/*'
+			'$static/*': 'static/*'
 		}
 	}
 };

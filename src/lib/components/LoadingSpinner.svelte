@@ -1,5 +1,5 @@
 <script lang="ts">
-	import Loader from '@static/loader.svg';
+	import Loader from '$static/loader.svg';
 
 	let clazz: string = '';
 	export { clazz as class };
