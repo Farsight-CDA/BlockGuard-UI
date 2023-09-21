@@ -5,27 +5,23 @@
 
 	var wallet = useOptionalWallet();
 
-	let sliderPosition;
-
-	export let isOpen: boolean;
-
-	let count = 0;
-	let configuration = false;
+	let isConfirmed = false;
+	let showConfirmation = false;
 
 	const dispatch = createEventDispatcher();
 
 	async function logout() {
-		if (count > 0) {
+		setTimeout(() => {
+			isConfirmed = true;
+		}, 1000);
+
+		showConfirmation = true;
+
+		if (isConfirmed) {
 			dispatch('close');
-			sliderPosition = 0;
-			isOpen = false;
 			await goto('/setup');
 			await wallet.clear();
 		}
-		configuration = true;
-		setTimeout(() => {
-			count++;
-		}, 1000);
 	}
 </script>
 
@@ -37,7 +33,7 @@
 	>
 		{#if $wallet != null}
 			<button on:click={() => logout()} class="bg-red-600 p-3 rounded-md"
-				>{configuration ? 'are you sure?' : 'log out'}</button
+				>{showConfirmation ? 'Are you sure?' : 'Log Out'}</button
 			>
 		{/if}
 	</div>
