@@ -24,7 +24,7 @@
 		try {
 			isCloseActionRunning[dseq] = true;
 			await $wallet.closeDeployment(dseq);
-		} catch (error) {
+		} finally {
 			isCloseActionRunning[dseq] = false;
 		}
 	}
