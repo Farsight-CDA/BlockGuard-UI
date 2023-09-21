@@ -1,8 +1,8 @@
 <script lang="ts">
-	import { NATIVE_API } from '$lib/native-api/native-api';
 	import type { ProviderLeaseStatus } from '$lib/types/types';
 	import { VPN_MANAGER } from '$lib/vpn-manager/vpn-manager';
-	import { type Wallet, WALLET } from '$lib/wallet/wallet';
+	import type { Wallet } from '$lib/wallet/types';
+	import { WALLET } from '$lib/wallet/wallet';
 
 	export let dseq: number;
 	export let createdAtHeight: number;

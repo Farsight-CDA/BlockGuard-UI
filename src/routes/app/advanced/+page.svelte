@@ -5,7 +5,6 @@
 	import type { DeploymentDetails, LeaseDetails } from '$lib/types/types';
 	import type { Writable } from 'svelte/store';
 	import ActiveLocationRow from './ActiveLocationRow.svelte';
-	import { VPN_MANAGER } from '$lib/vpn-manager/vpn-manager';
 	import DeadDeploymentTable from './DeadDeploymentTable.svelte';
 	import type { Wallet } from '$lib/wallet/types';
 
