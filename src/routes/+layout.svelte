@@ -6,7 +6,6 @@
 		initializeGlobalConfig
 	} from '$lib/configuration/configuration';
 	import { initializeNativeAPI } from '$lib/native-api/native-api';
-	import { initializeVPNConnectionStore } from '$lib/vpn/vpn-connection';
 	import { initializeWalletStore, useOptionalWallet } from '$lib/wallet/wallet';
 	import Gear from '$static/gear.svg';
 	import Logo from '$static/logo.webp';
@@ -22,7 +21,6 @@
 		const nativeApiWorks = await initializeNativeAPI();
 		const globalConfigWorks = await initializeGlobalConfig();
 		const walletWorks = await initializeWalletStore();
-		initializeVPNConnectionStore();
 
 		wallet = useOptionalWallet();
 
