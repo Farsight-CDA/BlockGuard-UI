@@ -26,7 +26,7 @@
 	} = {};
 
 	$: $leases.forEach((lease) => {
-		if (queryPromises[lease.dseq] != null) {
+		if (queryPromises[lease.dseq] == null) {
 			startLeaseQueries(lease);
 		}
 	});
