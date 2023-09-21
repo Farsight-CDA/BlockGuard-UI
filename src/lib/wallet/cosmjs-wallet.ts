@@ -42,6 +42,7 @@ import type {
 	SigningStargateClient
 } from '@playwo/akashjs/node_modules/@cosmjs/stargate';
 import { toBase64 } from 'pvutils';
+import { Semaphore } from 'semaphore-promise';
 import { writable, type Writable } from 'svelte/store';
 import type { CertificateInfo, Wallet } from './types';
 
@@ -74,6 +75,8 @@ export class CosmJSWallet implements Wallet {
 	private blockTimestampCache: Map<number, Date>;
 	private providerDetailsCache: Map<string, ProviderDetails>;
 
+	private txSemaphore: Semaphore;
+
 	constructor(
 		wallet: DirectSecp256k1HdWallet,
 		rpcUrl: string,
@@ -95,6 +98,8 @@ export class CosmJSWallet implements Wallet {
 
 		this.blockTimestampCache = new Map<number, Date>();
 		this.providerDetailsCache = new Map<string, ProviderDetails>();
+
+		this.txSemaphore = new Semaphore(1);
 
 		this.refreshTimeout = setInterval(this.refresh.bind(this), 3000);
 	}
@@ -164,7 +169,7 @@ export class CosmJSWallet implements Wallet {
 		const encodedCsr = base64ToUInt(toBase64(csr!));
 		const encdodedPublicKey = base64ToUInt(toBase64(publicKey!));
 
-		await this.sendTransaction(
+		await this.sendTx(
 			messages.MsgCreateCertificate,
 			MsgCreateCertificate.fromPartial({
 				owner: this.address,
@@ -175,11 +180,11 @@ export class CosmJSWallet implements Wallet {
 	}
 
 	async createDeplyoment(msg: MsgCreateDeployment): Promise<void> {
-		await this.sendTransaction(messages.MsgCreateDeployment, msg);
+		await this.sendTx(messages.MsgCreateDeployment, msg);
 	}
 
 	async closeDeployment(dseq: number): Promise<void> {
-		await this.sendTransaction(
+		await this.sendTx(
 			messages.MsgCloseDeployment,
 			MsgCloseDeployment.fromPartial({
 				id: {
@@ -196,7 +201,7 @@ export class CosmJSWallet implements Wallet {
 		oseq: number,
 		provider: string
 	): Promise<void> {
-		await this.sendTransaction(
+		await this.sendTx(
 			messages.MsgCreateLease,
 			MsgCreateLease.fromPartial({
 				bidId: {
@@ -300,7 +305,7 @@ export class CosmJSWallet implements Wallet {
 		return res.leases;
 	}
 
-	private async sendTransaction(
+	private async sendTx(
 		type: messages,
 		messageBody: any,
 		gasMultiplicator: number = 1.35
@@ -310,24 +315,35 @@ export class CosmJSWallet implements Wallet {
 			value: messageBody
 		};
 		const memo = 'BlockGuard';
-		const gas = Math.ceil(
-			gasMultiplicator *
-				(await this.msgClient.simulate(this.address, [message], memo))
-		);
-		await this.msgClient.signAndBroadcast(
-			this.address,
-			[message],
-			{
-				amount: [
-					{
-						denom: 'uakt',
-						amount: `${Math.ceil(GAS_PRICE * gas)}`
-					}
-				],
-				gas: `${gas}`
-			},
-			memo
-		);
+
+		await this.txSemaphore.acquire();
+
+		try {
+			const gas = Math.ceil(
+				gasMultiplicator *
+					(await this.msgClient.simulate(this.address, [message], memo))
+			);
+
+			await this.msgClient.signAndBroadcast(
+				this.address,
+				[message],
+				{
+					amount: [
+						{
+							denom: 'uakt',
+							amount: `${Math.ceil(GAS_PRICE * gas)}`
+						}
+					],
+					gas: `${gas}`
+				},
+				memo
+			);
+		} catch (error) {
+			console.error(`TX Failed: ${error}`);
+		} finally {
+			await new Promise((resolve) => setTimeout(resolve, 3000));
+			this.txSemaphore.release(1);
+		}
 	}
 
 	//Lifetime
@@ -360,7 +376,6 @@ export class CosmJSWallet implements Wallet {
 	}
 
 	dispose() {
-		console.log('Cleared - ' + this.refreshTimeout);
 		clearInterval(this.refreshTimeout);
 	}
 
