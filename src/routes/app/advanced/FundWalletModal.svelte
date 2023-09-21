@@ -8,8 +8,8 @@
 	export let open: () => Promise<void>;
 </script>
 
-<Modal bind:open
-	><div
+<Modal bind:open>
+	<div
 		class="flex flex-col items-center gap-4"
 		transition:scale={{ duration: 200, delay: 0 }}
 		on:introstart
@@ -19,5 +19,5 @@
 
 		<p>Send at least 5.5 AKT to</p>
 		<code class="p-2 bg-slate-600 rounded-md">{$wallet.getAddress()}</code>
-	</div></Modal
->
+	</div>
+</Modal>
