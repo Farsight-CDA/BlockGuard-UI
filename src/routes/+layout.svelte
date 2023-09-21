@@ -1,17 +1,19 @@
 <script lang="ts">
-	import { goto } from '$app/navigation';
-	import LoadingSpinner from '$lib/components/LoadingSpinner.svelte';
+	import { onMount } from 'svelte';
+	import '../app.css';
+	import Logo from '@static/logo.webp';
+	import Gear from '@static/gear.svg';
+	import { initializeNativeAPI } from '$lib/native-api/native-api';
+	import { initializeWalletStore, useOptionalWallet } from '$lib/wallet/wallet';
 	import {
 		GLOBAL_CONFIG,
 		initializeGlobalConfig
 	} from '$lib/configuration/configuration';
-	import { initializeNativeAPI } from '$lib/native-api/native-api';
+	import { goto } from '$app/navigation';
+	import LoadingSpinner from '$lib/components/LoadingSpinner.svelte';
 	import { initializeVPNConnectionStore } from '$lib/vpn-manager/vpn-connection';
-	import { initializeWalletStore } from '$lib/wallet/wallet';
-	import Gear from '@static/gear.svg';
-	import Logo from '@static/logo.webp';
-	import { onMount } from 'svelte';
-	import '../app.css';
+
+	var wallet = useOptionalWallet();
 
 	var initialized: boolean = false;
 
@@ -39,28 +41,95 @@
 			initialized = true;
 		}, 250);
 	});
+
+	const sidebarWith = 80;
+	let sidebarOpen = false;
+	let sidebarTranslate = 0;
+
+	function toggleSidebar() {
+		if (sidebarOpen == true) {
+			sidebarTranslate = 0;
+		} else if (sidebarOpen == false) {
+			sidebarTranslate = -sidebarWith;
+		}
+	}
+
+	function closeSidebar() {
+		if (sidebarOpen == true) {
+			sidebarTranslate = 0;
+			setTimeout(() => {
+				sidebarOpen = false;
+			}, 1000);
+		} else if (sidebarOpen == false) {
+			sidebarOpen = true;
+		}
+	}
+
+	let count = 0;
+	let configuration = false;
+
+	async function logout() {
+		console.log('div');
+		configuration = true;
+		if (count > 0) {
+			sidebarTranslate = 0;
+			await goto('/setup');
+			await wallet.initialize();
+		}
+		setTimeout(() => {
+			count++;
+		}, 1000);
+	}
 </script>
 
-<div class="flex flex-col h-full w-full">
-	<nav class="bg-gray-900 py-2 px-3 flex flex-row justify-between">
-		<div class="flex flex-row gap-3 items-center">
-			<img src={Logo} alt="" class="h-12" />
-			<h1 class="font-bold text-xl">BlockGuard</h1>
-		</div>
-
-		<button>
-			<img src={Gear} class="h-12 invert" alt="Settings" />
-		</button>
-	</nav>
-	<main
-		class="bg-black h-full overflow-y-auto overflow-x-hidden p-3 flex flex-col items-center"
+<div class="flex flex-row h-full w-full">
+	<!-- svelte-ignore a11y-click-events-have-key-events -->
+	<!-- svelte-ignore a11y-no-static-element-interactions -->
+	<div
+		class="flex flex-col h-full w-full z-10
+        transition-transform duration-1000 transform translate-x-0"
+		style={`transform: translateX(${sidebarTranslate}%)`}
+		on:click={closeSidebar}
 	>
-		{#if !initialized}
-			<div class="w-full h-full flex justify-center items-center">
-				<LoadingSpinner class="lg:w-1/12 w-1/6"></LoadingSpinner>
+		<nav
+			class={`bg-gray-900 py-2 px-3 flex flex-row justify-between ${
+				sidebarOpen == true ? 'rounded-tr-2xl' : ''
+			}`}
+		>
+			<div class="flex flex-row gap-3 items-center">
+				<img src={Logo} alt="" class="h-12" />
+				<h1 class="font-bold text-xl">BlockGuard</h1>
 			</div>
-		{:else}
-			<slot />
-		{/if}
-	</main>
+
+			<button on:click={toggleSidebar}>
+				<img src={Gear} class="h-12 invert" alt="Settings" />
+			</button>
+		</nav>
+		<main
+			class={`bg-black h-full overflow-y-auto overflow-x-hidden p-3 flex flex-col items-center ${
+				sidebarOpen == true ? 'rounded-br-2xl' : ''
+			}`}
+		>
+			{#if !initialized}
+				<div class="w-full h-full flex justify-center items-center">
+					<LoadingSpinner class="lg:w-1/12 w-1/6"></LoadingSpinner>
+				</div>
+			{:else}
+				<slot />
+			{/if}
+		</main>
+	</div>
+	{#if sidebarOpen}
+		<div
+			class="absolute top-0 right-0 flex flex-col h-full items-center pt-32 gap-5
+            rounded-l-2xl bg-gray-900"
+			style={`width: ${sidebarWith - 0.8}%`}
+		>
+			{#if $wallet != null}
+				<button on:click={logout} class="bg-red-600 p-3 rounded-md"
+					>{configuration ? 'are you sure?' : 'log out'}</button
+				>
+			{/if}
+		</div>
+	{/if}
 </div>
