@@ -11,7 +11,6 @@
 	} from '$lib/configuration/configuration';
 	import { goto } from '$app/navigation';
 	import LoadingSpinner from '$lib/components/LoadingSpinner.svelte';
-	import { VPN_MANAGER } from '$lib/vpn-manager/vpn-manager';
 
 	var initialized: boolean = false;
 
@@ -37,11 +36,6 @@
 
 			initialized = true;
 		}, 250);
-	});
-
-	onDestroy(() => {
-		WALLET.dispose();
-		VPN_MANAGER.dispose();
 	});
 </script>
 

@@ -5,14 +5,17 @@ import type { VPNConnectionInfo } from './types';
 const VPN_USERNAME = 'admin';
 const VPN_PASSWORD = 'notreallyasecretpassword';
 
-export const VPN_MANAGER = useVPNConnectionManager();
-
-export function useVPNConnectionManager() {
-	const { subscribe, update, set } = writable<VPNConnectionInfo>({
-		isActive: false
-	});
-
-	const refreshInterval = setInterval(refreshStatus, 3000);
+export function useVPNConnection() {
+	const { subscribe, update, set } = writable<VPNConnectionInfo>(
+		{
+			isActive: false
+		},
+		() => {
+			refreshStatus();
+			const refreshInterval = setInterval(refreshStatus, 3000);
+			return () => clearInterval(refreshInterval);
+		}
+	);
 
 	async function refreshStatus() {
 		const connectionStatus = await NATIVE_API.getConnectionStatus();
@@ -34,10 +37,6 @@ export function useVPNConnectionManager() {
 		) {
 			await closeVPNConnection();
 		}
-	}
-
-	function dispose() {
-		clearInterval(refreshInterval);
 	}
 
 	async function connectVPNToLease(dseq: number, host: string) {
@@ -64,18 +63,11 @@ export function useVPNConnectionManager() {
 					: null!
 			};
 		});
-
-		await NATIVE_API.disconnectVPN();
-
-		set({
-			isActive: false
-		});
 	}
 
 	return {
 		subscribe,
 		connectVPNToLease,
-		closeVPNConnection,
-		dispose
+		closeVPNConnection
 	};
 }

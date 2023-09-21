@@ -13,7 +13,10 @@ const WALLET_STORAGE_FILE = 'wallet.json';
 export const WALLET = useWallet();
 
 function useWallet() {
-	const { subscribe, update, set } = writable<Wallet | null>(null);
+	const { subscribe, update, set } = writable<Wallet | null>(
+		null,
+		() => () => dispose()
+	);
 	var wallet: CosmJSWallet | null = null;
 
 	async function initialize() {

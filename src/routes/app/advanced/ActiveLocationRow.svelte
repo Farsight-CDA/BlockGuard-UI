@@ -1,6 +1,6 @@
 <script lang="ts">
 	import type { ProviderLeaseStatus } from '$lib/types/types';
-	import { VPN_MANAGER } from '$lib/vpn-manager/vpn-manager';
+	import { useVPNConnection } from '$lib/vpn-manager/vpn-connection';
 	import type { Wallet } from '$lib/wallet/types';
 	import { WALLET } from '$lib/wallet/wallet';
 
@@ -14,6 +14,8 @@
 	var wallet: Wallet;
 	$: wallet = $WALLET!;
 
+	const vpnConnection = useVPNConnection();
+
 	async function triggerCloseDeployment(dseq: number) {
 		await wallet.closeDeployment(dseq);
 	}
@@ -22,7 +24,7 @@
 		dseq: number,
 		leaseStatus: ProviderLeaseStatus
 	) {
-		await VPN_MANAGER.connectVPNToLease(
+		await vpnConnection.connectVPNToLease(
 			dseq,
 			`${leaseStatus.forwardedPorts[0].host}:${leaseStatus.forwardedPorts[0].externalPort}`
 		);

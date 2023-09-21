@@ -2,10 +2,13 @@
 	import { createCertificate } from '@playwo/akashjs/build/certificates';
 	import StatusLamp, { StatusLampStatus } from './StatusLamp.svelte';
 	import { onDestroy } from 'svelte';
-	import { NATIVE_API } from '$lib/native-api/native-api';
 	import FundWalletModal from './FundWalletModal.svelte';
 	import type { CertificateInfo, Wallet } from '$lib/wallet/types';
 	import { WALLET } from '$lib/wallet/wallet';
+	import { useVPNClientStatus } from '$lib/vpn-manager/client-status';
+	import type { VPNClientStatus } from '$lib/native-api/native-api';
+
+	const vpnClientStatus = useVPNClientStatus();
 
 	var wallet: Wallet = $WALLET!;
 	$: wallet = $WALLET!;
@@ -16,33 +19,29 @@
 	const READY_BALANCE = 10;
 	const WARNING_BALANCE = 5.1;
 
-	const refreshInterval = setInterval(
-		async () => (vpnClientStatus = await getVPNClientStatus()),
-		4000
-	);
+	$: vpnClientLampStatus = getVPNClientStatus($vpnClientStatus);
+	var vpnClientLampStatus = StatusLampStatus.Loading;
 
-	var vpnClientStatus = StatusLampStatus.Loading;
-
-	$: fundsStatus = getFundsStatus($balance);
-	var fundsStatus = getFundsStatus($balance);
+	$: fundsLampStatus = getFundsStatus($balance);
+	var fundsLampStatus = getFundsStatus($balance);
 
 	var certificationCreationPending: boolean = false;
 
-	$: certificateStatus = getCertificateStatus(
+	$: certificateLampStatus = getCertificateStatus(
 		$certificate,
 		certificationCreationPending
 	);
-	var certificateStatus = getCertificateStatus(
+	var certificateLampStatus = getCertificateStatus(
 		$certificate,
 		certificationCreationPending
 	);
 
 	let openFundWalletModal: () => Promise<void>;
 
-	async function getVPNClientStatus() {
-		const status = await NATIVE_API.vpnClientStatus();
-
+	function getVPNClientStatus(status: VPNClientStatus | null) {
 		switch (status) {
+			case null:
+				return StatusLampStatus.Loading;
 			case 'Offline':
 				return StatusLampStatus.Error;
 			case 'Running':
@@ -85,28 +84,24 @@
 			certificationCreationPending = false;
 		}
 	}
-
-	onDestroy(() => {
-		clearInterval(refreshInterval);
-	});
 </script>
 
 <FundWalletModal bind:open={openFundWalletModal}></FundWalletModal>
 
 <div class="grid grid-cols-2 sm:grid-cols-3 gap-6 auto-rows-fr">
-	<StatusLamp name="VPN Client" status={vpnClientStatus} />
+	<StatusLamp name="VPN Client" status={vpnClientLampStatus} />
 	<StatusLamp
 		name="Funds"
-		status={fundsStatus}
+		status={fundsLampStatus}
 		value={Math.round(100 * $balance) / 100}
 		on:click={openFundWalletModal}
 		clickable={true}
 	/>
 	<StatusLamp
 		name="Certificate"
-		status={certificateStatus}
+		status={certificateLampStatus}
 		on:click={triggerUpdateCertificate}
-		clickable={certificateStatus != StatusLampStatus.Ready &&
+		clickable={certificateLampStatus != StatusLampStatus.Ready &&
 			!certificationCreationPending}
 	/>
 </div>

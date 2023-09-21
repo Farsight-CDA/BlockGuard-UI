@@ -15,7 +15,7 @@ export interface NativeAPIs {
 		csr: string,
 		privateKey: string
 	): Promise<T>;
-	vpnClientStatus(): Promise<VPNClientStatus>;
+	getVPNClientStatus(): Promise<VPNClientStatus>;
 	connectVPN(host: string, username: string, password: string): Promise<void>;
 	disconnectVPN(): Promise<void>;
 	getConnectionStatus(): Promise<VPNConnectionStatus>;
@@ -42,7 +42,7 @@ setNativeAPIInitializer(async () => {
 			Promise.resolve(localStorage.setItem(path, content)),
 		clearFile: (path) => Promise.resolve(localStorage.removeItem(path)),
 		mtlsFetch: (method, url, body, csr, privateKey) => Promise.resolve(null!),
-		vpnClientStatus: () => Promise.resolve('Running'),
+		getVPNClientStatus: () => Promise.resolve('Running'),
 		connectVPN: (host, username, password) => Promise.resolve(),
 		disconnectVPN: () => Promise.resolve(),
 		getConnectionStatus: () =>
