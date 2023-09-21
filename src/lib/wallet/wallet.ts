@@ -5,7 +5,6 @@ import { CosmJSWallet } from './cosmjs-wallet';
 
 //Necessary for type registrations!
 import type { Wallet } from './types';
-import { GLOBAL_CONFIG } from '$lib/configuration/configuration';
 
 const WALLET_STORAGE_FILE = 'wallet.json';
 

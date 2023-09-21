@@ -25,5 +25,5 @@ export async function initializeGlobalConfig() {
 
 const DEFAULT_GLOBAL_CONFIG = {
 	useAdvancedMode: true,
-	rpcUrl: ''
+	rpcUrl: 'https://rpc-akash.ecostake.com:443'
 } satisfies GlobalConfig;
