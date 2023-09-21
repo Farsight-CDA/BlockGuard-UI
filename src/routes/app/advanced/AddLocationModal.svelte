@@ -21,7 +21,9 @@
 		//Wait for manifest submission
 		SubmittingManifest,
 		//No more action needed, close asap
-		Completed
+		Completed,
+
+		Cancelling
 	}
 
 	var sdl: SDL = null!;
@@ -60,12 +62,13 @@
 		progress = Progress.AwaitBids;
 	};
 
-	function close() {
+	async function close() {
 		switch (progress) {
 			case Progress.Choosing:
 			case Progress.SubmittingManifest:
 				try {
-					$wallet.closeDeployment(dseq);
+					progress = Progress.Cancelling;
+					await $wallet.closeDeployment(dseq);
 				} catch (error) {}
 			case Progress.None:
 			case Progress.Completed:
@@ -118,7 +121,7 @@
 		await new Promise((resolve) => setTimeout(resolve, 6500));
 		await $wallet.submitManifest(dseq, bid.provider, sdl);
 		progress = Progress.Completed;
-		close();
+		await close();
 	}
 
 	function dialogClickHandler(e: MouseEvent) {
@@ -127,8 +130,8 @@
 		}
 	}
 
-	function onDialogClose(e: Event) {
-		if (close()) {
+	async function onDialogClose(e: Event) {
+		if (await close()) {
 			return;
 		}
 
@@ -168,6 +171,9 @@
 				<LoadingSpinner></LoadingSpinner>
 			{:else if progress == Progress.SubmittingManifest}
 				<p>Submitting Manifest...</p>
+				<LoadingSpinner></LoadingSpinner>
+			{:else if progress == Progress.Cancelling}
+				<p>Closing Deployment...</p>
 				<LoadingSpinner></LoadingSpinner>
 			{:else if (progress = Progress.Choosing)}
 				<p>Choose your provider</p>
