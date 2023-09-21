@@ -15,8 +15,8 @@
 	}
 </script>
 
-<Modal bind:open
-	><div
+<Modal bind:open>
+	<div
 		class="flex flex-col items-center gap-4"
 		transition:scale={{ duration: 200, delay: 0 }}
 		on:introstart
@@ -27,5 +27,5 @@
 		<button on:click={copyToClipboard} class="bg-green-600 p-3 rounded-md"
 			>{mnemonics}</button
 		>
-	</div></Modal
->
+	</div>
+</Modal>
