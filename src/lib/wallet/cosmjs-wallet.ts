@@ -1,5 +1,3 @@
-import type { CertificateInfo, Wallet } from './wallet';
-
 import { DirectSecp256k1HdWallet } from '@cosmjs/proto-signing';
 import type {
 	SigningStargateClient,
@@ -45,6 +43,7 @@ import {
 } from '@playwo/akashjs/build/protobuf/akash/market/v1beta3/lease';
 import type { SDL } from '@playwo/akashjs/build/sdl';
 import { NATIVE_API } from '$lib/native-api/native-api';
+import type { CertificateInfo, Wallet } from './types';
 
 interface StoredWallet {
 	mnemonics: string;

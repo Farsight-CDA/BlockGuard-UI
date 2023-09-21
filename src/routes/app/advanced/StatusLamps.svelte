@@ -1,15 +1,11 @@
 <script lang="ts">
-	import {
-		WALLET,
-		setNewCertificate,
-		type Wallet,
-		type CertificateInfo
-	} from '$lib/wallet/wallet';
 	import { createCertificate } from '@playwo/akashjs/build/certificates';
 	import StatusLamp, { StatusLampStatus } from './StatusLamp.svelte';
 	import { onDestroy } from 'svelte';
 	import { NATIVE_API } from '$lib/native-api/native-api';
 	import FundWalletModal from './FundWalletModal.svelte';
+	import type { CertificateInfo, Wallet } from '$lib/wallet/types';
+	import { WALLET } from '$lib/wallet/wallet';
 
 	var wallet: Wallet = $WALLET!;
 	$: wallet = $WALLET!;
@@ -77,12 +73,14 @@
 		}
 	}
 
+	function getConnectionStatus() {}
+
 	async function triggerUpdateCertificate() {
 		try {
 			certificationCreationPending = true;
 			const cert = await createCertificate(wallet.getAddress());
 			await wallet.broadcastCertificate(cert.csr, cert.publicKey);
-			await setNewCertificate(cert.csr, cert.publicKey, cert.privateKey);
+			await WALLET.setCertificate(cert.csr, cert.publicKey, cert.privateKey);
 		} finally {
 			certificationCreationPending = false;
 		}

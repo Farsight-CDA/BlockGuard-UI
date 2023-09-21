@@ -1,7 +1,8 @@
 <script lang="ts">
 	import LoadingSpinner from '$lib/components/LoadingSpinner.svelte';
 	import type { DeploymentDetails, LeaseDetails } from '$lib/types/types';
-	import { WALLET, type Wallet } from '$lib/wallet/wallet';
+	import type { Wallet } from '$lib/wallet/types';
+	import { WALLET } from '$lib/wallet/wallet';
 	import type { Writable } from 'svelte/store';
 
 	var wallet: Wallet;

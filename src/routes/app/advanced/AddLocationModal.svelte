@@ -1,11 +1,12 @@
 <script lang="ts">
 	import { scale } from 'svelte/transition';
-	import { type Wallet, WALLET } from '$lib/wallet/wallet';
+	import { WALLET } from '$lib/wallet/wallet';
 	import { MsgCreateDeployment } from '@playwo/akashjs/build/protobuf/akash/deployment/v1beta3/deploymentmsg';
 	import VpnSdlUrl from '@static/vpn-sdl.txt';
 	import { SDL } from '@playwo/akashjs/build/sdl';
 	import type { DeploymentBid } from '$lib/types/types';
 	import LoadingSpinner from '$lib/components/LoadingSpinner.svelte';
+	import type { Wallet } from '$lib/wallet/types';
 
 	enum Progress {
 		None,
@@ -203,7 +204,9 @@
 											<p>UP: {details.networkUpload}</p>
 										</td>
 										<td>
-											<button on:click={() => triggerAcceptBid(bid)}> Select </button>
+											<button on:click={() => triggerAcceptBid(bid)}>
+												Select
+											</button>
 										</td>
 									</tr>
 								{/await}

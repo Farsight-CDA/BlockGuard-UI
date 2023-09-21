@@ -4,7 +4,7 @@
 	import Logo from '@static/logo.webp';
 	import Gear from '@static/gear.svg';
 	import { initializeNativeAPI } from '$lib/native-api/native-api';
-	import { WALLET, disposeWallet, initializeWallet } from '$lib/wallet/wallet';
+	import { WALLET } from '$lib/wallet/wallet';
 	import {
 		GLOBAL_CONFIG,
 		initializeGlobalConfig
@@ -18,7 +18,7 @@
 	onMount(async () => {
 		const nativeApiWorks = await initializeNativeAPI();
 		const globalConfigWorks = await initializeGlobalConfig();
-		const walletWorks = await initializeWallet();
+		const walletWorks = await WALLET.initialize();
 
 		setTimeout(async () => {
 			if (!nativeApiWorks) {
@@ -40,7 +40,7 @@
 	});
 
 	onDestroy(() => {
-		disposeWallet();
+		WALLET.dispose();
 		VPN_MANAGER.dispose();
 	});
 </script>

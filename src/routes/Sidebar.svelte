@@ -1,11 +1,6 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
-	import {
-		WALLET,
-		deleteCurrentWallet,
-		disposeWallet,
-		initializeWallet
-	} from '$lib/wallet/wallet';
+	import { WALLET } from '$lib/wallet/wallet';
 	import { createEventDispatcher } from 'svelte';
 
 	let sliderPosition;
@@ -23,7 +18,7 @@
 			sliderPosition = 0;
 			isOpen = false;
 			await goto('/setup');
-			await deleteCurrentWallet();
+			await WALLET.clear();
 		}
 		configuration = true;
 		setTimeout(() => {

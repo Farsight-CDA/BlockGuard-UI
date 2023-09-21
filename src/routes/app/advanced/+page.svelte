@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { WALLET, type Wallet } from '$lib/wallet/wallet';
+	import { WALLET } from '$lib/wallet/wallet';
 	import AddLocationModal from './AddLocationModal.svelte';
 	import StatusLamps from './StatusLamps.svelte';
 	import type { DeploymentDetails, LeaseDetails } from '$lib/types/types';
@@ -7,6 +7,7 @@
 	import ActiveLocationRow from './ActiveLocationRow.svelte';
 	import { VPN_MANAGER } from '$lib/vpn-manager/vpn-manager';
 	import DeadDeploymentTable from './DeadDeploymentTable.svelte';
+	import type { Wallet } from '$lib/wallet/types';
 
 	var wallet: Wallet;
 	$: wallet = $WALLET!;
