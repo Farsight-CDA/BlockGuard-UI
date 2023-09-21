@@ -316,7 +316,7 @@ export class CosmJSWallet implements Wallet {
 		};
 		const memo = 'BlockGuard';
 
-		await this.txSemaphore.acquire();
+		const release = await this.txSemaphore.acquire();
 
 		try {
 			const gas = Math.ceil(
@@ -342,7 +342,7 @@ export class CosmJSWallet implements Wallet {
 			console.error(`TX Failed: ${error}`);
 		} finally {
 			await new Promise((resolve) => setTimeout(resolve, 3000));
-			this.txSemaphore.release(1);
+			release();
 		}
 	}
 
