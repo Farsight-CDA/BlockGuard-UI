@@ -8,7 +8,6 @@
 	import { useVPNConnection } from '$lib/vpn/vpn-connection';
 	import { useRequiredWallet } from '$lib/wallet/wallet';
 	import RefreshIcon from '$static/refresh.svg';
-	import { onMount } from 'svelte';
 	import type { Writable } from 'svelte/store';
 
 	var wallet = useRequiredWallet();
@@ -26,14 +25,18 @@
 			| undefined;
 	} = {};
 
-	onMount(() => {
-		$leases.forEach((lease) => {
-			queryPromises[lease.dseq] = {
-				providerDetailsQuery: $wallet.getProviderDetails(lease.provider),
-				statusQuery: queryProviderLeaseStatus(lease)
-			};
-		});
+	$: $leases.forEach((lease) => {
+		if (queryPromises[lease.dseq] != null) {
+			startLeaseQueries(lease);
+		}
 	});
+
+	function startLeaseQueries(lease: LeaseDetails) {
+		queryPromises[lease.dseq] = {
+			providerDetailsQuery: $wallet.getProviderDetails(lease.provider),
+			statusQuery: queryProviderLeaseStatus(lease)
+		};
+	}
 
 	function queryProviderLeaseStatus(lease: LeaseDetails) {
 		return $wallet.getProviderLeaseStatus(
