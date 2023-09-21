@@ -16,25 +16,28 @@
 	var leases: Writable<LeaseDetails[]>;
 	$: leases = $wallet.leases;
 
-	const queryPromises: {
+	const leasePromises: {
 		[key: number]:
 			| {
 					providerDetailsQuery: Promise<ProviderDetails>;
 					statusQuery: Promise<ProviderLeaseStatus>;
+					closeDeployment: Promise<void> | null;
 			  }
 			| undefined;
 	} = {};
+	var connectionPromiseRunning: boolean = false;
 
 	$: $leases.forEach((lease) => {
-		if (queryPromises[lease.dseq] == null) {
+		if (leasePromises[lease.dseq] == null) {
 			startLeaseQueries(lease);
 		}
 	});
 
 	function startLeaseQueries(lease: LeaseDetails) {
-		queryPromises[lease.dseq] = {
+		leasePromises[lease.dseq] = {
 			providerDetailsQuery: $wallet.getProviderDetails(lease.provider),
-			statusQuery: queryProviderLeaseStatus(lease)
+			statusQuery: queryProviderLeaseStatus(lease),
+			closeDeployment: null
 		};
 	}
 
@@ -48,24 +51,49 @@
 	}
 
 	function triggerRefreshProviderStatus(lease: LeaseDetails) {
-		queryPromises[lease.dseq]!.statusQuery = queryProviderLeaseStatus(lease);
+		leasePromises[lease.dseq]!.statusQuery = queryProviderLeaseStatus(lease);
 	}
 
 	async function triggerCloseDeployment(lease: LeaseDetails) {
-		await $wallet.closeDeployment(lease.dseq);
+		if (leasePromises[lease.dseq]?.closeDeployment != null) {
+			return;
+		}
+
+		leasePromises[lease.dseq]!.closeDeployment = $wallet.closeDeployment(
+			lease.dseq
+		);
+		await leasePromises[lease.dseq]!.closeDeployment;
 	}
 
 	async function triggerConnectVPN(lease: LeaseDetails) {
-		const leaseStatus = await queryPromises[lease.dseq]!.statusQuery!;
+		if (connectionPromiseRunning) {
+			return;
+		}
+		connectionPromiseRunning = true;
 
-		await vpnConnection.connectVPNToLease(
-			lease.dseq,
-			`${leaseStatus.forwardedPorts[0].host}:${leaseStatus.forwardedPorts[0].externalPort}`
-		);
+		try {
+			const leaseStatus = await leasePromises[lease.dseq]!.statusQuery!;
+
+			await vpnConnection.connectVPNToLease(
+				lease.dseq,
+				`${leaseStatus.forwardedPorts[0].host}:${leaseStatus.forwardedPorts[0].externalPort}`
+			);
+		} finally {
+			connectionPromiseRunning = false;
+		}
 	}
 
 	async function triggerDisconnectVPN() {
-		await vpnConnection.closeVPNConnection();
+		if (connectionPromiseRunning) {
+			return;
+		}
+		connectionPromiseRunning = true;
+
+		try {
+			await vpnConnection.closeVPNConnection();
+		} finally {
+			connectionPromiseRunning = false;
+		}
 	}
 </script>
 
@@ -81,14 +109,14 @@
 		{#each $leases as lease}
 			<tr>
 				<td>
-					{#await queryPromises[lease.dseq]?.providerDetailsQuery ?? new Promise( () => {} )}
+					{#await leasePromises[lease.dseq]?.providerDetailsQuery ?? new Promise( () => {} )}
 						<LoadingSpinner></LoadingSpinner>
 					{:then providerDetails}
 						{providerDetails.region}
 					{/await}
 				</td>
 				<td class="flex flex-row justify-around">
-					{#await queryPromises[lease.dseq]?.statusQuery ?? new Promise( () => {} )}
+					{#await leasePromises[lease.dseq]?.statusQuery ?? new Promise( () => {} )}
 						<LoadingSpinner></LoadingSpinner>
 					{:then providerLeaseStatus}
 						{#if providerLeaseStatus.forwardedPorts.length == 1}
@@ -108,19 +136,28 @@
 					{#if $vpnConnection.isActive && $vpnConnection.connection.dseq == lease.dseq}
 						<button
 							class="bg-yellow-600 px-2 py-1 rounded-md"
+							disabled={connectionPromiseRunning}
 							on:click={triggerDisconnectVPN}>Disconnect</button
 						>
 					{:else if !$vpnConnection.isActive}
 						<button
 							class="bg-green-800 px-2 py-1 rounded-md"
+							disabled={connectionPromiseRunning}
 							on:click={() => triggerConnectVPN(lease)}>Connect</button
 						>
 					{/if}
 
 					<button
 						class="bg-red-800 px-2 py-1 rounded-md"
-						on:click={() => triggerCloseDeployment(lease)}>Close</button
+						disabled={leasePromises[lease.dseq]?.closeDeployment != null}
+						on:click={() => triggerCloseDeployment(lease)}
 					>
+						{#if leasePromises[lease.dseq]?.closeDeployment != null}
+							<LoadingSpinner></LoadingSpinner>
+						{:else}
+							Close
+						{/if}
+					</button>
 				</td>
 			</tr>
 		{/each}
