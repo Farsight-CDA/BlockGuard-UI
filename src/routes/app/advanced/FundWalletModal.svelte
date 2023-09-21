@@ -26,7 +26,7 @@
 <!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
 <dialog
 	bind:this={dialogElement}
-	class="p-4 shadow-2xl rounded-lg bg-slate-900"
+	class="p-4 shadow-2xl rounded-lg bg-slate-900 backdrop:backdrop-blur-sm"
 	on:click={dialogClickHandler}
 	on:keydown={() => {}}
 >
