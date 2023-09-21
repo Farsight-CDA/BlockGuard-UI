@@ -8,6 +8,30 @@ export function base64ToUInt(base64: string) {
 	return bytes;
 }
 
+const SECOND = 1000;
+const MINUTE = 60 * SECOND;
+const HOUR = 60 * MINUTE;
+const DAY = 24 * HOUR;
+export function toTimespanString(milliseconds: number) {
+	if (milliseconds < MINUTE) {
+		return `${Math.round(milliseconds / SECOND)} sec${
+			milliseconds >= 2 * SECOND ? 's' : ''
+		}`;
+	} else if (milliseconds < HOUR) {
+		return `${Math.round(milliseconds / MINUTE)} min${
+			milliseconds >= 2 * MINUTE ? 's' : ''
+		}`;
+	} else if (milliseconds < DAY) {
+		return `${Math.round(milliseconds / HOUR)} hour${
+			milliseconds >= 2 * HOUR ? 's' : ''
+		}`;
+	} else {
+		return `${Math.round(milliseconds / DAY)} day${
+			milliseconds >= 2 * DAY ? 's' : ''
+		}`;
+	}
+}
+
 type AsyncFunction = (...params: any[]) => Promise<any>;
 type ErrorHandler = (e: any) => void;
 

@@ -11,9 +11,13 @@ export function useVPNConnection() {
 			isActive: false
 		},
 		() => {
+			console.log('NEW CONNECTIONSTATUS');
 			refreshStatus();
 			const refreshInterval = setInterval(refreshStatus, 3000);
-			return () => clearInterval(refreshInterval);
+			return () => {
+				clearInterval(refreshInterval);
+				console.log('KILLED CONNECTIONSTATUS');
+			};
 		}
 	);
 

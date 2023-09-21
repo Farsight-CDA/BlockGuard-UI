@@ -1,7 +1,6 @@
 <script lang="ts">
 	import { createCertificate } from '@playwo/akashjs/build/certificates';
 	import StatusLamp, { StatusLampStatus } from './StatusLamp.svelte';
-	import { onDestroy } from 'svelte';
 	import FundWalletModal from './FundWalletModal.svelte';
 	import type { CertificateInfo, Wallet } from '$lib/wallet/types';
 	import { WALLET } from '$lib/wallet/wallet';
@@ -71,8 +70,6 @@
 			return StatusLampStatus.Ready;
 		}
 	}
-
-	function getConnectionStatus() {}
 
 	async function triggerUpdateCertificate() {
 		try {

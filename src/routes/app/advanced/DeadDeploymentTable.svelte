@@ -1,6 +1,7 @@
 <script lang="ts">
 	import LoadingSpinner from '$lib/components/LoadingSpinner.svelte';
 	import type { DeploymentDetails, LeaseDetails } from '$lib/types/types';
+	import { toTimespanString } from '$lib/utils/utils';
 	import type { Wallet } from '$lib/wallet/types';
 	import { WALLET } from '$lib/wallet/wallet';
 	import type { Writable } from 'svelte/store';
@@ -31,22 +32,26 @@
 	}
 </script>
 
-<table>
-	<thead>
+<table class="text-center">
+	<thead class="border-b-2 border-white">
 		<tr>
-			<th> Age </th>
-			<th>Locked Funds</th>
-			<th> Actions </th>
+			<th class="pb-2"> Age </th>
+			<th class="pb-2">Locked Funds</th>
+			<th class="pb-2"> Actions </th>
 		</tr>
 	</thead>
-	<tbody>
+	<tbody class="before:content-[' '] before:block before:h-2">
 		{#each deadDeployments as deployment}
 			<tr>
 				<td>
 					{#await wallet.getBlockTimestamp(deployment.createdAtHeight)}
 						<LoadingSpinner></LoadingSpinner>
 					{:then blockTimestamp}
-						<p>{new Date().getTime() - blockTimestamp.getTime()} ms</p>
+						<p>
+							{toTimespanString(
+								new Date().getTime() - blockTimestamp.getTime()
+							)}
+						</p>
 					{/await}
 				</td>
 				<td> Not Implemented </td>
