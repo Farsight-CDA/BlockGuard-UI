@@ -1,6 +1,5 @@
 import type { VPNConnectionStatus } from '$lib/vpn-manager/types';
 import type { HttpMethod } from '@sveltejs/kit';
-import { writable } from 'svelte/store';
 
 export type VPNClientStatus = 'Offline' | 'Running';
 

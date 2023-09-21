@@ -1,16 +1,9 @@
 import { NATIVE_API } from '$lib/native-api/native-api';
-import {
-	writable,
-	type Invalidator,
-	type Subscriber,
-	type Writable
-} from 'svelte/store';
 import { DirectSecp256k1HdWallet } from '@cosmjs/proto-signing';
+import { writable, type Invalidator, type Subscriber } from 'svelte/store';
 import { CosmJSWallet } from './cosmjs-wallet';
 
 //Necessary for type registrations!
-import cert from '@playwo/akashjs/build/protobuf/akash/cert/v1beta3/cert';
-import deply from '@playwo/akashjs/build/protobuf/akash/deployment/v1beta3/deployment';
 import type { Wallet } from './types';
 
 const WALLET_STORAGE_FILE = 'wallet.json';

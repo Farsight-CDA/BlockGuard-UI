@@ -2,7 +2,6 @@
 	import LoadingSpinner from '$lib/components/LoadingSpinner.svelte';
 	import type { DeploymentDetails, LeaseDetails } from '$lib/types/types';
 	import { toTimespanString } from '$lib/utils/utils';
-	import type { Wallet } from '$lib/wallet/types';
 	import { useRequiredWallet } from '$lib/wallet/wallet';
 	import type { Writable } from 'svelte/store';
 

@@ -1,12 +1,11 @@
+import type { Attribute } from '@playwo/akashjs/build/protobuf/akash/base/v1beta3/attribute';
 import type { Deployment_State } from '@playwo/akashjs/build/protobuf/akash/deployment/v1beta3/deployment';
 import type { QueryDeploymentResponse } from '@playwo/akashjs/build/protobuf/akash/deployment/v1beta3/query';
 import type {
 	QueryBidResponse,
 	QueryLeaseResponse
 } from '@playwo/akashjs/build/protobuf/akash/market/v1beta3/query';
-import type { Bid_State } from '@playwo/akashjs/build/protobuf/akash/market/v1beta3/bid';
 import type { Provider } from '@playwo/akashjs/build/protobuf/akash/provider/v1beta3/provider';
-import type { Attribute } from '@playwo/akashjs/build/protobuf/akash/base/v1beta3/attribute';
 
 export interface DeploymentDetails {
 	dseq: number;

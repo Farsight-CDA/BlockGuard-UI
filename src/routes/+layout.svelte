@@ -1,19 +1,17 @@
 <script lang="ts">
-	import { onDestroy, onMount } from 'svelte';
-	import '../app.css';
-	import Logo from '@static/logo.webp';
-	import Gear from '@static/gear.svg';
-	import { initializeNativeAPI } from '$lib/native-api/native-api';
-	import { initializeWalletStore, useOptionalWallet } from '$lib/wallet/wallet';
+	import { goto } from '$app/navigation';
+	import LoadingSpinner from '$lib/components/LoadingSpinner.svelte';
 	import {
 		GLOBAL_CONFIG,
 		initializeGlobalConfig
 	} from '$lib/configuration/configuration';
-	import { goto } from '$app/navigation';
-	import LoadingSpinner from '$lib/components/LoadingSpinner.svelte';
+	import { initializeNativeAPI } from '$lib/native-api/native-api';
 	import { initializeVPNConnectionStore } from '$lib/vpn-manager/vpn-connection';
-
-	var wallet = useOptionalWallet();
+	import { initializeWalletStore } from '$lib/wallet/wallet';
+	import Gear from '@static/gear.svg';
+	import Logo from '@static/logo.webp';
+	import { onMount } from 'svelte';
+	import '../app.css';
 
 	var initialized: boolean = false;
 

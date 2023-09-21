@@ -1,12 +1,11 @@
 <script lang="ts">
-	import { useRequiredWallet } from '$lib/wallet/wallet';
-	import AddLocationModal from './AddLocationModal.svelte';
-	import StatusLamps from './StatusLamps.svelte';
 	import type { DeploymentDetails, LeaseDetails } from '$lib/types/types';
+	import { useRequiredWallet } from '$lib/wallet/wallet';
 	import type { Writable } from 'svelte/store';
 	import ActiveLocationRow from './ActiveLocationRow.svelte';
+	import AddLocationModal from './AddLocationModal.svelte';
 	import DeadDeploymentTable from './DeadDeploymentTable.svelte';
-	import type { Wallet } from '$lib/wallet/types';
+	import StatusLamps from './StatusLamps.svelte';
 
 	var wallet = useRequiredWallet();
 

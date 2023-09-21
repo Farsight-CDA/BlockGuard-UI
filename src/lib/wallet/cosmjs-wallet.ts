@@ -1,21 +1,29 @@
-import { DirectSecp256k1HdWallet } from '@cosmjs/proto-signing';
-import type {
-	SigningStargateClient,
-	ProtobufRpcClient
-} from '@playwo/akashjs/node_modules/@cosmjs/stargate';
-import { messages } from '@playwo/akashjs/build/stargate';
-import { getQueryClient, getMsgClient } from '@playwo/akashjs/build/rpc/index';
+import { NATIVE_API } from '$lib/native-api/native-api';
+import {
+	DeploymentBid,
+	DeploymentDetails,
+	LeaseDetails,
+	ProviderDetails,
+	ProviderLeaseStatus
+} from '$lib/types/types';
 import { base64ToUInt, retry } from '$lib/utils/utils';
-import { toBase64 } from 'pvutils';
-import { writable, type Writable } from 'svelte/store';
+import { DirectSecp256k1HdWallet } from '@cosmjs/proto-signing';
+import { MsgCreateCertificate } from '@playwo/akashjs/build/protobuf/akash/cert/v1beta1/cert';
+import { Deployment_State } from '@playwo/akashjs/build/protobuf/akash/deployment/v1beta3/deployment';
 import {
 	MsgCloseDeployment,
 	type MsgCreateDeployment
 } from '@playwo/akashjs/build/protobuf/akash/deployment/v1beta3/deploymentmsg';
 import {
 	QueryClientImpl as DeploymentQueryClient,
-	QueryDeploymentResponse
+	QueryDeploymentResponse,
+	QueryDeploymentsRequest
 } from '@playwo/akashjs/build/protobuf/akash/deployment/v1beta3/query';
+import { Bid_State } from '@playwo/akashjs/build/protobuf/akash/market/v1beta3/bid';
+import {
+	Lease_State,
+	MsgCreateLease
+} from '@playwo/akashjs/build/protobuf/akash/market/v1beta3/lease';
 import {
 	QueryClientImpl as MarketQueryClient,
 	QueryBidsRequest,
@@ -26,23 +34,15 @@ import {
 	QueryClientImpl as ProviderQueryClient,
 	QueryProviderRequest
 } from '@playwo/akashjs/build/protobuf/akash/provider/v1beta3/query';
-import { MsgCreateCertificate } from '@playwo/akashjs/build/protobuf/akash/cert/v1beta1/cert';
-import { QueryDeploymentsRequest } from '@playwo/akashjs/build/protobuf/akash/deployment/v1beta3/query';
-import {
-	DeploymentBid,
-	ProviderDetails,
-	LeaseDetails,
-	DeploymentDetails,
-	ProviderLeaseStatus
-} from '$lib/types/types';
-import { Deployment_State } from '@playwo/akashjs/build/protobuf/akash/deployment/v1beta3/deployment';
-import { Bid_State } from '@playwo/akashjs/build/protobuf/akash/market/v1beta3/bid';
-import {
-	Lease_State,
-	MsgCreateLease
-} from '@playwo/akashjs/build/protobuf/akash/market/v1beta3/lease';
+import { getMsgClient, getQueryClient } from '@playwo/akashjs/build/rpc/index';
 import type { SDL } from '@playwo/akashjs/build/sdl';
-import { NATIVE_API } from '$lib/native-api/native-api';
+import { messages } from '@playwo/akashjs/build/stargate';
+import type {
+	ProtobufRpcClient,
+	SigningStargateClient
+} from '@playwo/akashjs/node_modules/@cosmjs/stargate';
+import { toBase64 } from 'pvutils';
+import { writable, type Writable } from 'svelte/store';
 import type { CertificateInfo, Wallet } from './types';
 
 interface StoredWallet {

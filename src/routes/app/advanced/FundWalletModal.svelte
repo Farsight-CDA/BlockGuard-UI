@@ -1,7 +1,6 @@
 <script lang="ts">
-	import { scale } from 'svelte/transition';
-	import type { Wallet } from '$lib/wallet/types';
 	import { useRequiredWallet } from '$lib/wallet/wallet';
+	import { scale } from 'svelte/transition';
 
 	let dialogElement: HTMLDialogElement;
 	var isOpen: boolean = false;

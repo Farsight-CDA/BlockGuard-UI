@@ -1,13 +1,13 @@
 <script lang="ts">
-	import { createCertificate } from '@playwo/akashjs/build/certificates';
-	import StatusLamp, { StatusLampStatus } from './StatusLamp.svelte';
-	import FundWalletModal from './FundWalletModal.svelte';
-	import type { CertificateInfo, Wallet } from '$lib/wallet/types';
-	import { useVPNClientStatus } from '$lib/vpn-manager/client-status';
 	import type { VPNClientStatus } from '$lib/native-api/native-api';
-	import { useVPNConnection } from '$lib/vpn-manager/vpn-connection';
+	import { useVPNClientStatus } from '$lib/vpn-manager/client-status';
 	import type { VPNConnectionInfo } from '$lib/vpn-manager/types';
+	import { useVPNConnection } from '$lib/vpn-manager/vpn-connection';
+	import type { CertificateInfo } from '$lib/wallet/types';
 	import { useRequiredWallet } from '$lib/wallet/wallet';
+	import { createCertificate } from '@playwo/akashjs/build/certificates';
+	import FundWalletModal from './FundWalletModal.svelte';
+	import StatusLamp, { StatusLampStatus } from './StatusLamp.svelte';
 
 	const vpnClientStatus = useVPNClientStatus();
 	const vpnConnection = useVPNConnection();
