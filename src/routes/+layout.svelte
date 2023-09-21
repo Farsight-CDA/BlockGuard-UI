@@ -13,7 +13,7 @@
 	import { onMount } from 'svelte';
 	import '../app.css';
 
-	var wallet = useOptionalWallet();
+	var wallet: ReturnType<typeof useOptionalWallet>;
 
 	var initialized: boolean = false;
 
@@ -22,6 +22,8 @@
 		const globalConfigWorks = await initializeGlobalConfig();
 		const walletWorks = await initializeWalletStore();
 		initializeVPNConnectionStore();
+
+		wallet = useOptionalWallet();
 
 		setTimeout(async () => {
 			if (!nativeApiWorks) {
