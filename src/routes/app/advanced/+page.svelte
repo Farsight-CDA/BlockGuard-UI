@@ -2,7 +2,7 @@
 	import type { DeploymentDetails, LeaseDetails } from '$lib/types/types';
 	import { useRequiredWallet } from '$lib/wallet/wallet';
 	import type { Writable } from 'svelte/store';
-	import ActiveLocationRow from './ActiveLocationRow.svelte';
+	import ActiveDeploymentTable from './ActiveDeploymentTable.svelte';
 	import AddLocationModal from './AddLocationModal.svelte';
 	import DeadDeploymentTable from './DeadDeploymentTable.svelte';
 	import StatusLamps from './StatusLamps.svelte';
@@ -43,27 +43,7 @@
 			on:click={handleAddActiveLocation}>Add</button
 		>
 
-		<table>
-			<thead>
-				<tr>
-					<th> Location </th>
-					<th> Age </th>
-					<th> Status </th>
-					<th> Actions </th>
-				</tr>
-			</thead>
-			<tbody class="text-center">
-				{#each $leases as lease}
-					<ActiveLocationRow
-						dseq={lease.dseq}
-						gseq={lease.gseq}
-						oseq={lease.oseq}
-						provider={lease.provider}
-						createdAtHeight={lease.createdAtHeight}
-					></ActiveLocationRow>
-				{/each}
-			</tbody>
-		</table>
+		<ActiveDeploymentTable></ActiveDeploymentTable>
 
 		<h2 class="text-xl font-bold">Inactive Deployments</h2>
 
