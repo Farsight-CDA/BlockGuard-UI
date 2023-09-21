@@ -75,6 +75,8 @@ function createVPNConnection() {
 					: null!
 			};
 		});
+
+		await NATIVE_API.disconnectVPN();
 	}
 
 	return {
