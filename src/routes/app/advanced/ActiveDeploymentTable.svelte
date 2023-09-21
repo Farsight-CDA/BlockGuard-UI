@@ -18,10 +18,12 @@
 	$: leases = $wallet.leases;
 
 	const queryPromises: {
-		[key: number]: {
-			providerDetailsQuery: Promise<ProviderDetails>;
-			statusQuery: Promise<ProviderLeaseStatus>;
-		};
+		[key: number]:
+			| {
+					providerDetailsQuery: Promise<ProviderDetails>;
+					statusQuery: Promise<ProviderLeaseStatus>;
+			  }
+			| undefined;
 	} = {};
 
 	onMount(() => {
@@ -43,7 +45,7 @@
 	}
 
 	function triggerRefreshProviderStatus(lease: LeaseDetails) {
-		queryPromises[lease.dseq].statusQuery = queryProviderLeaseStatus(lease);
+		queryPromises[lease.dseq]!.statusQuery = queryProviderLeaseStatus(lease);
 	}
 
 	async function triggerCloseDeployment(lease: LeaseDetails) {
@@ -51,12 +53,16 @@
 	}
 
 	async function triggerConnectVPN(lease: LeaseDetails) {
-		const leaseStatus = await queryPromises[lease.dseq].statusQuery;
+		const leaseStatus = await queryPromises[lease.dseq]!.statusQuery!;
 
 		await vpnConnection.connectVPNToLease(
 			lease.dseq,
 			`${leaseStatus.forwardedPorts[0].host}:${leaseStatus.forwardedPorts[0].externalPort}`
 		);
+	}
+
+	async function triggerDisconnectVPN() {
+		await vpnConnection.closeVPNConnection();
 	}
 </script>
 
@@ -72,14 +78,14 @@
 		{#each $leases as lease}
 			<tr>
 				<td>
-					{#await queryPromises[lease.dseq].providerDetailsQuery}
+					{#await queryPromises[lease.dseq]?.providerDetailsQuery ?? new Promise( () => {} )}
 						<LoadingSpinner></LoadingSpinner>
 					{:then providerDetails}
 						{providerDetails.region}
 					{/await}
 				</td>
-				<td>
-					{#await queryPromises[lease.dseq].statusQuery}
+				<td class="flex flex-row justify-around">
+					{#await queryPromises[lease.dseq]?.statusQuery ?? new Promise( () => {} )}
 						<LoadingSpinner></LoadingSpinner>
 					{:then providerLeaseStatus}
 						{#if providerLeaseStatus.forwardedPorts.length == 1}
@@ -92,18 +98,26 @@
 					{/await}
 
 					<button on:click={() => triggerRefreshProviderStatus(lease)}>
-						<img src={RefreshIcon} alt="Refresh Status" />
+						<img class="h-5" src={RefreshIcon} alt="Refresh Status" />
 					</button>
 				</td>
 				<td>
 					{#if $vpnConnection.isActive && $vpnConnection.connection.dseq == lease.dseq}
-						<button on:click={() => triggerConnectVPN(lease)}>Disconnect</button
+						<button
+							class="bg-yellow-600 px-2 py-1 rounded-md"
+							on:click={triggerDisconnectVPN}>Disconnect</button
 						>
 					{:else if !$vpnConnection.isActive}
-						<button on:click={() => triggerConnectVPN(lease)}>Connect</button>
+						<button
+							class="bg-green-800 px-2 py-1 rounded-md"
+							on:click={() => triggerConnectVPN(lease)}>Connect</button
+						>
 					{/if}
 
-					<button on:click={() => triggerCloseDeployment(lease)}>Close</button>
+					<button
+						class="bg-red-800 px-2 py-1 rounded-md"
+						on:click={() => triggerCloseDeployment(lease)}>Close</button
+					>
 				</td>
 			</tr>
 		{/each}
