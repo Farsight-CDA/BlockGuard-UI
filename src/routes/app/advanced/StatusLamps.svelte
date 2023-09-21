@@ -3,41 +3,46 @@
 	import StatusLamp, { StatusLampStatus } from './StatusLamp.svelte';
 	import FundWalletModal from './FundWalletModal.svelte';
 	import type { CertificateInfo, Wallet } from '$lib/wallet/types';
-	import { WALLET } from '$lib/wallet/wallet';
 	import { useVPNClientStatus } from '$lib/vpn-manager/client-status';
 	import type { VPNClientStatus } from '$lib/native-api/native-api';
+	import { useVPNConnection } from '$lib/vpn-manager/vpn-connection';
+	import type { VPNConnectionInfo } from '$lib/vpn-manager/types';
+	import { useRequiredWallet } from '$lib/wallet/wallet';
 
 	const vpnClientStatus = useVPNClientStatus();
+	const vpnConnection = useVPNConnection();
 
-	var wallet: Wallet = $WALLET!;
-	$: wallet = $WALLET!;
+	var wallet = useRequiredWallet();
 
-	var balance = wallet.balance;
-	var certificate = wallet.certificate;
+	var balance = $wallet.balance;
+	var certificate = $wallet.certificate;
 
 	const READY_BALANCE = 10;
 	const WARNING_BALANCE = 5.1;
 
-	$: vpnClientLampStatus = getVPNClientStatus($vpnClientStatus);
+	$: vpnClientLampStatus = convertVPNClientStatus($vpnClientStatus);
 	var vpnClientLampStatus = StatusLampStatus.Loading;
 
-	$: fundsLampStatus = getFundsStatus($balance);
-	var fundsLampStatus = getFundsStatus($balance);
+	$: fundsLampStatus = convertFundsStatus($balance);
+	var fundsLampStatus = convertFundsStatus($balance);
 
 	var certificationCreationPending: boolean = false;
 
-	$: certificateLampStatus = getCertificateStatus(
+	$: certificateLampStatus = convertCertificateStatus(
 		$certificate,
 		certificationCreationPending
 	);
-	var certificateLampStatus = getCertificateStatus(
+	var certificateLampStatus = convertCertificateStatus(
 		$certificate,
 		certificationCreationPending
 	);
+
+	$: connectionLampStatus = convertConnectionLampStatus($vpnConnection);
+	var connectionLampStatus = StatusLampStatus.Loading;
 
 	let openFundWalletModal: () => Promise<void>;
 
-	function getVPNClientStatus(status: VPNClientStatus | null) {
+	function convertVPNClientStatus(status: VPNClientStatus | null) {
 		switch (status) {
 			case null:
 				return StatusLampStatus.Loading;
@@ -48,7 +53,7 @@
 		}
 	}
 
-	function getFundsStatus(balance: number) {
+	function convertFundsStatus(balance: number) {
 		if (balance >= READY_BALANCE) {
 			return StatusLampStatus.Ready;
 		} else if (balance >= WARNING_BALANCE) {
@@ -58,7 +63,7 @@
 		}
 	}
 
-	function getCertificateStatus(
+	function convertCertificateStatus(
 		certificate: CertificateInfo | null,
 		isPending: boolean
 	) {
@@ -71,12 +76,30 @@
 		}
 	}
 
+	function convertConnectionLampStatus(connectionInfo: VPNConnectionInfo) {
+		if (
+			!connectionInfo.isActive ||
+			connectionInfo.connection.status == 'Offline'
+		) {
+			return StatusLampStatus.ActionRequired;
+		} else if (connectionInfo.connection.status == 'Connected') {
+			return StatusLampStatus.Ready;
+		} else if (
+			connectionInfo.connection.status == 'Disconnecting' ||
+			connectionInfo.connection.status == 'Connecting'
+		) {
+			return StatusLampStatus.Loading;
+		}
+
+		return StatusLampStatus.Error;
+	}
+
 	async function triggerUpdateCertificate() {
 		try {
 			certificationCreationPending = true;
-			const cert = await createCertificate(wallet.getAddress());
-			await wallet.broadcastCertificate(cert.csr, cert.publicKey);
-			await WALLET.setCertificate(cert.csr, cert.publicKey, cert.privateKey);
+			const cert = await createCertificate($wallet.getAddress());
+			await $wallet.broadcastCertificate(cert.csr, cert.publicKey);
+			await wallet.setCertificate(cert.csr, cert.publicKey, cert.privateKey);
 		} finally {
 			certificationCreationPending = false;
 		}
@@ -85,7 +108,7 @@
 
 <FundWalletModal bind:open={openFundWalletModal}></FundWalletModal>
 
-<div class="grid grid-cols-2 sm:grid-cols-3 gap-6 auto-rows-fr">
+<div class="w-full grid grid-cols-2 md:grid-cols-4 gap-6 auto-rows-fr">
 	<StatusLamp name="VPN Client" status={vpnClientLampStatus} />
 	<StatusLamp
 		name="Funds"
@@ -101,4 +124,5 @@
 		clickable={certificateLampStatus != StatusLampStatus.Ready &&
 			!certificationCreationPending}
 	/>
+	<StatusLamp name="Connection" status={connectionLampStatus} />
 </div>

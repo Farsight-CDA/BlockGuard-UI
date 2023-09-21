@@ -1,12 +1,11 @@
 <script lang="ts">
 	import { scale } from 'svelte/transition';
-	import { WALLET } from '$lib/wallet/wallet';
 	import { MsgCreateDeployment } from '@playwo/akashjs/build/protobuf/akash/deployment/v1beta3/deploymentmsg';
 	import VpnSdlUrl from '@static/vpn-sdl.txt';
 	import { SDL } from '@playwo/akashjs/build/sdl';
 	import type { DeploymentBid } from '$lib/types/types';
 	import LoadingSpinner from '$lib/components/LoadingSpinner.svelte';
-	import type { Wallet } from '$lib/wallet/types';
+	import { useRequiredWallet } from '$lib/wallet/wallet';
 
 	enum Progress {
 		None,
@@ -35,8 +34,7 @@
 
 	var refreshInterval: NodeJS.Timeout;
 
-	var wallet: Wallet;
-	$: wallet = $WALLET!;
+	var wallet = useRequiredWallet();
 
 	var bids: DeploymentBid[] | null = null;
 
@@ -67,7 +65,7 @@
 			case Progress.Choosing:
 			case Progress.SubmittingManifest:
 				try {
-					wallet.closeDeployment(dseq);
+					$wallet.closeDeployment(dseq);
 				} catch (error) {}
 			case Progress.None:
 			case Progress.Completed:
@@ -92,20 +90,20 @@
 				amount: '5000000'
 			},
 			version: await sdl.manifestVersion(),
-			depositor: wallet.getAddress(),
+			depositor: $wallet.getAddress(),
 			id: {
-				owner: wallet.getAddress(),
+				owner: $wallet.getAddress(),
 				dseq: dseq
 			},
 			groups: sdl.v3Groups()
 		});
 
-		await wallet.createDeplyoment(msg);
+		await $wallet.createDeplyoment(msg);
 		refreshInterval = setInterval(refreshBids, 2000);
 	}
 
 	async function refreshBids() {
-		bids = await wallet.getDeploymentBids(dseq);
+		bids = await $wallet.getDeploymentBids(dseq);
 
 		if (progress == Progress.AwaitBids && bids.length > 0) {
 			progress = Progress.Choosing;
@@ -114,11 +112,11 @@
 
 	async function triggerAcceptBid(bid: DeploymentBid) {
 		progress = Progress.Accepting;
-		await wallet.createLease(dseq, bid.gseq, bid.oseq, bid.provider);
+		await $wallet.createLease(dseq, bid.gseq, bid.oseq, bid.provider);
 		progress = Progress.SubmittingManifest;
 		//Wait for provider to have block
 		await new Promise((resolve) => setTimeout(resolve, 6500));
-		await wallet.submitManifest(dseq, bid.provider, sdl);
+		await $wallet.submitManifest(dseq, bid.provider, sdl);
 		progress = Progress.Completed;
 		close();
 	}
@@ -188,7 +186,7 @@
 						{#if bids != null}
 							{#each bids as bid}
 								<!-- svelte-ignore empty-block -->
-								{#await wallet.getProviderDetails(bid.provider) then details}
+								{#await $wallet.getProviderDetails(bid.provider) then details}
 									<tr>
 										<td>
 											{details.region} ({details.country}, {details.city})

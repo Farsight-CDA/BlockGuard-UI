@@ -2,7 +2,7 @@
 	import type { ProviderLeaseStatus } from '$lib/types/types';
 	import { useVPNConnection } from '$lib/vpn-manager/vpn-connection';
 	import type { Wallet } from '$lib/wallet/types';
-	import { WALLET } from '$lib/wallet/wallet';
+	import { useRequiredWallet } from '$lib/wallet/wallet';
 
 	export let dseq: number;
 	export let createdAtHeight: number;
@@ -11,13 +11,12 @@
 	export let oseq: number | null = null;
 	export let provider: string | null = null;
 
-	var wallet: Wallet;
-	$: wallet = $WALLET!;
+	var wallet = useRequiredWallet();
 
 	const vpnConnection = useVPNConnection();
 
 	async function triggerCloseDeployment(dseq: number) {
-		await wallet.closeDeployment(dseq);
+		await $wallet.closeDeployment(dseq);
 	}
 
 	async function triggerConnectVPN(
@@ -34,7 +33,7 @@
 <tr>
 	<td>
 		{#if provider != null}
-			{#await wallet.getProviderDetails(provider)}
+			{#await $wallet.getProviderDetails(provider)}
 				...
 			{:then details}
 				<p>
@@ -46,7 +45,7 @@
 		{/if}
 	</td>
 	<td>
-		{#await wallet.getBlockTimestamp(createdAtHeight)}
+		{#await $wallet.getBlockTimestamp(createdAtHeight)}
 			...
 		{:then timestamp}
 			{Math.round((new Date().getTime() - timestamp.getTime()) / 60000)} mins
@@ -54,7 +53,7 @@
 	</td>
 
 	{#if gseq != null && oseq != null}
-		{#await wallet.getProviderLeaseStatus(dseq, gseq, oseq, `${provider}`)}
+		{#await $wallet.getProviderLeaseStatus(dseq, gseq, oseq, `${provider}`)}
 			<td> ... </td>
 			<td>
 				<button on:click={() => triggerCloseDeployment(dseq)}>Close</button>

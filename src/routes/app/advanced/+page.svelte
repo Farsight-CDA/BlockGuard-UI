@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { WALLET } from '$lib/wallet/wallet';
+	import { useRequiredWallet } from '$lib/wallet/wallet';
 	import AddLocationModal from './AddLocationModal.svelte';
 	import StatusLamps from './StatusLamps.svelte';
 	import type { DeploymentDetails, LeaseDetails } from '$lib/types/types';
@@ -8,17 +8,16 @@
 	import DeadDeploymentTable from './DeadDeploymentTable.svelte';
 	import type { Wallet } from '$lib/wallet/types';
 
-	var wallet: Wallet;
-	$: wallet = $WALLET!;
+	var wallet = useRequiredWallet();
 
 	var balance: Writable<number>;
-	$: balance = $WALLET!.balance;
+	$: balance = $wallet!.balance;
 
 	var deployments: Writable<DeploymentDetails[]>;
-	$: deployments = $WALLET!.deployments;
+	$: deployments = $wallet!.deployments;
 
 	var leases: Writable<LeaseDetails[]>;
-	$: leases = $WALLET!.leases;
+	$: leases = $wallet!.leases;
 
 	let openAddActiveLocationModal: () => Promise<void>;
 
@@ -29,10 +28,10 @@
 
 <AddLocationModal bind:open={openAddActiveLocationModal}></AddLocationModal>
 
-<div class="flex flex-col gap-6 w-full h-full items-center justify-center">
-	<div class="w-5/6 xl:w-1/3">
-		<StatusLamps></StatusLamps>
-	</div>
+<div
+	class="flex flex-col gap-6 w-5/6 xl:w-1/2 h-full items-center justify-center"
+>
+	<StatusLamps></StatusLamps>
 
 	<div
 		class="w-5/6 xl:w-1/3 bg-neutral-900 rounded-md flex flex-col justify-center p-4 gap-4"

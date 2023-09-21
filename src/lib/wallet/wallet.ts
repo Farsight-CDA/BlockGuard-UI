@@ -1,5 +1,10 @@
 import { NATIVE_API } from '$lib/native-api/native-api';
-import { writable, type Writable } from 'svelte/store';
+import {
+	writable,
+	type Invalidator,
+	type Subscriber,
+	type Writable
+} from 'svelte/store';
 import { DirectSecp256k1HdWallet } from '@cosmjs/proto-signing';
 import { CosmJSWallet } from './cosmjs-wallet';
 
@@ -10,10 +15,48 @@ import type { Wallet } from './types';
 
 const WALLET_STORAGE_FILE = 'wallet.json';
 
-export const WALLET = useWallet();
+var WALLET: ReturnType<typeof createWalletStore> = null!;
 
-function useWallet() {
-	const { subscribe, update, set } = writable<Wallet | null>(
+export function useRequiredWallet() {
+	return {
+		...WALLET,
+		subscribe: (
+			run: Subscriber<Wallet>,
+			invalidate?: Invalidator<Wallet> | undefined
+		) => {
+			if (WALLET == null) {
+				throw Error('Wallet not initialized');
+			}
+
+			return WALLET.subscribe(
+				(wallet) => {
+					if (wallet == null) {
+						throw Error('Wallet required but not set');
+					}
+					run(wallet!);
+				},
+				(wallet) => {
+					if (wallet == null) {
+						throw Error('Wallet required but not set');
+					}
+					invalidate?.(wallet!);
+				}
+			);
+		}
+	};
+}
+
+export function useOptionalWallet() {
+	return WALLET;
+}
+
+export async function initializeWalletStore() {
+	WALLET = createWalletStore();
+	return await WALLET.initialize();
+}
+
+function createWalletStore() {
+	const { subscribe, set } = writable<Wallet | null>(
 		null,
 		() => () => dispose()
 	);
@@ -23,7 +66,7 @@ function useWallet() {
 		const content = await NATIVE_API.loadFile(WALLET_STORAGE_FILE);
 
 		if (content == null) {
-			return;
+			return false;
 		}
 
 		const cosmJSWallet = await CosmJSWallet.deserialize(content);

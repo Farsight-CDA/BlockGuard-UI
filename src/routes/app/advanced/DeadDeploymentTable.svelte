@@ -3,17 +3,16 @@
 	import type { DeploymentDetails, LeaseDetails } from '$lib/types/types';
 	import { toTimespanString } from '$lib/utils/utils';
 	import type { Wallet } from '$lib/wallet/types';
-	import { WALLET } from '$lib/wallet/wallet';
+	import { useRequiredWallet } from '$lib/wallet/wallet';
 	import type { Writable } from 'svelte/store';
 
-	var wallet: Wallet;
-	$: wallet = $WALLET!;
+	var wallet = useRequiredWallet();
 
 	var deployments: Writable<DeploymentDetails[]>;
-	$: deployments = $WALLET!.deployments;
+	$: deployments = $wallet.deployments;
 
 	var leases: Writable<LeaseDetails[]>;
-	$: leases = $WALLET!.leases;
+	$: leases = $wallet.leases;
 
 	var deadDeployments: DeploymentDetails[] = [];
 	$: deadDeployments = $deployments.filter(
@@ -25,7 +24,7 @@
 	async function triggerCloseDeployment(dseq: number) {
 		try {
 			isCloseActionRunning[dseq] = true;
-			await wallet.closeDeployment(dseq);
+			await $wallet.closeDeployment(dseq);
 		} catch (error) {
 			isCloseActionRunning[dseq] = false;
 		}
@@ -44,7 +43,7 @@
 		{#each deadDeployments as deployment}
 			<tr>
 				<td>
-					{#await wallet.getBlockTimestamp(deployment.createdAtHeight)}
+					{#await $wallet.getBlockTimestamp(deployment.createdAtHeight)}
 						<LoadingSpinner></LoadingSpinner>
 					{:then blockTimestamp}
 						<p>

@@ -4,20 +4,24 @@
 	import Logo from '@static/logo.webp';
 	import Gear from '@static/gear.svg';
 	import { initializeNativeAPI } from '$lib/native-api/native-api';
-	import { WALLET } from '$lib/wallet/wallet';
+	import { initializeWalletStore, useOptionalWallet } from '$lib/wallet/wallet';
 	import {
 		GLOBAL_CONFIG,
 		initializeGlobalConfig
 	} from '$lib/configuration/configuration';
 	import { goto } from '$app/navigation';
 	import LoadingSpinner from '$lib/components/LoadingSpinner.svelte';
+	import { initializeVPNConnectionStore } from '$lib/vpn-manager/vpn-connection';
+
+	var wallet = useOptionalWallet();
 
 	var initialized: boolean = false;
 
 	onMount(async () => {
 		const nativeApiWorks = await initializeNativeAPI();
 		const globalConfigWorks = await initializeGlobalConfig();
-		const walletWorks = await WALLET.initialize();
+		const walletWorks = await initializeWalletStore();
+		initializeVPNConnectionStore();
 
 		setTimeout(async () => {
 			if (!nativeApiWorks) {

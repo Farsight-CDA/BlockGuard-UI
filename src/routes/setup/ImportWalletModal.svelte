@@ -1,7 +1,9 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
-	import { WALLET } from '$lib/wallet/wallet';
+	import { useOptionalWallet } from '$lib/wallet/wallet';
 	import { scale } from 'svelte/transition';
+
+	var wallet = useOptionalWallet();
 
 	let dialogElement: HTMLDialogElement;
 	var isOpen: boolean = false;
@@ -18,7 +20,7 @@
 
 	async function triggerSaveAndGoToApp() {
 		if (hasEnteredValidMnemonics) {
-			await WALLET.create(mnemonics!);
+			await wallet.create(mnemonics!);
 		}
 
 		goto('/app');

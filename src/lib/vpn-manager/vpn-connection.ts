@@ -5,18 +5,26 @@ import type { VPNConnectionInfo } from './types';
 const VPN_USERNAME = 'admin';
 const VPN_PASSWORD = 'notreallyasecretpassword';
 
+var VPN_CONNECTION: ReturnType<typeof createVPNConnection> = null!;
+
 export function useVPNConnection() {
+	return VPN_CONNECTION;
+}
+
+export function initializeVPNConnectionStore() {
+	VPN_CONNECTION = createVPNConnection();
+}
+
+function createVPNConnection() {
 	const { subscribe, update, set } = writable<VPNConnectionInfo>(
 		{
 			isActive: false
 		},
 		() => {
-			console.log('NEW CONNECTIONSTATUS');
 			refreshStatus();
 			const refreshInterval = setInterval(refreshStatus, 3000);
 			return () => {
 				clearInterval(refreshInterval);
-				console.log('KILLED CONNECTIONSTATUS');
 			};
 		}
 	);

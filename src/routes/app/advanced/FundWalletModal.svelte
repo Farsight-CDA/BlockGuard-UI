@@ -1,13 +1,12 @@
 <script lang="ts">
 	import { scale } from 'svelte/transition';
-	import { WALLET } from '$lib/wallet/wallet';
 	import type { Wallet } from '$lib/wallet/types';
+	import { useRequiredWallet } from '$lib/wallet/wallet';
 
 	let dialogElement: HTMLDialogElement;
 	var isOpen: boolean = false;
 
-	var wallet: Wallet;
-	$: wallet = $WALLET!;
+	var wallet = useRequiredWallet();
 
 	export const open = async function open() {
 		isOpen = true;
@@ -42,7 +41,7 @@
 			<h2 class="font-bold text-lg">Fund your Wallet</h2>
 
 			<p>Send at least 5.5 AKT to</p>
-			<code class="p-2 bg-slate-600 rounded-md">{wallet.getAddress()}</code>
+			<code class="p-2 bg-slate-600 rounded-md">{$wallet.getAddress()}</code>
 		</div>
 	{/if}
 </dialog>
