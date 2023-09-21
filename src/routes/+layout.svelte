@@ -80,7 +80,7 @@
 		if (isConfirmed) {
 			closeSidebar();
 			await goto('/setup');
-			await wallet.initialize();
+			await wallet.clear();
 		}
 		setTimeout(() => {
 			isConfirmed = true;
