@@ -5,9 +5,13 @@ import type { VPNConnectionInfo } from './types';
 const VPN_USERNAME = 'admin';
 const VPN_PASSWORD = 'notreallyasecretpassword';
 
-var VPN_CONNECTION: ReturnType<typeof createVPNConnection> = null!;
+var VPN_CONNECTION: ReturnType<typeof createVPNConnection> | null = null;
 
 export function useVPNConnection() {
+	if (VPN_CONNECTION == null) {
+		throw Error('VpnConnetion not initialized');
+	}
+
 	return VPN_CONNECTION;
 }
 
@@ -66,7 +70,7 @@ function createVPNConnection() {
 	async function closeVPNConnection() {
 		update((prev) => {
 			return {
-				isActive: prev.isActive,
+				isActive: true,
 				connection: prev.isActive
 					? {
 							dseq: prev.connection.dseq,
@@ -77,6 +81,12 @@ function createVPNConnection() {
 		});
 
 		await NATIVE_API.disconnectVPN();
+
+		update(() => {
+			return {
+				isActive: false
+			};
+		});
 	}
 
 	return {
