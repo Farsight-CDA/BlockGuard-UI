@@ -115,49 +115,53 @@
 						{providerDetails.region}
 					{/await}
 				</td>
-				<td class="flex flex-row justify-around">
-					{#await leasePromises[lease.dseq]?.statusQuery ?? new Promise( () => {} )}
-						<LoadingSpinner></LoadingSpinner>
-					{:then providerLeaseStatus}
-						{#if providerLeaseStatus.forwardedPorts.length == 1}
-							<p class="text-green-800">Active</p>
-						{:else}
-							<p class="text-yellow-600">Unknown</p>
-						{/if}
-					{:catch}
-						<p class="text-red-800">Unresponsibe</p>
-					{/await}
+				<td>
+					<div class="flex flex-row justify-around">
+						{#await leasePromises[lease.dseq]?.statusQuery ?? new Promise( () => {} )}
+							<LoadingSpinner></LoadingSpinner>
+						{:then providerLeaseStatus}
+							{#if providerLeaseStatus.forwardedPorts.length == 1}
+								<p class="text-green-800">Active</p>
+							{:else}
+								<p class="text-yellow-600">Unknown</p>
+							{/if}
+						{:catch}
+							<p class="text-red-800">Unresponsibe</p>
+						{/await}
 
-					<button on:click={() => triggerRefreshProviderStatus(lease)}>
-						<img class="h-5" src={RefreshIcon} alt="Refresh Status" />
-					</button>
+						<button on:click={() => triggerRefreshProviderStatus(lease)}>
+							<img class="h-5" src={RefreshIcon} alt="Refresh Status" />
+						</button>
+					</div>
 				</td>
 				<td>
-					{#if $vpnConnection.isActive && $vpnConnection.connection.dseq == lease.dseq}
-						<button
-							class="bg-yellow-600 px-2 py-1 rounded-md"
-							disabled={connectionPromiseRunning}
-							on:click={triggerDisconnectVPN}>Disconnect</button
-						>
-					{:else if !$vpnConnection.isActive}
-						<button
-							class="bg-green-800 px-2 py-1 rounded-md"
-							disabled={connectionPromiseRunning}
-							on:click={() => triggerConnectVPN(lease)}>Connect</button
-						>
-					{/if}
-
-					<button
-						class="bg-red-800 px-2 py-1 rounded-md"
-						disabled={leasePromises[lease.dseq]?.closeDeployment != null}
-						on:click={() => triggerCloseDeployment(lease)}
-					>
-						{#if leasePromises[lease.dseq]?.closeDeployment != null}
-							<LoadingSpinner></LoadingSpinner>
-						{:else}
-							Close
+					<div class="flex flex-row justify-around">
+						{#if $vpnConnection.isActive && $vpnConnection.connection.dseq == lease.dseq}
+							<button
+								class="bg-yellow-600 px-2 py-1 rounded-md"
+								disabled={connectionPromiseRunning}
+								on:click={triggerDisconnectVPN}>Disconnect</button
+							>
+						{:else if !$vpnConnection.isActive}
+							<button
+								class="bg-green-800 px-2 py-1 rounded-md"
+								disabled={connectionPromiseRunning}
+								on:click={() => triggerConnectVPN(lease)}>Connect</button
+							>
 						{/if}
-					</button>
+
+						<button
+							class="bg-red-800 px-2 py-1 rounded-md"
+							disabled={leasePromises[lease.dseq]?.closeDeployment != null}
+							on:click={() => triggerCloseDeployment(lease)}
+						>
+							{#if leasePromises[lease.dseq]?.closeDeployment != null}
+								<LoadingSpinner></LoadingSpinner>
+							{:else}
+								Close
+							{/if}
+						</button>
+					</div>
 				</td>
 			</tr>
 		{/each}
