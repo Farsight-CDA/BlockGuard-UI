@@ -7,10 +7,10 @@
 		dialogElement.showModal();
 	};
 
-	function close() {
+	export const close = function close() {
 		dialogElement.close();
 		isOpen = false;
-	}
+	};
 	function dialogClickHandler(e: MouseEvent) {
 		if (e.target === dialogElement) {
 			close();

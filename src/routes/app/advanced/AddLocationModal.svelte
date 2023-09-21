@@ -1,5 +1,6 @@
 <script lang="ts">
 	import LoadingSpinner from '$lib/components/LoadingSpinner.svelte';
+	import Modal from '$lib/components/Modal.svelte';
 	import type { DeploymentBid } from '$lib/types/types';
 	import { useRequiredWallet } from '$lib/wallet/wallet';
 	import { MsgCreateDeployment } from '@playwo/akashjs/build/protobuf/akash/deployment/v1beta3/deploymentmsg';
@@ -31,15 +32,13 @@
 	var progress: Progress = Progress.None;
 	var dseq: number = 0;
 
-	let dialogElement: HTMLDialogElement;
-	var isOpen: boolean = false;
-
 	var refreshInterval: NodeJS.Timeout;
 
 	var wallet = useRequiredWallet();
 
 	var bids: DeploymentBid[] | null = null;
 
+	let openInner: () => Promise<void>;
 	export const open = async function open() {
 		dseq = Math.round(Math.random() * 100000000);
 
@@ -49,8 +48,7 @@
 			progress = Progress.Deploying;
 		}
 
-		isOpen = true;
-		dialogElement.showModal();
+		openInner();
 
 		if (sdl == null) {
 			const VpnSdlText = await fetch(VpnSdlUrl).then((x) => x.text());
@@ -62,6 +60,7 @@
 		progress = Progress.AwaitBids;
 	};
 
+	let closeInner: () => void;
 	async function close() {
 		switch (progress) {
 			case Progress.Choosing:
@@ -73,9 +72,8 @@
 			case Progress.None:
 			case Progress.Completed:
 				clearInterval(refreshInterval);
-				dialogElement.close();
+				closeInner();
 				progress = Progress.None;
-				isOpen = false;
 				return true;
 
 			case Progress.Deploying:
@@ -123,102 +121,78 @@
 		progress = Progress.Completed;
 		await close();
 	}
-
-	function dialogClickHandler(e: MouseEvent) {
-		if (e.target === dialogElement) {
-			close();
-		}
-	}
-
-	async function onDialogClose(e: Event) {
-		if (await close()) {
-			return;
-		}
-
-		e.preventDefault();
-	}
 </script>
 
-<!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
-<dialog
-	bind:this={dialogElement}
-	class="p-4 shadow-2xl rounded-lg bg-slate-900"
-	on:click={dialogClickHandler}
-	on:keydown={() => {}}
-	on:close={onDialogClose}
-	on:cancel={onDialogClose}
->
-	{#if isOpen}
-		<div
-			class="flex flex-col items-center gap-4"
-			transition:scale={{ duration: 200, delay: 0 }}
-			on:introstart
-			on:outroend
-		>
-			<h2 class="font-bold text-lg">Add Active Location</h2>
+<Modal bind:open={openInner} bind:close={closeInner}>
+	<div
+		class="flex flex-col items-center gap-4"
+		transition:scale={{ duration: 200, delay: 0 }}
+		on:introstart
+		on:outroend
+	>
+		<h2 class="font-bold text-lg">Add Active Location</h2>
 
-			{#if progress == Progress.FetchingSDL}
-				<p>Fetching SDL...</p>
-				<LoadingSpinner></LoadingSpinner>
-			{:else if progress == Progress.Deploying}
-				<p>Creating Deployment...</p>
-				<LoadingSpinner></LoadingSpinner>
-			{:else if progress == Progress.AwaitBids}
-				<p>Waiting for Bids...</p>
-				<LoadingSpinner></LoadingSpinner>
-			{:else if progress == Progress.Accepting}
-				<p>Accepting Bid...</p>
-				<LoadingSpinner></LoadingSpinner>
-			{:else if progress == Progress.SubmittingManifest}
-				<p>Submitting Manifest...</p>
-				<LoadingSpinner></LoadingSpinner>
-			{:else if progress == Progress.Cancelling}
-				<p>Closing Deployment...</p>
-				<LoadingSpinner></LoadingSpinner>
-			{:else if (progress = Progress.Choosing)}
-				<p>Choose your provider</p>
+		{#if progress == Progress.FetchingSDL}
+			<p>Fetching SDL...</p>
+			<LoadingSpinner></LoadingSpinner>
+		{:else if progress == Progress.Deploying}
+			<p>Creating Deployment...</p>
+			<LoadingSpinner></LoadingSpinner>
+		{:else if progress == Progress.AwaitBids}
+			<p>Waiting for Bids...</p>
+			<LoadingSpinner></LoadingSpinner>
+		{:else if progress == Progress.Accepting}
+			<p>Accepting Bid...</p>
+			<LoadingSpinner></LoadingSpinner>
+		{:else if progress == Progress.SubmittingManifest}
+			<p>Submitting Manifest...</p>
+			<LoadingSpinner></LoadingSpinner>
+		{:else if progress == Progress.Cancelling}
+			<p>Closing Deployment...</p>
+			<LoadingSpinner></LoadingSpinner>
+		{:else if (progress = Progress.Choosing)}
+			<p>Choose your provider</p>
 
-				<table>
-					<thead>
-						<tr>
-							<th> Location </th>
-							<th> Provider </th>
-							<th> Price </th>
-							<th> Speed </th>
-							<th> Actions </th>
-						</tr>
-					</thead>
-					<tbody class="text-center">
-						{#if bids != null}
-							{#each bids as bid}
-								<!-- svelte-ignore empty-block -->
-								{#await $wallet.getProviderDetails(bid.provider) then details}
-									<tr>
-										<td>
-											{details.region} ({details.country}, {details.city})
-										</td>
-										<td>
-											{details.organization}
-											{details.website}
-										</td><td>
-											{bid.price} uakt / block
-										</td>
-										<td>
-											<p>DOWN: {details.networkDownload}</p>
-											<p>UP: {details.networkUpload}</p>
-										</td>
-										<td>
-											<button on:click={() => triggerAcceptBid(bid)}>
-												Select
-											</button>
-										</td>
-									</tr>
-								{/await}
-							{/each}
-						{/if}
-					</tbody>
-				</table>
-			{/if}
-		</div>
-	{/if}
-</dialog>
+			<table>
+				<thead>
+					<tr>
+						<th> Location </th>
+						<th> Provider </th>
+						<th> Price </th>
+						<th> Speed </th>
+						<th> Actions </th>
+					</tr>
+				</thead>
+				<tbody class="text-center">
+					{#if bids != null}
+						{#each bids as bid}
+							<!-- svelte-ignore empty-block -->
+							{#await $wallet.getProviderDetails(bid.provider) then details}
+								<tr>
+									<td>
+										{details.region} ({details.country}, {details.city})
+									</td>
+									<td>
+										{details.organization}
+										{details.website}
+									</td><td>
+										{bid.price} uakt / block
+									</td>
+									<td>
+										<p>DOWN: {details.networkDownload}</p>
+										<p>UP: {details.networkUpload}</p>
+									</td>
+									<td>
+										<button on:click={() => triggerAcceptBid(bid)}>
+											Select
+										</button>
+									</td>
+								</tr>
+							{/await}
+						{/each}
+					{/if}
+				</tbody>
+			</table>
+		{/if}
+	</div>
+</Modal>
