@@ -29,12 +29,12 @@
 <AddLocationModal bind:open={openAddActiveLocationModal}></AddLocationModal>
 
 <div
-	class="flex flex-col gap-6 w-5/6 xl:w-1/2 h-full items-center justify-center"
+	class="flex flex-col gap-6 w-2/3 xl:w-1/2 h-full items-center justify-center"
 >
 	<StatusLamps></StatusLamps>
 
 	<div
-		class="w-5/6 xl:w-1/3 bg-neutral-900 rounded-md flex flex-col justify-center p-4 gap-4"
+		class="w-full bg-neutral-900 rounded-md flex flex-col justify-center p-4 gap-4"
 	>
 		<h2 class="text-xl font-bold">Active Locations</h2>
 
