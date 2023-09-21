@@ -23,7 +23,7 @@
 			await wallet.create(mnemonics!);
 		}
 
-		goto('/app');
+		await goto('/');
 	}
 
 	function dialogClickHandler(e: MouseEvent) {

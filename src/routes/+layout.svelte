@@ -72,19 +72,18 @@
 		}, 1000);
 	}
 
-	let isConfirmed = false;
 	let showConfirmation = false;
 
 	async function logout() {
 		showConfirmation = true;
-		if (isConfirmed) {
+		if (showConfirmation) {
 			closeSidebar();
 			await goto('/setup');
 			await wallet.clear();
 		}
 		setTimeout(() => {
-			isConfirmed = true;
-		}, 1000);
+			showConfirmation = false;
+		}, 5000);
 	}
 
 	function openExport() {
@@ -145,7 +144,10 @@
 				<button on:click={openExport} class="bg-green-600 p-3 rounded-md"
 					>export Mnemonics</button
 				>
-				<ExportMnemonicModal bind:open={openExportMnemonicModal} />
+				<ExportMnemonicModal
+					mnemonics={$wallet.getMnemonic()}
+					bind:open={openExportMnemonicModal}
+				/>
 			{/if}
 		</div>
 	{/if}

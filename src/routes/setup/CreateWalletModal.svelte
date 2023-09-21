@@ -23,7 +23,7 @@
 
 	async function triggerSaveAndGoToApp() {
 		await wallet.create(generatedMnemonics!);
-		goto('/app');
+		await goto('/');
 	}
 
 	function dialogClickHandler(e: MouseEvent) {

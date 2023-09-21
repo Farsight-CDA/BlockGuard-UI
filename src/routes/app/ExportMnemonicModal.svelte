@@ -7,8 +7,7 @@
 
 	export let open: () => Promise<void>;
 
-	var mnemonics: string;
-	$: mnemonics = $wallet.getMnemonic();
+	export let mnemonics: string;
 
 	function copyToClipboard() {
 		navigator.clipboard.writeText(mnemonics);
