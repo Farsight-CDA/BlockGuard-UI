@@ -12,6 +12,7 @@
 	import Logo from '@static/logo.webp';
 	import { onMount } from 'svelte';
 	import '../app.css';
+	import ExportMnemonicModal from './app/ExportMnemonicModal.svelte';
 
 	var wallet: ReturnType<typeof useOptionalWallet>;
 
@@ -48,7 +49,7 @@
 	let sidebarOpen = false;
 	let sidebarTranslate = 0;
 
-	function toggleSidebar() {
+	function toggleSidebarAnimation() {
 		if (sidebarOpen == true) {
 			sidebarTranslate = 0;
 		} else if (sidebarOpen == false) {
@@ -56,15 +57,19 @@
 		}
 	}
 
-	function closeSidebar() {
+	function closeSidebarStatus() {
 		if (sidebarOpen == true) {
-			sidebarTranslate = 0;
-			setTimeout(() => {
-				sidebarOpen = false;
-			}, 1000);
+			closeSidebar();
 		} else if (sidebarOpen == false) {
 			sidebarOpen = true;
 		}
+	}
+
+	function closeSidebar() {
+		sidebarTranslate = 0;
+		setTimeout(() => {
+			sidebarOpen = false;
+		}, 1000);
 	}
 
 	let isConfirmed = false;
@@ -73,7 +78,7 @@
 	async function logout() {
 		showConfirmation = true;
 		if (isConfirmed) {
-			sidebarTranslate = 0;
+			closeSidebar();
 			await goto('/setup');
 			await wallet.initialize();
 		}
@@ -81,6 +86,13 @@
 			isConfirmed = true;
 		}, 1000);
 	}
+
+	function openExport() {
+		sidebarTranslate = 0;
+		openExportMnemonicModal();
+	}
+
+	export let openExportMnemonicModal: () => Promise<void>;
 </script>
 
 <div class="flex flex-row h-full w-full">
@@ -90,7 +102,7 @@
 		class="flex flex-col h-full w-full z-10
         transition-transform duration-1000 transform translate-x-0"
 		style={`transform: translateX(${sidebarTranslate}%)`}
-		on:click={closeSidebar}
+		on:click={closeSidebarStatus}
 	>
 		<nav
 			class={`bg-gray-900 py-2 px-3 flex flex-row justify-between ${
@@ -102,7 +114,7 @@
 				<h1 class="font-bold text-xl">BlockGuard</h1>
 			</div>
 
-			<button on:click={toggleSidebar}>
+			<button on:click={toggleSidebarAnimation}>
 				<img src={Gear} class="h-12 invert" alt="Settings" />
 			</button>
 		</nav>
@@ -130,6 +142,10 @@
 				<button on:click={logout} class="bg-red-600 p-3 rounded-md"
 					>{showConfirmation ? 'You sure?' : 'Log Out'}</button
 				>
+				<button on:click={openExport} class="bg-green-600 p-3 rounded-md"
+					>export Mnemonics</button
+				>
+				<ExportMnemonicModal bind:open={openExportMnemonicModal} />
 			{/if}
 		</div>
 	{/if}
