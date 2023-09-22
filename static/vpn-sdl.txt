@@ -11,6 +11,10 @@ services:
           - global: true
     env:
       - USERS=admin:notreallyasecretpassword
+    volumes:
+      - /dev/null:/usr/vpnserver/server_log
+      - /dev/null:/usr/vpnserver/packet_log
+      - /dev/null:/usr/vpnserver/security_log
 
 profiles:
   compute:
