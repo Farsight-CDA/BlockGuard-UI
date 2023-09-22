@@ -147,10 +147,10 @@
 	async function triggerAcceptBid(bid: DeploymentBid) {
 		setProgress(DeploymentStep.Accepting);
 
-		moveForward(DeploymentStep.SubmittingManifest, [6000], () =>
+		await moveForward(DeploymentStep.SubmittingManifest, [6000], () =>
 			$wallet.createLease(dseq, bid.gseq, bid.oseq, bid.provider)
 		);
-		moveForward(
+		await moveForward(
 			DeploymentStep.Completed,
 			Array(15).map((x) => 1000),
 			() => $wallet.submitManifest(dseq, bid.provider, sdl)
