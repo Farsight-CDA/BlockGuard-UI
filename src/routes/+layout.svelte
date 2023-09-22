@@ -26,7 +26,7 @@
 		wallet = useOptionalWallet();
 		globalConfig = useGlobalConfig();
 
-		if (!nativeApiWorks) {
+		if (!nativeApiWorks || !globalConfigWorks) {
 			await goto('/error');
 		} else {
 			if (!walletWorks) {
