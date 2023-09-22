@@ -32,7 +32,7 @@ export interface Wallet {
 		oseq: number,
 		provider: string
 	): Promise<void>;
-	submitManifest(dseq: number, provider: string, sdl: SDL): Promise<boolean>;
+	submitManifest(dseq: number, provider: string, sdl: SDL): Promise<void>;
 	getProviderLeaseStatus(
 		dseq: number,
 		gseq: number,

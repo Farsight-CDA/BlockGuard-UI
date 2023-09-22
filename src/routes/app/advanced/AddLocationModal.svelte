@@ -2,13 +2,14 @@
 	import LoadingSpinner from '$lib/components/LoadingSpinner.svelte';
 	import Modal from '$lib/components/Modal.svelte';
 	import type { DeploymentBid } from '$lib/types/types';
+	import { retry } from '$lib/utils/utils';
 	import { useRequiredWallet } from '$lib/wallet/wallet';
 	import VPNSdlString from '$static/vpn-sdl.yaml';
 	import { MsgCreateDeployment } from '@playwo/akashjs/build/protobuf/akash/deployment/v1beta3/deploymentmsg';
 	import { SDL } from '@playwo/akashjs/build/sdl';
 	import { scale } from 'svelte/transition';
 
-	enum Progress {
+	enum DeploymentStep {
 		None,
 		//Wait for deployment tx
 		Deploying,
@@ -23,50 +24,95 @@
 		//No more action needed, close asap
 		Completed,
 
-		Cancelling
+		Cancelling,
+
+		Failed
 	}
+	interface DeploymentProgress {
+		step: DeploymentStep;
+		retries: number;
+	}
+
+	var wallet = useRequiredWallet();
 
 	var sdl: SDL = SDL.fromString(VPNSdlString);
 
-	var progress: Progress = Progress.None;
+	var progress: DeploymentProgress = {
+		step: DeploymentStep.None,
+		retries: 0
+	};
+
 	var dseq: number = 0;
 
 	var refreshInterval: NodeJS.Timeout;
 
-	var wallet = useRequiredWallet();
-
 	var bids: DeploymentBid[] | null = null;
+
+	function setProgress(step: DeploymentStep) {
+		progress = {
+			step: step,
+			retries: 0
+		};
+	}
+
+	async function moveForward(
+		targetStep: DeploymentStep,
+		retries: number[],
+		action: () => Promise<void>
+	) {
+		try {
+			await retry(() => {
+				progress.retries++;
+				return action();
+			}, retries);
+			setProgress(targetStep);
+		} catch (error) {
+			setProgress(DeploymentStep.Failed);
+			throw error;
+		}
+	}
 
 	let openInner: () => Promise<void>;
 	export const open = async function open() {
 		dseq = Math.round(Math.random() * 100000000);
-		progress = Progress.Deploying;
+		setProgress(DeploymentStep.Deploying);
 
 		openInner();
 
-		await triggerCreateDeployment();
-		progress = Progress.AwaitBids;
+		await moveForward(
+			DeploymentStep.AwaitBids,
+			[6000],
+			triggerCreateDeployment
+		);
+
+		await new Promise((resolve) => setTimeout(resolve, 3000));
+
+		await moveForward(
+			DeploymentStep.Choosing,
+			[1000, 2000, 3000, 4000, 5000, 6000, 7000],
+			triggerGatherBids
+		);
 	};
 
 	let closeInner: () => void;
 	async function close() {
-		switch (progress) {
-			case Progress.Choosing:
-			case Progress.SubmittingManifest:
+		switch (progress.step) {
+			case DeploymentStep.Choosing:
+			case DeploymentStep.SubmittingManifest:
 				try {
-					progress = Progress.Cancelling;
+					setProgress(DeploymentStep.Cancelling);
 					await $wallet.closeDeployment(dseq);
 				} catch (error) {}
-			case Progress.None:
-			case Progress.Completed:
+			case DeploymentStep.None:
+			case DeploymentStep.Completed:
 				clearInterval(refreshInterval);
 				closeInner();
-				progress = Progress.None;
+				setProgress(DeploymentStep.None);
 				return true;
 
-			case Progress.Deploying:
-			case Progress.Accepting:
-			case Progress.AwaitBids: //Hard to estimate gas without bids
+			case DeploymentStep.Deploying:
+			case DeploymentStep.Accepting:
+			case DeploymentStep.AwaitBids: //Hard to estimate gas without bids
 				//Can't close now
 				return false;
 		}
@@ -88,25 +134,28 @@
 		});
 
 		await $wallet.createDeplyoment(msg);
-		refreshInterval = setInterval(refreshBids, 2000);
 	}
 
-	async function refreshBids() {
+	async function triggerGatherBids() {
 		bids = await $wallet.getDeploymentBids(dseq);
 
-		if (progress == Progress.AwaitBids && bids.length > 0) {
-			progress = Progress.Choosing;
+		if (bids.length == 0) {
+			throw Error('No bids received');
 		}
 	}
 
 	async function triggerAcceptBid(bid: DeploymentBid) {
-		progress = Progress.Accepting;
-		await $wallet.createLease(dseq, bid.gseq, bid.oseq, bid.provider);
-		progress = Progress.SubmittingManifest;
-		//Wait for provider to have block
-		await new Promise((resolve) => setTimeout(resolve, 6500));
-		await $wallet.submitManifest(dseq, bid.provider, sdl);
-		progress = Progress.Completed;
+		setProgress(DeploymentStep.Accepting);
+
+		moveForward(DeploymentStep.SubmittingManifest, [6000], () =>
+			$wallet.createLease(dseq, bid.gseq, bid.oseq, bid.provider)
+		);
+		moveForward(
+			DeploymentStep.Completed,
+			Array(15).map((x) => 1000),
+			() => $wallet.submitManifest(dseq, bid.provider, sdl)
+		);
+
 		await close();
 	}
 </script>
@@ -120,22 +169,27 @@
 	>
 		<h2 class="font-bold text-lg">Add Active Location</h2>
 
-		{#if progress == Progress.Deploying}
+		{#if progress.step == DeploymentStep.Deploying}
 			<p>Creating Deployment...</p>
 			<LoadingSpinner></LoadingSpinner>
-		{:else if progress == Progress.AwaitBids}
+			<p>Attempt: {progress.retries}</p>
+		{:else if progress.step == DeploymentStep.AwaitBids}
 			<p>Waiting for Bids...</p>
 			<LoadingSpinner></LoadingSpinner>
-		{:else if progress == Progress.Accepting}
+			<p>Attempt: {progress.retries}</p>
+		{:else if progress.step == DeploymentStep.Accepting}
 			<p>Accepting Bid...</p>
 			<LoadingSpinner></LoadingSpinner>
-		{:else if progress == Progress.SubmittingManifest}
+			<p>Attempt: {progress.retries}</p>
+		{:else if progress.step == DeploymentStep.SubmittingManifest}
 			<p>Submitting Manifest...</p>
 			<LoadingSpinner></LoadingSpinner>
-		{:else if progress == Progress.Cancelling}
+			<p>Attempt: {progress.retries}</p>
+		{:else if progress.step == DeploymentStep.Cancelling}
 			<p>Closing Deployment...</p>
 			<LoadingSpinner></LoadingSpinner>
-		{:else if (progress = Progress.Choosing)}
+			<p>Attempt: {progress.retries}</p>
+		{:else if (progress.step = DeploymentStep.Choosing)}
 			<p>Choose your provider</p>
 
 			<table>
