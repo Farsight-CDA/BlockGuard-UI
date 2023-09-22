@@ -147,12 +147,9 @@
 						<input
 							type="checkbox"
 							class="sr-only peer"
-							checked={$GLOBAL_CONFIG?.useAdvancedMode}
+							checked={$globalConfig?.useAdvancedMode}
 							on:change={(e) =>
-								GLOBAL_CONFIG.update((prev) => {
-									prev.useAdvancedMode = e.currentTarget.checked;
-									return prev;
-								})}
+								globalConfig.setAdvancedMode(e.currentTarget.checked)}
 						/>
 						<div
 							class="w-11 h-6 bg-gray-200 rounded-full
