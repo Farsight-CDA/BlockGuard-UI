@@ -300,6 +300,27 @@ export class CosmJSWallet implements Wallet {
 		return res.leases;
 	}
 
+	private async loadLeaseDetails(
+		lease: QueryLeaseResponse
+	): Promise<LeaseDetails> {
+		const providerDetails = await this.getProviderDetails(
+			lease.lease!.leaseId!.provider
+		);
+
+		const providerStatus = await this.getProviderLeaseStatus(
+			lease.lease!.leaseId!.dseq.toNumber(),
+			lease.lease!.leaseId!.gseq,
+			lease.lease!.leaseId!.oseq,
+			lease.lease!.leaseId!.provider
+		).catch(() => null);
+
+		return LeaseDetails.fromLeaseResponse(
+			lease,
+			providerDetails,
+			providerStatus
+		);
+	}
+
 	private async sendTx(
 		type: messages,
 		messageBody: any,
@@ -369,7 +390,9 @@ export class CosmJSWallet implements Wallet {
 		);
 
 		const newLeases = await this.loadCurrentLeases();
-		this.leases.set(newLeases.map((l) => LeaseDetails.fromLeaseResponse(l)));
+		this.leases.set(
+			await Promise.all(newLeases.map((x) => this.loadLeaseDetails(x)))
+		);
 	}
 
 	dispose() {

@@ -1,13 +1,8 @@
 <script lang="ts">
 	import LoadingSpinner from '$lib/components/LoadingSpinner.svelte';
-	import type {
-		LeaseDetails,
-		ProviderDetails,
-		ProviderLeaseStatus
-	} from '$lib/types/types';
+	import type { LeaseDetails } from '$lib/types/types';
 	import { useVPNConnection } from '$lib/vpn/vpn-connection';
 	import { useRequiredWallet } from '$lib/wallet/wallet';
-	import RefreshIcon from '$static/refresh.svg';
 	import { Lease_State } from '@playwo/akashjs/build/protobuf/akash/market/v1beta3/lease';
 	import type { Writable } from 'svelte/store';
 
@@ -17,67 +12,26 @@
 	var leases: Writable<LeaseDetails[]>;
 	$: leases = $wallet.leases;
 
-	const leasePromises: {
-		[key: number]:
-			| {
-					providerDetailsQuery: Promise<ProviderDetails>;
-					statusQuery: Promise<ProviderLeaseStatus>;
-					closeDeployment: Promise<void> | null;
-			  }
-			| undefined;
+	const closeDeploymentPromises: {
+		[key: number]: Promise<void> | undefined;
 	} = {};
 	var connectionPromiseRunning: boolean = false;
 
-	$: $leases.forEach((lease) => {
-		if (leasePromises[lease.dseq] == null) {
-			startLeaseQueries(lease);
-		}
-	});
-
-	function startLeaseQueries(lease: LeaseDetails) {
-		leasePromises[lease.dseq] = {
-			providerDetailsQuery: $wallet.getProviderDetails(lease.provider),
-			statusQuery: queryProviderLeaseStatus(lease),
-			closeDeployment: null
-		};
-	}
-
-	function queryProviderLeaseStatus(lease: LeaseDetails) {
-		return $wallet.getProviderLeaseStatus(
-			lease.dseq,
-			lease.gseq,
-			lease.oseq,
-			lease.provider
-		);
-	}
-
-	function triggerRefreshProviderStatus(lease: LeaseDetails) {
-		leasePromises[lease.dseq]!.statusQuery = queryProviderLeaseStatus(lease);
-	}
-
 	async function triggerCloseDeployment(lease: LeaseDetails) {
-		if (leasePromises[lease.dseq]?.closeDeployment != null) {
-			return;
-		}
-
-		leasePromises[lease.dseq]!.closeDeployment = $wallet.closeDeployment(
-			lease.dseq
-		);
-		await leasePromises[lease.dseq]!.closeDeployment;
+		closeDeploymentPromises[lease.dseq] = $wallet.closeDeployment(lease.dseq);
+		await closeDeploymentPromises[lease.dseq];
 	}
 
 	async function triggerConnectVPN(lease: LeaseDetails) {
-		if (connectionPromiseRunning) {
+		if (connectionPromiseRunning || lease.status == null) {
 			return;
 		}
 		connectionPromiseRunning = true;
 
 		try {
-			const leaseStatus = await leasePromises[lease.dseq]!.statusQuery!;
-
 			await vpnConnection.connectVPNToLease(
 				lease.dseq,
-				`${leaseStatus.forwardedPorts[0].host}:${leaseStatus.forwardedPorts[0].externalPort}`
+				`${lease.status.forwardedPorts[0].host}:${lease.status.forwardedPorts[0].externalPort}`
 			);
 		} finally {
 			connectionPromiseRunning = false;
@@ -108,36 +62,29 @@
 		</tr>
 	</thead>
 	<tbody class="before:content-[' '] before:block before:h-2">
-		{#each $leases as lease}
-			<tr>
+		{#each $leases.sort((a, b) => a.createdAtHeight - b.createdAtHeight) as lease}
+			<tr
+				class:border={$vpnConnection.isActive &&
+					$vpnConnection.connection.dseq == lease.dseq}
+				class:border-gray-300={$vpnConnection.isActive &&
+					$vpnConnection.connection.dseq == lease.dseq}
+				class:bg-gray-500={$vpnConnection.isActive &&
+					$vpnConnection.connection.dseq == lease.dseq}
+			>
 				<td>
-					{#await leasePromises[lease.dseq]?.providerDetailsQuery ?? new Promise( () => {} )}
-						<LoadingSpinner></LoadingSpinner>
-					{:then providerDetails}
-						{providerDetails.region}
-					{/await}
+					{lease.providerDetails.region}
 				</td>
 				<td>
 					<p>{Lease_State[lease.state]}</p>
 				</td>
 				<td>
-					<div class="flex flex-row justify-around">
-						{#await leasePromises[lease.dseq]?.statusQuery ?? new Promise( () => {} )}
-							<LoadingSpinner></LoadingSpinner>
-						{:then providerLeaseStatus}
-							{#if providerLeaseStatus.forwardedPorts.length == 1}
-								<p class="text-green-800">Active</p>
-							{:else}
-								<p class="text-yellow-600">Unknown</p>
-							{/if}
-						{:catch}
-							<p class="text-red-800">Unresponsibe</p>
-						{/await}
-
-						<button on:click={() => triggerRefreshProviderStatus(lease)}>
-							<img class="h-5" src={RefreshIcon} alt="Refresh Status" />
-						</button>
-					</div>
+					{#if lease.status == null}
+						<p class="text-red-800">Unresponsive</p>
+					{:else if lease.status.forwardedPorts.length == 1}
+						<p class="text-green-800">Active</p>
+					{:else}
+						<p class="text-yellow-600">Unknown</p>
+					{/if}
 				</td>
 				<td>
 					<div class="flex flex-row justify-end gap-3">
@@ -147,10 +94,9 @@
 								disabled={connectionPromiseRunning}
 								on:click={triggerDisconnectVPN}>Disconnect</button
 							>
-						{:else if !$vpnConnection.isActive && leasePromises[lease.dseq]?.closeDeployment != null}
+						{:else if !$vpnConnection.isActive && !connectionPromiseRunning}
 							<button
 								class="bg-green-800 px-2 py-1 rounded-md"
-								disabled={connectionPromiseRunning}
 								on:click={() => triggerConnectVPN(lease)}>Connect</button
 							>
 						{/if}
@@ -158,10 +104,10 @@
 						{#if !$vpnConnection.isActive || ($vpnConnection.isActive && $vpnConnection.connection.dseq != lease.dseq)}
 							<button
 								class="bg-red-800 px-2 py-1 rounded-md"
-								disabled={leasePromises[lease.dseq]?.closeDeployment != null}
+								disabled={closeDeploymentPromises[lease.dseq] != null}
 								on:click={() => triggerCloseDeployment(lease)}
 							>
-								{#if leasePromises[lease.dseq]?.closeDeployment != null}
+								{#if closeDeploymentPromises[lease.dseq] != null}
 									<LoadingSpinner></LoadingSpinner>
 								{:else}
 									Close

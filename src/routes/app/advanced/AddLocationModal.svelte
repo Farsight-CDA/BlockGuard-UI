@@ -105,6 +105,8 @@
 				} catch (error) {}
 			case DeploymentStep.None:
 			case DeploymentStep.Completed:
+			case DeploymentStep.Cancelling:
+			case DeploymentStep.Failed:
 				clearInterval(refreshInterval);
 				closeInner();
 				setProgress(DeploymentStep.None);

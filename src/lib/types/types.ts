@@ -29,17 +29,24 @@ export interface LeaseDetails {
 	oseq: number;
 	state: Lease_State;
 	createdAtHeight: number;
-	provider: string;
+
+	providerDetails: ProviderDetails;
+	status: ProviderLeaseStatus | null;
 }
 export const LeaseDetails = {
-	fromLeaseResponse(response: QueryLeaseResponse) {
+	fromLeaseResponse(
+		response: QueryLeaseResponse,
+		providerDetails: ProviderDetails,
+		providerStatus: ProviderLeaseStatus | null
+	) {
 		return {
 			dseq: response.lease!.leaseId!.dseq.toNumber(),
 			gseq: response.lease!.leaseId!.gseq,
 			oseq: response.lease!.leaseId!.oseq,
 			state: response.lease!.state,
 			createdAtHeight: response.lease!.createdAt.toNumber(),
-			provider: response.lease!.leaseId!.provider
+			providerDetails: providerDetails,
+			status: providerStatus
 		} satisfies LeaseDetails;
 	}
 };
