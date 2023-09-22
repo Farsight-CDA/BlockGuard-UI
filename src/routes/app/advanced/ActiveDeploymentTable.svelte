@@ -8,6 +8,7 @@
 	import { useVPNConnection } from '$lib/vpn/vpn-connection';
 	import { useRequiredWallet } from '$lib/wallet/wallet';
 	import RefreshIcon from '$static/refresh.svg';
+	import { Lease_State } from '@playwo/akashjs/build/protobuf/akash/market/v1beta3/lease';
 	import type { Writable } from 'svelte/store';
 
 	var wallet = useRequiredWallet();
@@ -102,6 +103,7 @@
 		<tr>
 			<th class="pb-2">Location</th>
 			<th class="pb-2">Status</th>
+			<th class="pb-2">Reachability</th>
 			<th class="pb-2">Actions</th>
 		</tr>
 	</thead>
@@ -114,6 +116,9 @@
 					{:then providerDetails}
 						{providerDetails.region}
 					{/await}
+				</td>
+				<td>
+					<p>{Lease_State[lease.state]}</p>
 				</td>
 				<td>
 					<div class="flex flex-row justify-around">
