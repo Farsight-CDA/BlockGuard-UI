@@ -3,14 +3,13 @@
 	import Modal from '$lib/components/Modal.svelte';
 	import type { DeploymentBid } from '$lib/types/types';
 	import { useRequiredWallet } from '$lib/wallet/wallet';
-	import VpnSdlUrl from '$static/vpn-sdl.txt';
+	import VPNSdlString from '$static/vpn-sdl.yaml';
 	import { MsgCreateDeployment } from '@playwo/akashjs/build/protobuf/akash/deployment/v1beta3/deploymentmsg';
 	import { SDL } from '@playwo/akashjs/build/sdl';
 	import { scale } from 'svelte/transition';
 
 	enum Progress {
 		None,
-		FetchingSDL,
 		//Wait for deployment tx
 		Deploying,
 		//Wait for bids to come in
@@ -27,7 +26,7 @@
 		Cancelling
 	}
 
-	var sdl: SDL = null!;
+	var sdl: SDL = SDL.fromString(VPNSdlString);
 
 	var progress: Progress = Progress.None;
 	var dseq: number = 0;
@@ -41,22 +40,11 @@
 	let openInner: () => Promise<void>;
 	export const open = async function open() {
 		dseq = Math.round(Math.random() * 100000000);
-
-		if (sdl == null) {
-			progress = Progress.FetchingSDL;
-		} else {
-			progress = Progress.Deploying;
-		}
+		progress = Progress.Deploying;
 
 		openInner();
 
-		if (sdl == null) {
-			const VpnSdlText = await fetch(VpnSdlUrl).then((x) => x.text());
-			sdl = SDL.fromString(VpnSdlText, 'beta3');
-			progress = Progress.Deploying;
-		}
-
-		await triggerCreateDeployment();
+		//await triggerCreateDeployment();
 		progress = Progress.AwaitBids;
 	};
 
@@ -132,10 +120,7 @@
 	>
 		<h2 class="font-bold text-lg">Add Active Location</h2>
 
-		{#if progress == Progress.FetchingSDL}
-			<p>Fetching SDL...</p>
-			<LoadingSpinner></LoadingSpinner>
-		{:else if progress == Progress.Deploying}
+		{#if progress == Progress.Deploying}
 			<p>Creating Deployment...</p>
 			<LoadingSpinner></LoadingSpinner>
 		{:else if progress == Progress.AwaitBids}
