@@ -150,17 +150,19 @@
 							>
 						{/if}
 
-						<button
-							class="bg-red-800 px-2 py-1 rounded-md"
-							disabled={leasePromises[lease.dseq]?.closeDeployment != null}
-							on:click={() => triggerCloseDeployment(lease)}
-						>
-							{#if leasePromises[lease.dseq]?.closeDeployment != null}
-								<LoadingSpinner></LoadingSpinner>
-							{:else}
-								Close
-							{/if}
-						</button>
+						{#if !$vpnConnection.isActive || ($vpnConnection.isActive && $vpnConnection.connection.dseq != lease.dseq)}
+							<button
+								class="bg-red-800 px-2 py-1 rounded-md"
+								disabled={leasePromises[lease.dseq]?.closeDeployment != null}
+								on:click={() => triggerCloseDeployment(lease)}
+							>
+								{#if leasePromises[lease.dseq]?.closeDeployment != null}
+									<LoadingSpinner></LoadingSpinner>
+								{:else}
+									Close
+								{/if}
+							</button>
+						{/if}
 					</div>
 				</td>
 			</tr>
