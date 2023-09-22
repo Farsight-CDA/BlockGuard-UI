@@ -152,7 +152,7 @@
 		);
 		await moveForward(
 			DeploymentStep.Completed,
-			Array(15).map((x) => 1000),
+			Array.from(Array(15).keys()).map((x) => 1000),
 			() => $wallet.submitManifest(dseq, bid.provider, sdl)
 		);
 
@@ -189,7 +189,9 @@
 			<p>Closing Deployment...</p>
 			<LoadingSpinner></LoadingSpinner>
 			<p>Attempt: {progress.retries}</p>
-		{:else if (progress.step = DeploymentStep.Choosing)}
+		{:else if progress.step == DeploymentStep.Failed}
+			<p>Failed!</p>
+		{:else if progress.step == DeploymentStep.Choosing}
 			<p>Choose your provider</p>
 
 			<table>
