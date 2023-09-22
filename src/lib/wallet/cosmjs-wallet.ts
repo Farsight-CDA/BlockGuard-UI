@@ -10,7 +10,7 @@ import {
 	ProviderDetails,
 	ProviderLeaseStatus
 } from '$lib/types/types';
-import { base64ToUInt, retry } from '$lib/utils/utils';
+import { base64ToUInt } from '$lib/utils/utils';
 import { DirectSecp256k1HdWallet } from '@cosmjs/proto-signing';
 import { MsgCreateCertificate } from '@playwo/akashjs/build/protobuf/akash/cert/v1beta3/cert';
 import { Deployment_State } from '@playwo/akashjs/build/protobuf/akash/deployment/v1beta3/deployment';
@@ -250,22 +250,16 @@ export class CosmJSWallet implements Wallet {
 	): Promise<ProviderLeaseStatus> {
 		const providerDetails = await this.getProviderDetails(provider);
 
-		const attempt = () =>
-			NATIVE_API.mtlsFetch<ProviderLeaseStatusResponse>(
-				'GET',
-				new URL(`lease/${dseq}/${gseq}/${oseq}/status`, providerDetails.hostUri)
-					.href,
-				'',
-				this._certificate!.csr,
-				this._certificate!.privkey
-			);
+		const response = await NATIVE_API.mtlsFetch<ProviderLeaseStatusResponse>(
+			'GET',
+			new URL(`lease/${dseq}/${gseq}/${oseq}/status`, providerDetails.hostUri)
+				.href,
+			'',
+			this._certificate!.csr,
+			this._certificate!.privkey
+		);
 
-		try {
-			const response = await retry(attempt, [1000, 3000, 5000]);
-			return ProviderLeaseStatus.fromResponse(response);
-		} catch (error) {
-			throw Error(`Contacting Provider Failed: ${error}`);
-		}
+		return ProviderLeaseStatus.fromResponse(response);
 	}
 
 	//Internal

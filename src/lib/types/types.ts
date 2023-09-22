@@ -1,6 +1,7 @@
 import type { Attribute } from '@playwo/akashjs/build/protobuf/akash/base/v1beta3/attribute';
 import type { Deployment_State } from '@playwo/akashjs/build/protobuf/akash/deployment/v1beta3/deployment';
 import type { QueryDeploymentResponse } from '@playwo/akashjs/build/protobuf/akash/deployment/v1beta3/query';
+import type { Lease_State } from '@playwo/akashjs/build/protobuf/akash/market/v1beta3/lease';
 import type {
 	QueryBidResponse,
 	QueryLeaseResponse
@@ -26,6 +27,7 @@ export interface LeaseDetails {
 	dseq: number;
 	gseq: number;
 	oseq: number;
+	state: Lease_State;
 	createdAtHeight: number;
 	provider: string;
 }
@@ -35,6 +37,7 @@ export const LeaseDetails = {
 			dseq: response.lease!.leaseId!.dseq.toNumber(),
 			gseq: response.lease!.leaseId!.gseq,
 			oseq: response.lease!.leaseId!.oseq,
+			state: response.lease!.state,
 			createdAtHeight: response.lease!.createdAt.toNumber(),
 			provider: response.lease!.leaseId!.provider
 		} satisfies LeaseDetails;
