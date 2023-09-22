@@ -9,6 +9,7 @@
 	import { initializeWalletStore, useOptionalWallet } from '$lib/wallet/wallet';
 	import Gear from '$static/gear.svg';
 	import Logo from '$static/logo.webp';
+	import SettingsIcon from '$static/settings.svg';
 	import { onMount } from 'svelte';
 	import '../app.css';
 	import ExportMnemonicModal from './app/ExportMnemonicModal.svelte';
@@ -86,12 +87,9 @@
 		}, 5000);
 	}
 
-	function openExport() {
-		sidebarTranslate = 0;
-		openExportMnemonicModal();
-	}
-
 	export let openExportMnemonicModal: () => Promise<void>;
+	sidebarOpen = true;
+	sidebarTranslate = -80;
 </script>
 
 <div class="flex flex-row h-full w-full">
@@ -133,21 +131,55 @@
 	</div>
 	{#if sidebarOpen}
 		<div
-			class="absolute top-0 right-0 flex flex-col h-full items-center pt-32 gap-5
-            rounded-l-2xl bg-gray-900"
+			class="absolute top-0 right-0 flex flex-col h-full items-center gap-5
+            rounded-l-2xl bg-black p-4"
 			style={`width: ${sidebarWith - 0.8}%`}
 		>
+			<span class="mr-3 text-lg font-medium text-gray-300"> Settings </span>
+			<div class="bg-gray-900 p-4 rounded-lg w-full">
+				<label class="flex justify-between items-center cursor-pointer">
+					<img class="h-6" src={SettingsIcon} alt="" />
+
+					<span class="ml-1 text-sm font-medium text-gray-300">
+						Advanced Mode
+					</span>
+					<div class="ml-auto relative inset-y-0 right-0 w-11 h-6">
+						<input
+							type="checkbox"
+							class="sr-only peer"
+							checked={$GLOBAL_CONFIG?.useAdvancedMode}
+							on:change={(e) =>
+								GLOBAL_CONFIG.update((prev) => {
+									prev.useAdvancedMode = e.currentTarget.checked;
+									return prev;
+								})}
+						/>
+						<div
+							class="w-11 h-6 bg-gray-200 rounded-full
+							peer dark:bg-gray-700 peer-checked:after:translate-x-full
+							after:absolute after:top-[2px] after:left-[2px] after:bg-white
+							after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"
+						></div>
+					</div>
+				</label>
+			</div>
+
 			{#if $wallet != null}
-				<button on:click={logout} class="bg-red-600 p-3 rounded-md"
-					>{showConfirmation ? 'You sure?' : 'Log Out'}</button
-				>
-				<button on:click={openExport} class="bg-green-600 p-3 rounded-md"
-					>Export Mnemonics</button
+				<button
+					on:click={openExportMnemonicModal}
+					class="bg-gray-900 p-3 rounded-md w-full">Export Mnemonics</button
 				>
 				<ExportMnemonicModal
 					mnemonics={$wallet.getMnemonic()}
 					bind:open={openExportMnemonicModal}
 				/>
+				<button
+					on:click={logout}
+					class={`${
+						showConfirmation ? 'bg-red-600 p-3 ' : 'bg-red-900 p-3 '
+					} w-full rounded-md mt-auto`}
+					>{showConfirmation ? 'You sure?' : 'Log Out'}</button
+				>
 			{/if}
 		</div>
 	{/if}
