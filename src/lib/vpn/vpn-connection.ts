@@ -85,18 +85,20 @@ function createVPNConnection() {
 							dseq: prev.connection.dseq,
 							status: 'Disconnecting'
 					  }
-					: null!
+					: { dseq: -1, status: 'Offline' }
 			};
 		});
 
-		await NATIVE_API.disconnectVPN();
-
-		update(() => {
-			return {
-				isActive: false,
-				isUpdating: false
-			};
-		});
+		try {
+			await NATIVE_API.disconnectVPN();
+		} finally {
+			update(() => {
+				return {
+					isActive: false,
+					isUpdating: false
+				};
+			});
+		}
 	}
 
 	return {
