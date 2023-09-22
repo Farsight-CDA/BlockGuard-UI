@@ -35,7 +35,9 @@ function createVPNConnection() {
 		var shouldKill = false;
 
 		update((prev) => {
-			if (prev.isActive) {
+			if (connectionStatus.status == 'Offline') {
+				prev.isActive = false;
+			} else if (prev.isActive) {
 				prev.connection.status = connectionStatus.status;
 			} else {
 				shouldKill = true;
