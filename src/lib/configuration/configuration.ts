@@ -8,19 +8,41 @@ export interface GlobalConfig {
 
 const CONFIG_STORAGE_FILE = 'config.json';
 
-export const GLOBAL_CONFIG = writable<GlobalConfig | null>(null);
+var GLOBAL_CONFIG: ReturnType<typeof createGlobalConfig> | null;
+
+export function useGlobalConfig() {
+	if (GLOBAL_CONFIG == null) {
+		throw Error('GLOBAL_CONFIG not initialized');
+	}
+
+	return GLOBAL_CONFIG!;
+}
 
 //Tries to load config from storage, if not found does nothing
 export async function initializeGlobalConfig() {
-	const globalConfigJson = await NATIVE_API.loadFile(CONFIG_STORAGE_FILE);
+	GLOBAL_CONFIG = createGlobalConfig();
 
-	GLOBAL_CONFIG.set(
-		globalConfigJson == null
-			? DEFAULT_GLOBAL_CONFIG
-			: JSON.parse(globalConfigJson)
-	);
+	try {
+		await GLOBAL_CONFIG.initialize();
+	} catch (error) {
+		return false;
+	}
 
 	return true;
+}
+
+function createGlobalConfig() {
+	const { subscribe, set } = writable<GlobalConfig>();
+
+	async function initialize() {
+		const gcJson = await NATIVE_API.loadFile(CONFIG_STORAGE_FILE);
+		set(gcJson == null ? DEFAULT_GLOBAL_CONFIG : JSON.parse(gcJson));
+	}
+
+	return {
+		subscribe,
+		initialize
+	};
 }
 
 const DEFAULT_GLOBAL_CONFIG = {

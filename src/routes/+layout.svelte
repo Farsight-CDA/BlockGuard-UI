@@ -2,8 +2,8 @@
 	import { goto } from '$app/navigation';
 	import LoadingSpinner from '$lib/components/LoadingSpinner.svelte';
 	import {
-		GLOBAL_CONFIG,
-		initializeGlobalConfig
+		initializeGlobalConfig,
+		useGlobalConfig
 	} from '$lib/configuration/configuration';
 	import { initializeNativeAPI } from '$lib/native-api/native-api';
 	import { initializeWalletStore, useOptionalWallet } from '$lib/wallet/wallet';
@@ -14,6 +14,7 @@
 	import ExportMnemonicModal from './app/ExportMnemonicModal.svelte';
 
 	var wallet: ReturnType<typeof useOptionalWallet>;
+	var globalConfig: ReturnType<typeof useGlobalConfig>;
 
 	var initialized: boolean = false;
 
@@ -23,6 +24,7 @@
 		const walletWorks = await initializeWalletStore();
 
 		wallet = useOptionalWallet();
+		globalConfig = useGlobalConfig();
 
 		if (!nativeApiWorks) {
 			await goto('/error');
@@ -30,7 +32,7 @@
 			if (!walletWorks) {
 				await goto('/setup');
 			} else {
-				if ($GLOBAL_CONFIG?.useAdvancedMode) {
+				if ($globalConfig?.useAdvancedMode) {
 					await goto('/app/advanced');
 				} else {
 					await goto('/app/simple');

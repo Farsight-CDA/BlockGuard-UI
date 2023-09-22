@@ -4,6 +4,7 @@ import { writable, type Invalidator, type Subscriber } from 'svelte/store';
 import { CosmJSWallet } from './cosmjs-wallet';
 
 //Necessary for type registrations!
+import { useGlobalConfig } from '$lib/configuration/configuration';
 import type { Wallet } from './types';
 
 const WALLET_STORAGE_FILE = 'wallet.json';
@@ -81,7 +82,7 @@ function createWalletStore() {
 		const hdWallet = await DirectSecp256k1HdWallet.fromMnemonic(mnemonic, {
 			prefix: 'akash'
 		});
-		const cosmJSWallet = new CosmJSWallet(hdWallet, null);
+		const cosmJSWallet = new CosmJSWallet(hdWallet, null, useGlobalConfig());
 		await cosmJSWallet.initialize();
 
 		set(cosmJSWallet);

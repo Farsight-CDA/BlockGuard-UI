@@ -5,7 +5,7 @@ import type { VPNConnectionInfo } from './types';
 const VPN_USERNAME = 'admin';
 const VPN_PASSWORD = 'notreallyasecretpassword';
 
-var VPN_CONNECTION: ReturnType<typeof createVPNConnection> | null =
+var VPN_CONNECTION: ReturnType<typeof createVPNConnection> =
 	createVPNConnection();
 
 export function useVPNConnection() {

@@ -1,4 +1,7 @@
-import { GLOBAL_CONFIG } from '$lib/configuration/configuration';
+import {
+	useGlobalConfig,
+	type GlobalConfig
+} from '$lib/configuration/configuration';
 import { NATIVE_API } from '$lib/native-api/native-api';
 import {
 	DeploymentBid,
@@ -44,7 +47,13 @@ import type {
 } from '@playwo/akashjs/node_modules/@cosmjs/stargate';
 import { toBase64 } from 'pvutils';
 import { Semaphore } from 'semaphore-promise';
-import { get, writable, type Unsubscriber, type Writable } from 'svelte/store';
+import {
+	get,
+	writable,
+	type Readable,
+	type Unsubscriber,
+	type Writable
+} from 'svelte/store';
 import type { CertificateInfo, Wallet } from './types';
 
 interface StoredWallet {
@@ -84,20 +93,21 @@ export class CosmJSWallet implements Wallet {
 
 	constructor(
 		wallet: DirectSecp256k1HdWallet,
-		certificate: CertificateInfo | null
+		certificate: CertificateInfo | null,
+		globalConfig: Readable<GlobalConfig>
 	) {
 		this.wallet = wallet;
 
 		this._certificate = certificate;
 		this.certificate.set(certificate);
 
-		const currentRPCUrl = get(GLOBAL_CONFIG)?.rpcUrl;
+		const currentRPCUrl = get(globalConfig)?.rpcUrl;
 		if (currentRPCUrl == null) {
 			throw Error('GLOBAL_CONFIG must be initialized before Wallet');
 		}
 		this.rpcUrl = currentRPCUrl;
 
-		this.configUnsubscriber = GLOBAL_CONFIG.subscribe(async (config) => {
+		this.configUnsubscriber = globalConfig.subscribe(async (config) => {
 			if (config == null) {
 				throw Error('GLOBAL_CONFIG must be initialized before Wallet');
 			}
@@ -401,7 +411,11 @@ export class CosmJSWallet implements Wallet {
 				? (JSON.parse(storedWallet.certificate) as CertificateInfo)
 				: null;
 
-		const cosmJsWallet = new CosmJSWallet(hdWallet, certificate);
+		const cosmJsWallet = new CosmJSWallet(
+			hdWallet,
+			certificate,
+			useGlobalConfig()
+		);
 		await cosmJsWallet.initialize();
 		return cosmJsWallet;
 	}
