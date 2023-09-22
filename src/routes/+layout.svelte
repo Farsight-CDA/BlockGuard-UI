@@ -24,23 +24,21 @@
 
 		wallet = useOptionalWallet();
 
-		setTimeout(async () => {
-			if (!nativeApiWorks) {
-				await goto('/error');
+		if (!nativeApiWorks) {
+			await goto('/error');
+		} else {
+			if (!walletWorks) {
+				await goto('/setup');
 			} else {
-				if (!walletWorks) {
-					await goto('/setup');
+				if ($GLOBAL_CONFIG?.useAdvancedMode) {
+					await goto('/app/advanced');
 				} else {
-					if ($GLOBAL_CONFIG?.useAdvancedMode) {
-						await goto('/app/advanced');
-					} else {
-						await goto('/app/simple');
-					}
+					await goto('/app/simple');
 				}
 			}
+		}
 
-			initialized = true;
-		}, 250);
+		initialized = true;
 	});
 
 	const sidebarWith = 80;
