@@ -135,7 +135,7 @@
 					</div>
 				</td>
 				<td>
-					<div class="flex flex-row justify-around">
+					<div class="flex flex-row justify-end gap-3">
 						{#if $vpnConnection.isActive && $vpnConnection.connection.dseq == lease.dseq}
 							<button
 								class="bg-yellow-600 px-2 py-1 rounded-md"
