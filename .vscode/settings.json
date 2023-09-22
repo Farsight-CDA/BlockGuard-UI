@@ -4,6 +4,10 @@
 	},
 	"editor.defaultFormatter": "esbenp.prettier-vscode",
 	"editor.formatOnSave": true,
+	"files.exclude": {
+		"**/.svelte-kit": true,
+		"**/build": true
+	},
 	"formatFiles.excludedFolders": [
 		"node_modules",
 		".vscode",
