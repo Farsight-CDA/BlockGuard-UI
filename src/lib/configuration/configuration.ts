@@ -1,3 +1,4 @@
+import { goto } from '$app/navigation';
 import { NATIVE_API } from '$lib/native-api/native-api';
 import { writable } from 'svelte/store';
 
@@ -32,15 +33,36 @@ export async function initializeGlobalConfig() {
 }
 
 function createGlobalConfig() {
-	const { subscribe, set } = writable<GlobalConfig>();
+	const { subscribe, set, update } = writable<GlobalConfig>(null!);
+	var initialized = false;
 
 	async function initialize() {
 		const gcJson = await NATIVE_API.loadFile(CONFIG_STORAGE_FILE);
 		set(gcJson == null ? DEFAULT_GLOBAL_CONFIG : JSON.parse(gcJson));
+		initialized = true;
+	}
+
+	async function setAdvancedMode(useAdvancedMode: boolean) {
+		var requiresReload: boolean = false;
+
+		update((prev) => {
+			if (prev.useAdvancedMode == useAdvancedMode) {
+				return prev;
+			}
+
+			prev.useAdvancedMode = useAdvancedMode;
+			requiresReload = true;
+			return prev;
+		});
+
+		if (requiresReload) {
+			await goto('/');
+		}
 	}
 
 	return {
 		subscribe,
+		setAdvancedMode,
 		initialize
 	};
 }
