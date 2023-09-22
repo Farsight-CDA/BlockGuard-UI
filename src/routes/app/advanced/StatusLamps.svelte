@@ -79,7 +79,7 @@
 	function convertConnectionLampStatus(connectionInfo: VPNConnectionInfo) {
 		if (
 			!connectionInfo.isActive ||
-			connectionInfo.connection.status == 'Offline'
+			(connectionInfo.isActive && connectionInfo.connection.status == 'Offline')
 		) {
 			return StatusLampStatus.ActionRequired;
 		} else if (connectionInfo.connection.status == 'Connected') {
