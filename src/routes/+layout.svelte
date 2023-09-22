@@ -73,12 +73,14 @@
 	let showConfirmation = false;
 
 	async function logout() {
-		showConfirmation = true;
 		if (showConfirmation) {
 			closeSidebar();
 			await goto('/setup');
 			await wallet.clear();
 		}
+
+		showConfirmation = true;
+
 		setTimeout(() => {
 			showConfirmation = false;
 		}, 5000);
@@ -140,7 +142,7 @@
 					>{showConfirmation ? 'You sure?' : 'Log Out'}</button
 				>
 				<button on:click={openExport} class="bg-green-600 p-3 rounded-md"
-					>export Mnemonics</button
+					>Export Mnemonics</button
 				>
 				<ExportMnemonicModal
 					mnemonics={$wallet.getMnemonic()}
