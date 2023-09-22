@@ -1,6 +1,6 @@
 import { goto } from '$app/navigation';
 import { NATIVE_API } from '$lib/native-api/native-api';
-import { writable } from 'svelte/store';
+import { get, writable } from 'svelte/store';
 
 export interface GlobalConfig {
 	useAdvancedMode: boolean;
@@ -56,8 +56,16 @@ function createGlobalConfig() {
 		});
 
 		if (requiresReload) {
+			await store();
 			await goto('/');
 		}
+	}
+
+	async function store() {
+		await NATIVE_API.saveFile(
+			CONFIG_STORAGE_FILE,
+			JSON.stringify(get({ subscribe }))
+		);
 	}
 
 	return {
