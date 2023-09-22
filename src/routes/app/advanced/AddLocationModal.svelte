@@ -44,7 +44,7 @@
 
 		openInner();
 
-		//await triggerCreateDeployment();
+		await triggerCreateDeployment();
 		progress = Progress.AwaitBids;
 	};
 
