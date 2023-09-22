@@ -19,7 +19,8 @@ export function useVPNConnection() {
 function createVPNConnection() {
 	const { subscribe, update, set } = writable<VPNConnectionInfo>(
 		{
-			isActive: false
+			isActive: false,
+			isUpdating: false
 		},
 		() => {
 			refreshStatus();
@@ -35,7 +36,9 @@ function createVPNConnection() {
 		var shouldKill = false;
 
 		update((prev) => {
-			if (prev.isActive) {
+			if (prev.isUpdating) {
+				return prev;
+			} else if (prev.isActive) {
 				prev.connection.status = connectionStatus.status;
 			} else {
 				shouldKill = true;
@@ -56,19 +59,27 @@ function createVPNConnection() {
 	async function connectVPNToLease(dseq: number, host: string) {
 		set({
 			isActive: true,
+			isUpdating: true,
 			connection: {
 				dseq: dseq,
 				status: 'Connecting'
 			}
 		});
 
-		await NATIVE_API.connectVPN(host, VPN_USERNAME, VPN_PASSWORD);
+		try {
+			await NATIVE_API.connectVPN(host, VPN_USERNAME, VPN_PASSWORD);
+		} finally {
+			update((prev) => {
+				return { ...prev, isUpdating: false };
+			});
+		}
 	}
 
 	async function closeVPNConnection() {
 		update((prev) => {
 			return {
 				isActive: true,
+				isUpdating: true,
 				connection: prev.isActive
 					? {
 							dseq: prev.connection.dseq,
@@ -82,7 +93,8 @@ function createVPNConnection() {
 
 		update(() => {
 			return {
-				isActive: false
+				isActive: false,
+				isUpdating: false
 			};
 		});
 	}

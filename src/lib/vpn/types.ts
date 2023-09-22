@@ -19,8 +19,10 @@ interface VPNConnection {
 export type VPNConnectionInfo =
 	| {
 			isActive: true;
+			isUpdating: boolean;
 			connection: VPNConnection;
 	  }
 	| {
 			isActive: false;
+			isUpdating: boolean;
 	  };

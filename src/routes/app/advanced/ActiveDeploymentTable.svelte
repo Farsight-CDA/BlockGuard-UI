@@ -15,7 +15,6 @@
 	const closeDeploymentPromises: {
 		[key: number]: Promise<void> | undefined;
 	} = {};
-	var connectionPromiseRunning: boolean = false;
 
 	async function triggerCloseDeployment(lease: LeaseDetails) {
 		closeDeploymentPromises[lease.dseq] = $wallet.closeDeployment(lease.dseq);
@@ -23,32 +22,18 @@
 	}
 
 	async function triggerConnectVPN(lease: LeaseDetails) {
-		if (connectionPromiseRunning || lease.status == null) {
+		if ($vpnConnection.isUpdating || lease.status == null) {
 			return;
 		}
-		connectionPromiseRunning = true;
 
-		try {
-			await vpnConnection.connectVPNToLease(
-				lease.dseq,
-				`${lease.status.forwardedPorts[0].host}:${lease.status.forwardedPorts[0].externalPort}`
-			);
-		} finally {
-			connectionPromiseRunning = false;
-		}
+		await vpnConnection.connectVPNToLease(
+			lease.dseq,
+			`${lease.status.forwardedPorts[0].host}:${lease.status.forwardedPorts[0].externalPort}`
+		);
 	}
 
 	async function triggerDisconnectVPN() {
-		if (connectionPromiseRunning) {
-			return;
-		}
-		connectionPromiseRunning = true;
-
-		try {
-			await vpnConnection.closeVPNConnection();
-		} finally {
-			connectionPromiseRunning = false;
-		}
+		await vpnConnection.closeVPNConnection();
 	}
 </script>
 
@@ -91,10 +76,10 @@
 						{#if $vpnConnection.isActive && $vpnConnection.connection.dseq == lease.dseq}
 							<button
 								class="bg-yellow-600 px-2 py-1 rounded-md"
-								disabled={connectionPromiseRunning}
+								disabled={$vpnConnection.isUpdating}
 								on:click={triggerDisconnectVPN}>Disconnect</button
 							>
-						{:else if !$vpnConnection.isActive && !connectionPromiseRunning}
+						{:else if !$vpnConnection.isActive && !$vpnConnection.isUpdating}
 							<button
 								class="bg-green-800 px-2 py-1 rounded-md"
 								on:click={() => triggerConnectVPN(lease)}>Connect</button
