@@ -147,7 +147,7 @@
 								disabled={connectionPromiseRunning}
 								on:click={triggerDisconnectVPN}>Disconnect</button
 							>
-						{:else if !$vpnConnection.isActive}
+						{:else if !$vpnConnection.isActive && leasePromises[lease.dseq]?.closeDeployment != null}
 							<button
 								class="bg-green-800 px-2 py-1 rounded-md"
 								disabled={connectionPromiseRunning}
