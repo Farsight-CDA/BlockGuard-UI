@@ -62,7 +62,7 @@
 
 	export let openExportMnemonicModal: () => Promise<void>;
 	let block = true;
-	let open = false;
+	let open = true;
 	function toggleSidebarAnimation() {
 		open = !open;
 		if (block) {
@@ -95,8 +95,8 @@
 		on:click={closeaaaa}
 	>
 		<nav
-			class={`bg-gray-900 py-2 px-3 flex flex-row justify-between ${
-				open == true ? 'rounded-tr-2xl' : ''
+			class={`bg-gray-900 py-2 px-3 flex h-20 flex-row justify-between ${
+				open == true ? 'rounded-r-2xl' : ''
 			}`}
 		>
 			<div class="flex flex-row gap-3 items-center">
@@ -122,53 +122,67 @@
 			{/if}
 		</main>
 	</div>
+	<div class="absolute top-9 w-full h-20 bg-black" />
 	<div
 		class="  xl:w-90 lg:w-60 md:w-80 w-80
-		absolute top-0 right-0 flex flex-col h-full items-center gap-5
-            rounded-l-2xl bg-black p-4"
+	absolute top-0 right-0 flex flex-col h-full items-center
+		rounded-l-2xl bg-black"
 	>
-		<span class="mr-3 text-lg font-medium text-gray-300"> Settings </span>
-		<div class="bg-gray-900 p-4 rounded-lg w-full">
-			<label class="flex justify-between items-center cursor-pointer">
-				<img class="h-6" src={SettingsIcon} alt="" />
+		<nav
+			class={`bg-gray-900 py-2 px-3 flex flex-row w-full rounded-l-2xl h-20 justify-center items-center `}
+		>
+			<div class="flex flex-row gap-3">
+				<h1 class="font-bold text-xl text-center">Settings</h1>
+			</div>
+		</nav>
 
-				<span class="ml-1 text-sm font-medium text-gray-300">
-					Advanced Mode
-				</span>
-				<div class="ml-auto relative inset-y-0 right-0 w-11 h-6">
-					<input
-						type="checkbox"
-						class="sr-only peer"
-						checked={$globalConfig?.useAdvancedMode}
-						on:change={(e) =>
-							globalConfig.setAdvancedMode(e.currentTarget.checked)}
-					/>
-					<div
-						class="w-11 h-6 bg-gray-200 rounded-full
+		<div
+			class="  xl:w-90 lg:w-60 md:w-80 w-80
+		 flex flex-col h-full items-center gap-5
+            rounded-l-2xl p-5"
+		>
+			<div class="bg-gray-900 p-4 rounded-2xl w-full">
+				<label class="flex justify-between items-center cursor-pointer">
+					<img class="h-6" src={SettingsIcon} alt="" />
+
+					<span class="ml-1 text-sm font-medium text-gray-300">
+						Advanced Mode
+					</span>
+					<div class="ml-auto relative inset-y-0 right-0 w-11 h-6">
+						<input
+							type="checkbox"
+							class="sr-only peer"
+							checked={$globalConfig?.useAdvancedMode}
+							on:change={(e) =>
+								globalConfig.setAdvancedMode(e.currentTarget.checked)}
+						/>
+						<div
+							class="w-11 h-6 bg-gray-200 rounded-full
 							peer dark:bg-gray-700 peer-checked:after:translate-x-full
 							after:absolute after:top-[2px] after:left-[2px] after:bg-white
 							after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"
-					></div>
-				</div>
-			</label>
-		</div>
+						></div>
+					</div>
+				</label>
+			</div>
 
-		{#if $wallet != null}
-			<button
-				on:click={openExportMnemonicModal}
-				class="bg-gray-900 p-3 rounded-md w-full">Export Mnemonics</button
-			>
-			<ExportMnemonicModal
-				mnemonics={$wallet.getMnemonic()}
-				bind:open={openExportMnemonicModal}
-			/>
-			<button
-				on:click={logout}
-				class={`${
-					showConfirmation ? 'bg-red-600 p-3 ' : 'bg-red-900 p-3 '
-				} w-full rounded-md mt-auto`}
-				>{showConfirmation ? 'You sure?' : 'Log Out'}</button
-			>
-		{/if}
+			{#if $wallet != null}
+				<button
+					on:click={openExportMnemonicModal}
+					class="bg-gray-900 p-3 rounded-md w-full">Export Mnemonics</button
+				>
+				<ExportMnemonicModal
+					mnemonics={$wallet.getMnemonic()}
+					bind:open={openExportMnemonicModal}
+				/>
+				<button
+					on:click={logout}
+					class={`${
+						showConfirmation ? 'bg-red-600 p-3 ' : 'bg-red-900 p-3 '
+					} w-full rounded-md mt-auto`}
+					>{showConfirmation ? 'You sure?' : 'Log Out'}</button
+				>
+			{/if}
+		</div>
 	</div>
 </div>
