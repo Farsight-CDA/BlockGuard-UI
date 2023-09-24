@@ -62,7 +62,7 @@
 
 	export let openExportMnemonicModal: () => Promise<void>;
 	let block = true;
-	let open = true;
+	let open = false;
 	function toggleSidebarAnimation() {
 		open = !open;
 		if (block) {
