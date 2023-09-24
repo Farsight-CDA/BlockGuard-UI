@@ -5,6 +5,7 @@ import { get, writable } from 'svelte/store';
 export interface GlobalConfig {
 	useAdvancedMode: boolean;
 	rpcUrl: string;
+	agbRead: boolean;
 }
 
 const CONFIG_STORAGE_FILE = 'config.json';
@@ -61,6 +62,24 @@ function createGlobalConfig() {
 		}
 	}
 
+	async function setAgbRead(agbRead: boolean) {
+		var requiresReload: boolean = false;
+
+		update((prev) => {
+			if (prev.agbRead == agbRead) {
+				return prev;
+			}
+
+			prev.agbRead = agbRead;
+			requiresReload = true;
+			return prev;
+		});
+
+		if (requiresReload) {
+			await store();
+		}
+	}
+
 	async function store() {
 		await NATIVE_API.saveFile(
 			CONFIG_STORAGE_FILE,
@@ -71,11 +90,13 @@ function createGlobalConfig() {
 	return {
 		subscribe,
 		setAdvancedMode,
+		setAgbRead,
 		initialize
 	};
 }
 
 const DEFAULT_GLOBAL_CONFIG = {
 	useAdvancedMode: true,
-	rpcUrl: 'https://rpc-akash.ecostake.com:443'
+	rpcUrl: 'https://rpc-akash.ecostake.com:443',
+	agbRead: false
 } satisfies GlobalConfig;
