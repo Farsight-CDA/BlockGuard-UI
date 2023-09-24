@@ -86,7 +86,7 @@
 	<!-- svelte-ignore a11y-click-events-have-key-events -->
 	<!-- svelte-ignore a11y-no-static-element-interactions -->
 	<div
-		class={` flex flex-col h-full w-full
+		class={` flex flex-col h-full w-full z-10
 		${open ? '-translate-x-80' : '-translate-x-0'} 
 		  transform lg:translate-x-0 ${
 				open ? 'xl:w-[calc(100%-22rem)] lg:w-[calc(100%-15rem)]' : 'lg:w-full'
@@ -124,7 +124,7 @@
 	</div>
 	<div
 		class="  xl:w-90 lg:w-60 md:w-80 w-80
-		absolute -z-10 top-0 right-0 flex flex-col h-full items-center gap-5
+		absolute top-0 right-0 flex flex-col h-full items-center gap-5
             rounded-l-2xl bg-black p-4"
 	>
 		<span class="mr-3 text-lg font-medium text-gray-300"> Settings </span>
