@@ -33,11 +33,13 @@
 		on:click={triggerForwardClick}
 		on:keydown={() => {}}
 		disabled={!clickable}
-		class:bg-neutral-500={status == StatusLampStatus.Loading}
+		class:bg-neutral-400={status == StatusLampStatus.Loading}
 		class:bg-red-800={status == StatusLampStatus.Error}
-		class:bg-yellow-500={status == StatusLampStatus.Warning}
-		class:bg-green-500={status == StatusLampStatus.Ready}
+		class:bg-yellow-400={status == StatusLampStatus.Warning}
+		class:bg-green-400={status == StatusLampStatus.Ready}
 		class:bg-red-400={status == StatusLampStatus.ActionRequired}
+		class:drop-shadow-glow-red-400={status == StatusLampStatus.Error}
+		class:drop-shadow-glow-green-400={status == StatusLampStatus.Ready}
 	>
 		{#if status == StatusLampStatus.Loading}
 			<LoadingSpinner></LoadingSpinner>
