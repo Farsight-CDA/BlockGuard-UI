@@ -42,13 +42,18 @@
 	>
 		<h2 class="font-bold text-lg mb-3">Import Wallet</h2>
 
-		<textarea class="bg-slate-700 p-2" bind:value={mnemonics} />
+		<textarea
+			class="bg-slate-700 p-2 rounded-t-xl h-40 overflow-hidden over"
+			bind:value={mnemonics}
+		/>
 
 		<button
 			disabled={!hasEnteredValidMnemonics}
-			class="px-2 py-1"
+			class="px-2 py-1 rounded-b-xl"
 			on:click={triggerSaveAndGoToApp}
-			class:bg-green-500={hasEnteredValidMnemonics}
+			class:bg-green-400={hasEnteredValidMnemonics}
+			class:drop-shadow-glow-green-400={hasEnteredValidMnemonics}
+			class:hover:bg-green-500={hasEnteredValidMnemonics}
 			class:bg-gray-800={!hasEnteredValidMnemonics}>Go to App</button
 		>
 	</div>
