@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { blur } from 'svelte/transition';
+
 	let dialogElement: HTMLDialogElement;
 	var isOpen: boolean = false;
 
@@ -27,6 +29,8 @@
 	on:keydown={() => {}}
 >
 	{#if isOpen}
-		<slot />
+		<div transition:blur={{ duration: 200, delay: 0 }}>
+			<slot />
+		</div>
 	{/if}
 </dialog>
