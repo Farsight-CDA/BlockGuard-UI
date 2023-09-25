@@ -3,8 +3,8 @@
 	import CreateWalletModal from './CreateWalletModal.svelte';
 	import ImportWalletModal from './ImportWalletModal.svelte';
 
-	let openCreateWalletModal: () => void;
-	let openImportWalletModal: () => void;
+	let openCreateWalletModal: () => Promise<void>;
+	let openImportWalletModal: () => Promise<void>;
 
 	var globalConfig = useGlobalConfig();
 	let agbRead = $globalConfig.agbRead;
@@ -30,7 +30,7 @@
 {#if agbRead == false}
 	<button
 		on:click={agreeToAgb}
-		class="w-full gap-3 p-4 border-white border-2 rounded-lg mt-4
+		class="w-full gap-3 p-4 rounded-lg mt-4
 	hover:bg-gray-600 active:bg-gray-600 focus:outline-none focus:ring focus:ring-gray-200 max-w-lg"
 	>
 		<p class="text-sm font-medium text-left">
@@ -43,14 +43,14 @@
 		<p class="text-xs text-right mt-1">press to hide this dialog</p>
 	</button>
 {/if}
-<div
-	class="flex flex-col gap-3 p-4 border-white border-2 rounded-lg bg-slate-950"
->
-	<button class="bg-green-600 p-3 rounded-md" on:click={handleCreateWallet}
-		>Create Wallet <br /> (Recommended)</button
+<div class="flex flex-col gap-4 p-4 rounded-lg">
+	<button
+		class="bg-green-400 p-3 hover:bg-green-500 drop-shadow-glow-green-400 rounded-md"
+		on:click={handleCreateWallet}>Create Wallet <br /> (Recommended)</button
 	>
-	<button class="bg-blue-600 p-3 rounded-md" on:click={handleImportWallet}
-		>Import from Mnemonic</button
+	<button
+		class="bg-blue-400 hover:bg-blue-500 p-3 shadow-lg drop-shadow-glow-blue-400 rounded-md"
+		on:click={handleImportWallet}>Import from Mnemonic</button
 	>
 </div>
 

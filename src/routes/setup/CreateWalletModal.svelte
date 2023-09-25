@@ -6,9 +6,6 @@
 
 	var wallet = useOptionalWallet();
 
-	let dialogElement: HTMLDialogElement;
-	var isOpen: boolean = false;
-
 	var generatedMnemonics: string | null;
 
 	var hasSavedMnemonics: boolean = false;
@@ -24,11 +21,9 @@
 		await goto('/');
 	}
 
-	function dialogClickHandler(e: MouseEvent) {
-		if (e.target === dialogElement) {
-			dialogElement.close();
-			isOpen = false;
-		}
+	function copyToClipboard() {
+		console.log(generatedMnemonics);
+		navigator.clipboard.writeText(generatedMnemonics!);
 	}
 </script>
 
@@ -43,30 +38,55 @@
 		<h2 class="font-bold text-lg">Create Wallet</h2>
 
 		{#if generatedMnemonics == null}
-			<button on:click={triggerMnemonicsGeneration}>Generate Mnemonics</button>
+			<button
+				class={'px-2 py-1 rounded-lg w-full bg-green-400'}
+				on:click={triggerMnemonicsGeneration}>Generate Mnemonics</button
+			>
 		{:else}
-			<div class="grid grid-cols-4 gap-3 p-4 rounded-xl bg-slate-800">
+			<button
+				class="grid grid-cols-4 gap-2 p-4 rounded-xl hover:bg-slate-800"
+				on:click={copyToClipboard}
+			>
 				{#each generatedMnemonics.split(' ') as word, i}
 					<p>{word}</p>
 				{/each}
-			</div>
+			</button>
 		{/if}
-
-		<span>
-			<input
-				disabled={generatedMnemonics == null}
-				id="copied"
-				type="checkbox"
-				bind:checked={hasSavedMnemonics}
-			/>
-			<label for="copied">I have saved the mnemonics</label>
-		</span>
-
+		{#if generatedMnemonics != null}
+			<span>
+				<div class="flex">
+					<div class="flex items-center h-5">
+						<input
+							disabled={generatedMnemonics == null}
+							bind:checked={hasSavedMnemonics}
+							id="helper-checkbox"
+							type="checkbox"
+							class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300"
+						/>
+					</div>
+					<div class="ml-2 text-sm">
+						<label
+							for="helper-checkbox"
+							class="font-medium text-gray-900 dark:text-gray-300"
+							>I have saved the mnemonics</label
+						>
+						<p
+							id="helper-checkbox-text"
+							class="text-xxs font-light text-gray-500 dark:text-gray-300"
+						>
+							I know that without them, my funds could be lost forever
+						</p>
+					</div>
+				</div>
+			</span>
+		{/if}
 		<button
 			disabled={!hasSavedMnemonics}
-			class="px-2 py-1"
-			class:bg-green-500={hasSavedMnemonics}
-			class:bg-gray-800={!hasSavedMnemonics}
+			class="px-2 py-1 rounded-lg w-full bg-black drop-shadow-glow-black-100"
+			class:hover:drop-shadow-glow-red-100={!hasSavedMnemonics}
+			class:bg-green-400={hasSavedMnemonics}
+			class:hover:bg-red-400={!hasSavedMnemonics}
+			class:drop-shadow-glow-green-400={hasSavedMnemonics}
 			on:click={triggerSaveAndGoToApp}>Go to App</button
 		>
 	</div>
