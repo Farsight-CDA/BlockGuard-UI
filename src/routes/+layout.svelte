@@ -109,7 +109,7 @@
 			</button>
 		</nav>
 		<main
-			class={`bg-black h-full overflow-y-auto overflow-x-hidden p-3 flex flex-col items-center ${
+			class={`bg-black h-full overflow-y-auto overflow-x-hidden p-3 flex flex-col items-center justify-center ${
 				open == true ? 'rounded-br-2xl' : ''
 			}`}
 		>

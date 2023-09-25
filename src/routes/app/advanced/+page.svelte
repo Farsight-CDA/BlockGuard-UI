@@ -28,9 +28,9 @@
 <AddLocationModal bind:open={openAddActiveLocationModal}></AddLocationModal>
 
 <div
-	class="flex flex-col gap-6 w-11/12 sm:w-2/3 xl:w-1/2 h-full items-center justify-center"
+	class="flex flex-col gap-6 w-11/12 sm:w-2/3 xl:w-1/2 h-full items-center justify-start"
 >
-	<StatusLamps></StatusLamps>
+	<StatusLamps />
 
 	<div
 		class="w-full bg-neutral-900 rounded-md flex flex-col justify-center p-4 gap-4"
