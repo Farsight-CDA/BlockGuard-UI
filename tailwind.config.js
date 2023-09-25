@@ -3,13 +3,21 @@ export default {
 	content: ['./src/**/*.{html,js,svelte,ts}'],
 	theme: {
 		extend: {
+			fontSize: {
+				xxs: '0.625rem'
+			},
 			spacing: {
 				90: '22rem'
 			},
 			dropShadow: {
 				glow: [
-					'0 0px 20px rgba(255,255, 255, 0.35)',
+					'0 0px 20px rgba(255,255, 255, 0.2)',
 					'0 0px 65px rgba(255, 255,255, 0.2)'
+				],
+				// Shadows for red
+				'glow-black-100': [
+					'0 0px 20px rgba(0, 0, 0, 0.35)',
+					'0 0px 65px rgba(0, 0, 0, 0.2)'
 				],
 				// Shadows for red
 				'glow-red-100': [
