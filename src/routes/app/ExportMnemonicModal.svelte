@@ -1,4 +1,5 @@
 <script lang="ts">
+	import MnemonicsForm from '$lib/components/MnemonicsForm.svelte';
 	import Modal from '$lib/components/Modal.svelte';
 	import { useRequiredWallet } from '$lib/wallet/wallet';
 	import { scale } from 'svelte/transition';
@@ -23,23 +24,6 @@
 	>
 		<h2 class="font-bold text-lg">Export your Mnemonics</h2>
 
-		{#if mnemonics == null}
-			<div class="grid grid-cols-4 gap-3 p-4 rounded-xl bg-slate-800">
-				<p>No mnemonics this is weard</p>
-			</div>
-		{:else}
-			<button
-				on:click={copyToClipboard}
-				class="grid grid-cols-4 gap-3 p-4 rounded-xl bg-slate-800"
-			>
-				{#each mnemonics.split(' ') as word, i}
-					<p>{word}</p>
-				{/each}
-			</button>
-			<button
-				class="gap-3 p-4 rounded-xl bg-slate-800 transform"
-				on:click={copyToClipboard}>Copy</button
-			>
-		{/if}
-	</div></Modal
->
+		<MnemonicsForm {mnemonics} mode="View" exposed={true}></MnemonicsForm>
+	</div>
+</Modal>

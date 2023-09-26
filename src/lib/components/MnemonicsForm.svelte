@@ -3,13 +3,14 @@
 	import Clipboard from '$static/clipboard.svg';
 	import Eye from '$static/eye.svg';
 	import { DirectSecp256k1HdWallet } from '@cosmjs/proto-signing';
+	import { onMount } from 'svelte';
 
 	var words: 12 | 24 = 12;
 	$: if (mode == 'Generate') {
 		generateMnemonics(words).then((x) => (mnemonicsInner = x));
 	}
 
-	export let mode: 'Input' | 'Generate';
+	export let mode: 'Input' | 'Generate' | 'View';
 	export let exposed: boolean = false;
 
 	export let mnemonics: string | null = null;
@@ -25,6 +26,14 @@
 
 	var hoverMap: { [index: number]: boolean } = {};
 	var focusMap: { [index: number]: boolean } = {};
+
+	onMount(() => {
+		if ((mnemonics ?? '').split(' ').length > 12) {
+			words = 24;
+		} else {
+			words = 12;
+		}
+	});
 
 	async function validateMnemonics(mnemonicsArr: string[], words: number) {
 		if (mnemonicsArr.length == 0) {
@@ -123,12 +132,14 @@
 		<div class="bg-slate-950 p-1 rounded-full">
 			<button
 				class="rounded-full px-3 py-1"
+				class:hidden={words != 12 && mode == 'View'}
 				class:bg-slate-800={words == 12}
 				on:click={() => (words = 12)}
 				disabled={words == 12}>12 words</button
 			>
 			<button
 				class="rounded-full px-3 py-1"
+				class:hidden={words != 24 && mode == 'View'}
 				class:bg-slate-800={words == 24}
 				on:click={() => (words = 24)}
 				disabled={words == 24}>24 words</button
@@ -164,7 +175,7 @@
 					class="p-2 bg-slate-950 border-gray-700 border rounded-lg w-11/12"
 					type={hoverMap[i] || focusMap[i] || exposed ? 'text' : 'password'}
 					value={mnemonicsArr[i] ?? ''}
-					readonly={mode == 'Generate'}
+					readonly={mode == 'Generate' || mode == 'View'}
 					on:mouseover={() => (hoverMap[i] = true)}
 					on:mouseout={() => (hoverMap[i] = false)}
 					on:focus={() => (focusMap[i] = true)}
