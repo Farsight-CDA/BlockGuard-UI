@@ -6,7 +6,7 @@
 	};
 </script>
 
-<div class="absolute w-full h-full z-10 flex justify-center items-center">
+<div class="absolute w-full h-5/6 z-10 flex justify-center items-center">
 	<slot />
 </div>
 <div class="landscape">
