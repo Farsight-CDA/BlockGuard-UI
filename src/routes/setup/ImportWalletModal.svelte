@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
-	import MnemonicForm from '$lib/components/MnemonicForm.svelte';
+	import MnemonicForm from '$lib/components/MnemonicsForm.svelte';
 	import Modal from '$lib/components/Modal.svelte';
 	import { useOptionalWallet } from '$lib/wallet/wallet';
 	import { scale } from 'svelte/transition';
