@@ -1,51 +1,43 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
+	import MnemonicForm from '$lib/components/MnemonicForm.svelte';
 	import Modal from '$lib/components/Modal.svelte';
 	import { useOptionalWallet } from '$lib/wallet/wallet';
 	import { scale } from 'svelte/transition';
 
 	var wallet = useOptionalWallet();
 
-	let dialogElement: HTMLDialogElement;
-	var isOpen: boolean = false;
-
 	var mnemonics: string | null = null;
 	var hasEnteredValidMnemonics: boolean = false;
 
-	$: hasEnteredValidMnemonics = mnemonics != null;
+	var innerOpen: () => Promise<void>;
 
-	export let open: () => Promise<void>;
+	export const open = async function open() {
+		mnemonics = null;
+		await innerOpen();
+	};
 
 	async function triggerSaveAndGoToApp() {
-		if (hasEnteredValidMnemonics) {
-			await wallet.create(mnemonics!);
-		}
-
+		await wallet.create(mnemonics!);
 		await goto('/');
-	}
-
-	function dialogClickHandler(e: MouseEvent) {
-		if (e.target === dialogElement) {
-			dialogElement.close();
-			isOpen = false;
-		}
 	}
 </script>
 
 <!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
-<Modal bind:open>
+<Modal bind:open={innerOpen}>
 	<div
-		class="flex flex-col"
+		class="flex flex-col gap-4"
 		transition:scale={{ duration: 200, delay: 0 }}
 		on:introstart
 		on:outroend
 	>
-		<h2 class="font-bold text-lg mb-3">Import Wallet</h2>
+		<h2 class="font-bold text-lg">Import Wallet</h2>
 
-		<textarea
-			class="bg-slate-700 p-2 rounded-t-xl h-40 overflow-hidden over"
-			bind:value={mnemonics}
-		/>
+		<MnemonicForm
+			bind:mnemonics
+			bind:isValid={hasEnteredValidMnemonics}
+			mode={'Modifyable'}
+		></MnemonicForm>
 
 		<button
 			disabled={!hasEnteredValidMnemonics}
