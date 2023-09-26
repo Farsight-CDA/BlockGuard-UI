@@ -21,11 +21,12 @@
 <WelcomeAnimation>
 	<div class="w-full h-full items-center justify-center flex flex-col">
 		<div
-			class="border-2 border-gray-500 rounded-xl px-5 py-2 bg-neutral-800 bg-opacity-75"
+			class="border-2 border-gray-500 rounded-xl px-5 py-2 bg-neutral-800 bg-opacity-75 text-center"
 		>
-			<h2 class="text-2xl font-bold mb-4">Welcome to BlockGuard!</h2>
+			<h2 class="text-2xl font-bold">Welcome to BlockGuard VPN!</h2>
+			<p>Your permissionless gateway to a free internet.</p>
 
-			<hr />
+			<hr class="mt-3" />
 
 			<div class="flex flex-col gap-8 p-4 rounded-lg">
 				<button
