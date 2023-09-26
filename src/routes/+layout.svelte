@@ -33,7 +33,7 @@
 			if (!walletWorks) {
 				await goto('/setup');
 			} else {
-				if ($globalConfig?.useAdvancedMode) {
+				if ($globalConfig.useAdvancedMode) {
 					await goto('/app/advanced');
 				} else {
 					await goto('/app/simple');
@@ -108,11 +108,7 @@
 				<img src={Gear} class="h-12 invert" alt="Settings" />
 			</button>
 		</nav>
-		<main
-			class={`bg-black h-full overflow-y-auto overflow-x-hidden flex flex-col items-center justify-center ${
-				open == true ? 'rounded-br-2xl' : ''
-			}`}
-		>
+		<main class={`bg-black h-full overflow-y-auto`}>
 			{#if !initialized}
 				<div class="w-full h-full flex justify-center items-center">
 					<LoadingSpinner class="lg:w-1/12 w-1/6"></LoadingSpinner>
@@ -122,10 +118,9 @@
 			{/if}
 		</main>
 	</div>
-	<div class="absolute top-9 w-full h-20 bg-black" />
 	<div
-		class="  xl:w-90 lg:w-60 md:w-80 w-80
-	absolute top-0 right-0 flex flex-col h-full items-center
+		class="xl:w-90 lg:w-60 md:w-80 w-80
+		absolute top-0 right-0 flex flex-col h-full items-center
 		rounded-l-2xl bg-black"
 	>
 		<nav
@@ -137,9 +132,9 @@
 		</nav>
 
 		<div
-			class="  xl:w-90 lg:w-60 md:w-80 w-80
-		 flex flex-col h-full items-center gap-5
-            rounded-l-2xl p-5"
+			class="xl:w-90 lg:w-60 md:w-80 w-80
+		 		   flex flex-col h-full items-center gap-5
+            	   rounded-l-2xl p-5"
 		>
 			<div class="bg-gray-900 p-4 rounded-2xl w-full">
 				<label class="flex justify-between items-center cursor-pointer">

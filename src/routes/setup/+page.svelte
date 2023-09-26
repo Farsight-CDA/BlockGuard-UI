@@ -28,8 +28,8 @@
 </script>
 
 <WelcomeAnimation>
-	<div class="flex flex-col">
-		<h2 class="text-lg font-bold mb-4">Welcome to BlockGuard!</h2>
+	<div class="w-full h-full items-center justify-center flex flex-col">
+		<h2 class="text-2xl font-bold mb-4">Welcome to BlockGuard!</h2>
 		{#if agbRead == false}
 			<button
 				on:click={agreeToAgb}

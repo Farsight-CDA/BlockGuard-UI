@@ -6,36 +6,38 @@
 	};
 </script>
 
-<div class="absolute w-full h-5/6 z-10 flex justify-center items-center">
-	<slot />
-</div>
-<div class="landscape">
-	<div
-		class="fade {triggerAnimation ? '-translate-y-full' : '-translate-y-0'}"
-		style={` transition: all 1.2s ease-out `}
-	></div>
-	<div class="mountain"></div>
-	<div class="mountain mountain-2"></div>
-	<div class="mountain mountain-3"></div>
-	<div class=""></div>
-	<div class="sun-container">
-		<div class="sun"></div>
+<div class="relative h-full w-full">
+	<div class="w-full h-full relative bg-transparent z-10">
+		<slot />
 	</div>
-	<div class="cloud"></div>
-	<div class="cloud cloud-1"></div>
-	<div class="light"></div>
-	<div class="light light-1"></div>
-	<div class="water"></div>
+	<div class="landscape absolute top-0 -z-10">
+		<div
+			class="fade {triggerAnimation ? '-translate-y-full' : '-translate-y-0'}"
+			style={` transition: all 1.2s ease-out `}
+		></div>
+		<div class="mountain"></div>
+		<div class="mountain mountain-2"></div>
+		<div class="mountain mountain-3"></div>
+		<div class=""></div>
+		<div class="sun-container">
+			<div class="sun"></div>
+		</div>
+		<div class="cloud"></div>
+		<div class="cloud cloud-1"></div>
+		<div class="light"></div>
+		<div class="light light-1"></div>
+		<div class="water"></div>
 
-	<div class="lotus lotus-1"></div>
-	<div class="lotus lotus-2"></div>
-	<div class="lotus lotus-3"></div>
-	<div class="front">
-		<div class="grass"></div>
-		<div class="grass grass-1"></div>
-		<div class="grass grass-2"></div>
-		<div class="reed"></div>
-		<div class="reed reed-1"></div>
+		<div class="lotus lotus-1"></div>
+		<div class="lotus lotus-2"></div>
+		<div class="lotus lotus-3"></div>
+		<div class="front">
+			<div class="grass"></div>
+			<div class="grass grass-1"></div>
+			<div class="grass grass-2"></div>
+			<div class="reed"></div>
+			<div class="reed reed-1"></div>
+		</div>
 	</div>
 </div>
 
@@ -80,7 +82,6 @@
 		width: 100%;
 		height: 100%;
 		background-image: linear-gradient(var(--v1), var(--s1), var(--v1));
-		position: relative;
 		z-index: 1;
 		overflow: hidden;
 	}
