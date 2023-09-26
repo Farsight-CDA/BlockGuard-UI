@@ -1,7 +1,8 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
+	import MnemonicsForm from '$lib/components/MnemonicsForm.svelte';
 	import Modal from '$lib/components/Modal.svelte';
-	import { generateMnemonics, useOptionalWallet } from '$lib/wallet/wallet';
+	import { useOptionalWallet } from '$lib/wallet/wallet';
 	import { scale } from 'svelte/transition';
 
 	var wallet = useOptionalWallet();
@@ -10,25 +11,22 @@
 
 	var hasSavedMnemonics: boolean = false;
 
-	export let open: () => Promise<void>;
+	export const open = async function open() {
+		generatedMnemonics = null;
+		hasSavedMnemonics = false;
+		await innerOpen();
+	};
 
-	async function triggerMnemonicsGeneration() {
-		generatedMnemonics = await generateMnemonics();
-	}
+	let innerOpen: () => Promise<void>;
 
 	async function triggerSaveAndGoToApp() {
 		await wallet.create(generatedMnemonics!);
 		await goto('/');
 	}
-
-	function copyToClipboard() {
-		console.log(generatedMnemonics);
-		navigator.clipboard.writeText(generatedMnemonics!);
-	}
 </script>
 
 <!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
-<Modal bind:open>
+<Modal bind:open={innerOpen}>
 	<div
 		class="flex flex-col items-center gap-4"
 		transition:scale={{ duration: 200, delay: 0 }}
@@ -37,21 +35,11 @@
 	>
 		<h2 class="font-bold text-lg">Create Wallet</h2>
 
-		{#if generatedMnemonics == null}
-			<button
-				class={'px-2 py-1 rounded-lg w-full bg-green-400'}
-				on:click={triggerMnemonicsGeneration}>Generate Mnemonics</button
-			>
-		{:else}
-			<button
-				class="grid grid-cols-4 gap-2 p-4 rounded-xl hover:bg-slate-800"
-				on:click={copyToClipboard}
-			>
-				{#each generatedMnemonics.split(' ') as word, i}
-					<p>{word}</p>
-				{/each}
-			</button>
-		{/if}
+		<MnemonicsForm
+			mode="Generate"
+			bind:mnemonics={generatedMnemonics}
+			exposed={true}
+		></MnemonicsForm>
 		{#if generatedMnemonics != null}
 			<span>
 				<div class="flex">

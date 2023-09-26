@@ -36,7 +36,7 @@
 		<MnemonicForm
 			bind:mnemonics
 			bind:isValid={hasEnteredValidMnemonics}
-			mode={'Modifyable'}
+			mode="Input"
 		></MnemonicForm>
 
 		<button

@@ -128,6 +128,6 @@ function createWalletStore() {
 	};
 }
 
-export async function generateMnemonics() {
-	return (await DirectSecp256k1HdWallet.generate(24)).mnemonic;
+export async function generateMnemonics(length: 12 | 24) {
+	return (await DirectSecp256k1HdWallet.generate(length)).mnemonic;
 }
