@@ -1,52 +1,72 @@
 <script lang="ts">
-	import { EnglishMnemonic } from '@cosmjs/crypto';
+	import { DirectSecp256k1HdWallet } from '@cosmjs/proto-signing';
 
 	var words: 12 | 24 = 12;
 
 	export let mode: 'Readonly' | 'Modifyable';
 
 	export let mnemonics: string | null = null;
+	var mnemonicsInner: string | null = null;
+	$: mnemonicsInner = mnemonics;
+	$: finalizeMnemonics(isValid, words);
 
 	export let isValid: boolean = false;
-	$: isValid = validateMnemonics(mnemonics, words);
+	$: validateMnemonics(mnemonicsArr, words).then((x) => (isValid = x));
 
 	var mnemonicsArr: string[] = [];
-	$: mnemonicsArr = mnemonics?.split(' ') ?? [];
+	$: mnemonicsArr = mnemonicsInner?.split(' ') ?? [];
 
 	var hoverMap: { [index: number]: boolean } = {};
 	var focusMap: { [index: number]: boolean } = {};
 
-	function validateMnemonics(mnemonics: string | null, words: number) {
-		console.log(mnemonics);
-
-		if (mnemonics == null) {
-			console.log('NOPE, NULL');
+	async function validateMnemonics(mnemonicsArr: string[], words: number) {
+		if (mnemonicsArr.length == 0) {
 			return false;
 		}
 
-		if (mnemonics.split(' ').length < words) {
+		if (mnemonicsArr.length < words) {
 			return false;
 		}
 
-		for (let i = 0; i < words; i++) {
-			if (!EnglishMnemonic.wordlist.includes(mnemonics.split(' ')[i])) {
-				return false;
-			}
+		try {
+			await DirectSecp256k1HdWallet.fromMnemonic(
+				mnemonicsArr
+					.reduce(
+						(prev, curr, i) => `${prev}` + (i < words ? ` ${curr}` : ''),
+						''
+					)
+					.trim()
+			);
+			return true;
+		} catch (error) {
+			return false;
+		}
+	}
+
+	function finalizeMnemonics(isValid: boolean, words: number) {
+		if (!isValid) {
+			return;
 		}
 
-		return true;
+		mnemonics = mnemonicsArr
+			.reduce((prev, curr, i) => `${prev}` + (i < words ? ` ${curr}` : ''), '')
+			.trim();
 	}
 
 	function setMnemonicWord(word: string, index: number) {
-		if (mnemonics == null) {
-			mnemonics = ' '.repeat(index) + word;
+		if (index >= words) {
+			words = 24;
+		}
+
+		if (mnemonicsInner == null) {
+			mnemonicsInner = ' '.repeat(index) + word;
 			return;
 		}
 
 		var traversedLetters = 0;
 		var lettersToReplace = 0;
-		for (let i = 0; i < mnemonics.length; i++) {
-			if (mnemonics[i] == ' ') {
+		for (let i = 0; i < mnemonicsInner.length; i++) {
+			if (mnemonicsInner[i] == ' ') {
 				if (index == 0) {
 					break;
 				}
@@ -60,15 +80,15 @@
 		}
 
 		if (index == 0) {
-			mnemonics = `${mnemonics.substring(
+			mnemonicsInner = `${mnemonicsInner.substring(
 				0,
 				traversedLetters - lettersToReplace
-			)}${word}${mnemonics.substring(traversedLetters)}`.trim();
+			)}${word}${mnemonicsInner.substring(traversedLetters)}`.trim();
 		} else {
-			mnemonics = `${mnemonics}${' '.repeat(index)}${word}`.trim();
+			mnemonicsInner = `${mnemonicsInner}${' '.repeat(index)}${word}`.trim();
 		}
 
-		mnemonicsArr = mnemonics?.split(' ') ?? [];
+		mnemonicsArr = mnemonicsInner?.split(' ') ?? [];
 	}
 
 	function handleInputPaste(e: ClipboardEvent, index: number) {
