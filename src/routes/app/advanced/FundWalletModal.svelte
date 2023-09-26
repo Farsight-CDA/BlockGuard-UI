@@ -15,7 +15,7 @@
 		select,
 		manual,
 		kado,
-		kip,
+		skip,
 		load
 	}
 
@@ -62,19 +62,19 @@
 						id="helper-checkbox-text"
 						class="text-xxs font-light text-gray-500 dark:text-gray-300"
 					>
-						comming soon
+						coming soon
 					</p></button
 				>
 				<button
 					on:click={() => null}
 					class="bg-gray-600 p-3 rounded-md w-full"
 					disabled={true}
-					>Kip API
+					>Skip API
 					<p
 						id="helper-checkbox-text"
 						class="text-xxs font-light text-gray-500 dark:text-gray-300"
 					>
-						comming soon
+						coming soon
 					</p></button
 				>
 			</div>
@@ -109,7 +109,7 @@
 	{#if step === FundWalletStep.kado}
 		<div>kado</div>
 	{/if}
-	{#if step === FundWalletStep.kip}
+	{#if step === FundWalletStep.skip}
 		<div>kip</div>
 	{/if}
 </Modal>
