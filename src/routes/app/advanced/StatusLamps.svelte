@@ -98,8 +98,11 @@
 		try {
 			certificationCreationPending = true;
 			const cert = await createCertificate($wallet.getAddress());
+			console.log('Created');
 			await $wallet.broadcastCertificate(cert.csr, cert.publicKey);
+			console.log('Broadcasted');
 			await wallet.setCertificate(cert.csr, cert.publicKey, cert.privateKey);
+			console.log('SET');
 		} finally {
 			certificationCreationPending = false;
 		}

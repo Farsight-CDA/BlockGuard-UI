@@ -356,6 +356,7 @@ export class CosmJSWallet implements Wallet {
 			);
 		} catch (error) {
 			console.error(`TX Failed: ${error}`);
+			throw error;
 		} finally {
 			await new Promise((resolve) => setTimeout(resolve, 3000));
 			release();
