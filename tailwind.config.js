@@ -27,14 +27,17 @@ export default {
 
 				// Shadows for green
 				'glow-green-400': [
-					'0 0px 20px rgba(74, 222, 128, 0.35)',
-					'0 0px 65px rgba(74, 222, 128, 0.2)'
+					'0 0px 10px rgba(74, 222, 128, 0.2)',
+					'0 0px 35px rgba(74, 222, 128, 0.1)'
 				],
 				// Shadows for blue
 				'glow-blue-400': [
-					'0 0px 20px rgba(96, 165, 250, 0.35)',
-					'0 0px 65px rgba(96, 165, 250, 0.2)'
+					'0 0px 10px rgba(96, 165, 250, 0.2)',
+					'0 0px 35px rgba(96, 165, 250, 0.1)'
 				]
+			},
+			blur: {
+				xs: '1px'
 			}
 		},
 		fontFamily: {
