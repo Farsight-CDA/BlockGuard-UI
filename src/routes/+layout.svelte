@@ -108,9 +108,7 @@
 				<img src={Gear} class="h-12 invert" alt="Settings" />
 			</button>
 		</nav>
-		<main
-			class={`bg-black h-full w-full overflow-y-auto w-full flex justify-center`}
-		>
+		<main class={`bg-black h-full w-full overflow-y-auto flex justify-center`}>
 			{#if !initialized}
 				<div class="w-full h-full flex justify-center items-center">
 					<LoadingSpinner class="lg:w-1/12 w-1/6"></LoadingSpinner>
