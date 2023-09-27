@@ -3,6 +3,15 @@ export default {
 	content: ['./src/**/*.{html,js,svelte,ts}'],
 	theme: {
 		extend: {
+			colors: {
+				'custom-pink': '#764d76',
+				'custom-lila-light': '#4d2f80',
+				'custom-lila-dark': '#2f0f64',
+				'custom-blue': '#111827',
+				'custom-red-light': '#9e575c',
+				'custom-red-dark': '#ad3732',
+				'custom-cloud': '#9e575c'
+			},
 			fontSize: {
 				xxs: '0.625rem'
 			},
