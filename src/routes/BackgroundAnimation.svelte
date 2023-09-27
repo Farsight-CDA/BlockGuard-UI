@@ -1,14 +1,11 @@
 <script lang="ts">
-	export const count = 20;
+	export const count = 6;
 
 	function reverseGausRandom() {
-		/// Generate a random number between 0 and 1
 		const randomValue = Math.random();
 
-		// Use a quadratic function to create the gradient
 		const gradientValue = Math.pow(randomValue, 2);
 
-		// Map the gradient to the range of 0 to 100
 		return Math.floor(gradientValue * 85);
 	}
 
