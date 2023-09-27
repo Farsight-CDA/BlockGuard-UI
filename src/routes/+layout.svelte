@@ -96,7 +96,7 @@
 	>
 		<nav
 			class={`bg-gray-900 py-2 px-3 flex h-20 flex-row justify-between ${
-				open == true ? 'rounded-r-2xl' : ''
+				open == true ? 'rounded-tr-2xl' : ''
 			}`}
 		>
 			<div class="flex flex-row gap-3 items-center">
@@ -108,7 +108,10 @@
 				<img src={Gear} class="h-12 invert" alt="Settings" />
 			</button>
 		</nav>
-		<main class={`bg-black h-full w-full overflow-y-auto flex justify-center`}>
+		<main
+			class={`bg-black h-full  w-full  overflow-y-auto flex justify-center
+			${open == true ? 'rounded-br-2xl' : ''}`}
+		>
 			{#if !initialized}
 				<div class="w-full h-full flex justify-center items-center">
 					<LoadingSpinner class="lg:w-1/12 w-1/6"></LoadingSpinner>
@@ -124,7 +127,7 @@
 		rounded-l-2xl bg-black"
 	>
 		<nav
-			class={`bg-gray-900 py-2 px-3 flex flex-row w-full rounded-l-2xl h-20 justify-center items-center `}
+			class={`bg-gray-900 py-2 px-3 flex flex-row w-full rounded-tl-2xl h-20 justify-center items-center `}
 		>
 			<div class="flex flex-row gap-3">
 				<h1 class="font-bold text-xl text-center">Settings</h1>
