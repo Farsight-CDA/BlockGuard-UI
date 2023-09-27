@@ -95,11 +95,7 @@
 		style={` transition: all 0.5s ease-out `}
 		on:click={closeaaaa}
 	>
-		<nav
-			class={`bg-gray-900 py-2 px-3 flex h-20 flex-row justify-between ${
-				open == true ? 'rounded-tr-2xl' : ''
-			}`}
-		>
+		<nav class={`bg-gray-900 py-2 px-3 flex h-20 flex-row justify-between `}>
 			<div class="flex flex-row gap-3 items-center">
 				<img src={Logo} alt="" class="h-12" />
 				<h1 class="font-bold text-xl">BlockGuard</h1>
@@ -112,7 +108,7 @@
 		<BackgroundAnimation>
 			<main
 				class={` h-full  w-full  overflow-y-auto flex justify-center
-			${open == true ? 'rounded-br-2xl' : ''}`}
+			`}
 			>
 				{#if !initialized}
 					<div class="w-full h-full flex justify-center items-center">
@@ -127,10 +123,10 @@
 	<div
 		class="xl:w-90 lg:w-60 md:w-80 w-80
 		absolute top-0 right-0 flex flex-col h-full items-center
-		rounded-l-2xl bg-black"
+		 bg-black"
 	>
 		<nav
-			class={`bg-gray-900 py-2 px-3 flex flex-row w-full rounded-tl-2xl h-20 justify-center items-center `}
+			class={`bg-gray-900 py-2 px-3 flex flex-row w-full  h-20 justify-center items-center `}
 		>
 			<div class="flex flex-row gap-3">
 				<h1 class="font-bold text-xl text-center">Settings</h1>
