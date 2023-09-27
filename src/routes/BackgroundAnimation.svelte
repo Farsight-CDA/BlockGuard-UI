@@ -57,19 +57,19 @@
 				}s; animation-delay: ${b.delay}s; left: ${b.position}rem;
 				rotate: -${b.rotation}deg;
 				box-shadow:
-					inset 20px -10px 50px -20px rgb(${255 - b.r * 70}, ${255 - b.b * 25}, ${
-						255 - b.g * 5
+					inset 20px -10px 50px -20px rgb(${255 - b.r * 75}, ${255 - b.g * 30}, ${
+						255 - b.b * 15
 					}),
-					inset -40px 12px 20px -40px rgb(${128 - b.r * 40}, ${128 - b.b * 20}, ${
-						128 - b.g * 10
+					inset -40px 12px 20px -40px rgb(${128 - b.r * 30}, ${128 - b.g * 10}, ${
+						128 - b.b * 30
 					});`}
 			>
 				<div
 					class="bubble-shine"
 					style={`scale: ${b.size}; 
 					box-shadow:
-					inset -5px -10px 70px 0px rgb(${0 + b.r * 5}, ${0 + b.b * 20}, ${
-						0 + b.g * 20
+					inset -5px -10px 70px 0px rgb(${0 + b.r * 5}, ${0 + b.g * 20}, ${
+						0 + b.b * 25
 					})`}
 				></div>
 			</div>
@@ -81,16 +81,22 @@
 	@keyframes myAnimation {
 		0% {
 			bottom: -15rem;
+			transform: scale(1);
+			opacity: 1;
+		}
+
+		90% {
+			opacity: 0.5;
 		}
 		100% {
 			bottom: 45%;
+			transform: scale(2);
+			opacity: 0;
 		}
 	}
 
 	.bubble {
-		animation:
-			myAnimation 100s ease-in infinite,
-			ping 100s ease-in infinite;
+		animation: myAnimation 100s ease-in infinite;
 		scale: 0.1;
 		display: flex;
 		justify-content: center;
@@ -106,10 +112,9 @@
 	.bubble-shine {
 		margin-left: 8rem;
 		margin-bottom: 2rem;
-		width: 5rem;
-		height: 5rem;
+		width: 6rem;
+		height: 6rem;
 		background-color: white;
 		border-radius: 44% 56% 46% 54% / 36% 50% 50% 64%;
-		box-shadow: inset -5px -10px 70px 0px black;
 	}
 </style>
