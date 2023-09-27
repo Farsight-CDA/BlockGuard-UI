@@ -12,6 +12,7 @@
 	import SettingsIcon from '$static/settings.svg';
 	import { onMount } from 'svelte';
 	import '../app.css';
+	import BackgroundAnimation from './BackgroundAnimation.svelte';
 	import ExportMnemonicModal from './app/ExportMnemonicModal.svelte';
 
 	var wallet: ReturnType<typeof useOptionalWallet>;
@@ -108,18 +109,20 @@
 				<img src={Gear} class="h-12 invert" alt="Settings" />
 			</button>
 		</nav>
-		<main
-			class={`bg-black h-full  w-full  overflow-y-auto flex justify-center
+		<BackgroundAnimation>
+			<main
+				class={` h-full  w-full  overflow-y-auto flex justify-center
 			${open == true ? 'rounded-br-2xl' : ''}`}
-		>
-			{#if !initialized}
-				<div class="w-full h-full flex justify-center items-center">
-					<LoadingSpinner class="lg:w-1/12 w-1/6"></LoadingSpinner>
-				</div>
-			{:else}
-				<slot />
-			{/if}
-		</main>
+			>
+				{#if !initialized}
+					<div class="w-full h-full flex justify-center items-center">
+						<LoadingSpinner class="lg:w-1/12 w-1/6"></LoadingSpinner>
+					</div>
+				{:else}
+					<slot />
+				{/if}
+			</main>
+		</BackgroundAnimation>
 	</div>
 	<div
 		class="xl:w-90 lg:w-60 md:w-80 w-80
