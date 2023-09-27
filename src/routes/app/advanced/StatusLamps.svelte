@@ -19,6 +19,7 @@
 
 	const READY_BALANCE = 10;
 	const WARNING_BALANCE = 5.1;
+	const CERTIFICATE_CLICKABLE_BALANCE = 0.05;
 
 	$: vpnClientLampStatus = convertVPNClientStatus($vpnClientStatus);
 	var vpnClientLampStatus = StatusLampStatus.Loading;
@@ -30,10 +31,12 @@
 
 	$: certificateLampStatus = convertCertificateStatus(
 		$certificate,
+		$balance,
 		certificationCreationPending
 	);
 	var certificateLampStatus = convertCertificateStatus(
 		$certificate,
+		$balance,
 		certificationCreationPending
 	);
 
@@ -65,10 +68,13 @@
 
 	function convertCertificateStatus(
 		certificate: CertificateInfo | null,
+		balance: number,
 		isPending: boolean
 	) {
 		if (isPending) {
 			return StatusLampStatus.Loading;
+		} else if (balance < CERTIFICATE_CLICKABLE_BALANCE) {
+			return StatusLampStatus.Error;
 		} else if (certificate == null) {
 			return StatusLampStatus.ActionRequired;
 		} else {
@@ -81,7 +87,7 @@
 			!connectionInfo.isActive ||
 			(connectionInfo.isActive && connectionInfo.connection.status == 'Offline')
 		) {
-			return StatusLampStatus.ActionRequired;
+			return StatusLampStatus.Error;
 		} else if (connectionInfo.connection.status == 'Connected') {
 			return StatusLampStatus.Ready;
 		} else if (
@@ -125,7 +131,8 @@
 		status={certificateLampStatus}
 		on:click={triggerUpdateCertificate}
 		clickable={certificateLampStatus != StatusLampStatus.Ready &&
-			!certificationCreationPending}
+			!certificationCreationPending &&
+			$balance >= 0.02}
 	/>
 	<StatusLamp name="Connection" status={connectionLampStatus} />
 </div>
