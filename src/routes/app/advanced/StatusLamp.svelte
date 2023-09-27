@@ -29,7 +29,7 @@
 	class="flex flex-col gap-3 justify-between items-center bg-neutral-900 rounded-md p-2 text-center"
 >
 	<button
-		class="w-1/2 sm:w-1/3 md:w-7/12 aspect-square rounded-full flex justify-center items-center"
+		class="w-1/2 sm:w-1/3 md:w-7/12 aspect-square drop-shadow-glow-red-400 rounded-full flex justify-center items-center"
 		on:click={triggerForwardClick}
 		on:keydown={() => {}}
 		disabled={!clickable}
@@ -38,7 +38,8 @@
 		class:bg-yellow-400={status == StatusLampStatus.Warning}
 		class:bg-green-400={status == StatusLampStatus.Ready}
 		class:bg-red-400={status == StatusLampStatus.ActionRequired}
-		class:drop-shadow-glow-red-400={status == StatusLampStatus.Error}
+		class:drop-shadow-glow-red-100={status == StatusLampStatus.Error ||
+			status == StatusLampStatus.ActionRequired}
 		class:drop-shadow-glow-green-400={status == StatusLampStatus.Ready}
 	>
 		{#if status == StatusLampStatus.Loading}
