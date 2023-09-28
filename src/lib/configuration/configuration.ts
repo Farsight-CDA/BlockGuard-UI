@@ -98,6 +98,6 @@ function createGlobalConfig() {
 
 const DEFAULT_GLOBAL_CONFIG = {
 	useAdvancedMode: true,
-	useBubbleMode: true,
+	useBubbleMode: false,
 	rpcUrl: 'https://rpc-akash.ecostake.com:443'
 } satisfies GlobalConfig;
