@@ -5,6 +5,7 @@
 		initializeGlobalConfig,
 		useGlobalConfig
 	} from '$lib/configuration/configuration';
+	import { initializePriceData } from '$lib/priceData';
 	import { initializeNativeAPI } from '$lib/native-api/native-api';
 	import { initializeWalletStore, useOptionalWallet } from '$lib/wallet/wallet';
 	import Gear from '$static/gear.svg';
@@ -24,11 +25,11 @@
 		const nativeApiWorks = await initializeNativeAPI();
 		const globalConfigWorks = await initializeGlobalConfig();
 		const walletWorks = await initializeWalletStore();
-
+		const priceWorks = await initializePriceData();
 		wallet = useOptionalWallet();
 		globalConfig = useGlobalConfig();
 
-		if (!nativeApiWorks || !globalConfigWorks) {
+		if (!nativeApiWorks || !globalConfigWorks || !priceWorks) {
 			await goto('/error');
 		} else {
 			if (!walletWorks) {
