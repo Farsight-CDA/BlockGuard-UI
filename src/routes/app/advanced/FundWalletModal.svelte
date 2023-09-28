@@ -33,13 +33,13 @@
 		step = FundWalletStep.load;
 		setTimeout(() => {
 			step = newStep;
-		}, 300); ///eeeeeeh scheint so zu gehen ohne das es flackert hab schon in der AddLocationModal.svelte geschaut
+		}, 1); ///eeeeeeh scheint so zu gehen ohne das es flackert hab schon in der AddLocationModal.svelte geschaut
 	}
 </script>
 
 <Modal bind:open>
 	{#if step === FundWalletStep.select}
-		<div transition:blur={{ duration: 200, delay: 0 }} class="m-6">
+		<div in:blur={{ duration: 200, delay: 0 }} class="m-6">
 			<div class="flex flex-col items-center pb-6" on:introstart on:outroend>
 				<h2 class="font-bold text-2xl">Fund your Wallet</h2>
 				<div>
@@ -79,9 +79,8 @@
 				>
 			</div>
 		</div>
-	{/if}
-	{#if step === FundWalletStep.manual}
-		<div transition:blur={{ duration: 200, delay: 0 }} class="m-6">
+	{:else if step === FundWalletStep.manual}
+		<div in:blur={{ duration: 200, delay: 0 }} class="m-6">
 			<h2 class="font-bold text-xl ml-1">This is you address</h2>
 			<h2 class="font-bold text-sm mt-4 ml-1">Send funds to this address:</h2>
 			<button
@@ -96,18 +95,16 @@
 			<div class="flex justify-center mt-5">
 				<button
 					on:click={() => setStep(FundWalletStep.select)}
-					class=" bg-custom-red-light rounded-md drop-shadow-glow-red-100
+					class=" bg-red-400 rounded-md drop-shadow-glow-red-100 p-2
 			pl-2 pr-2 md:flex md:flex-row"
 				>
 					Back to Selection
 				</button>
 			</div>
 		</div>
-	{/if}
-	{#if step === FundWalletStep.kado}
+	{:else if step === FundWalletStep.kado}
 		<div>kado</div>
-	{/if}
-	{#if step === FundWalletStep.skip}
+	{:else if step === FundWalletStep.skip}
 		<div>kip</div>
 	{/if}
 </Modal>
