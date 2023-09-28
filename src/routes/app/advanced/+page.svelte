@@ -5,6 +5,7 @@
 	import ActiveDeploymentTable from './ActiveDeploymentTable.svelte';
 	import AddLocationModal from './AddLocationModal.svelte';
 	import DeadDeploymentTable from './DeadDeploymentTable.svelte';
+	import { StatusLampStatus } from './StatusLamp.svelte';
 	import StatusLamps from './StatusLamps.svelte';
 
 	var wallet = useRequiredWallet();
@@ -23,25 +24,42 @@
 	function handleAddActiveLocation() {
 		openAddActiveLocationModal();
 	}
+
+	var clientStatus: StatusLampStatus;
+	var fundStatus: StatusLampStatus;
+	var certificateStatus: StatusLampStatus;
+	var connectionStatus: StatusLampStatus;
+
+	var readyToAddLocation: boolean;
+	$: readyToAddLocation =
+		fundStatus == StatusLampStatus.Ready &&
+		certificateStatus == StatusLampStatus.Ready;
 </script>
 
 <AddLocationModal bind:open={openAddActiveLocationModal}></AddLocationModal>
 
-<div
-	class="flex flex-col gap-6 w-11/12 sm:w-2/3 xl:w-1/2 h-full items-center justify-center"
->
-	<StatusLamps />
+<div class="gap-6 w-11/12 sm:w-2/3 xl:w-1/2">
+	<StatusLamps
+		bind:vpnClientLampStatus={clientStatus}
+		bind:fundsLampStatus={fundStatus}
+		bind:certificateLampStatus={certificateStatus}
+		bind:connectionLampStatus={connectionStatus}
+	/>
 
 	<div
 		class="w-full bg-neutral-900 rounded-md flex flex-col justify-center p-4 gap-4"
 	>
-		<h2 class="text-xl font-bold">Active Locations</h2>
+		<div class="w-full flex justify-between">
+			<h2 class="text-xl font-bold">Active Locations</h2>
 
-		<button
-			disabled={$balance < 5.1}
-			class="bg-blue-500 rounded-md px-4 py-1"
-			on:click={handleAddActiveLocation}>Add</button
-		>
+			<button
+				disabled={!readyToAddLocation}
+				class:bg-gray-500={!readyToAddLocation}
+				class:bg-blue-500={readyToAddLocation}
+				class="rounded-md px-4 py-1"
+				on:click={handleAddActiveLocation}>Add</button
+			>
+		</div>
 
 		<ActiveDeploymentTable></ActiveDeploymentTable>
 
