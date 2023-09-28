@@ -38,7 +38,7 @@
 
 <AddLocationModal bind:open={openAddActiveLocationModal}></AddLocationModal>
 
-<div class="w-full h-full flex justify-center p-6">
+<div class="w-full flex min-h-full justify-center p-6">
 	<div class="flex flex-col gap-6 w-11/12 sm:w-2/3 xl:w-1/2 my-auto">
 		<StatusLamps
 			bind:vpnClientLampStatus={clientStatus}
