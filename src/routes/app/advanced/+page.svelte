@@ -33,12 +33,14 @@
 
 	var readyToAddLocation: boolean;
 	$: readyToAddLocation =
-		fundStatus == StatusLampStatus.Ready &&
+		(fundStatus == StatusLampStatus.Ready ||
+			fundStatus == StatusLampStatus.Warning) &&
 		certificateStatus == StatusLampStatus.Ready;
 
 	var addLocationStatusMessage: string;
 	$: addLocationStatusMessage =
-		fundStatus != StatusLampStatus.Ready
+		fundStatus != StatusLampStatus.Ready &&
+		fundStatus != StatusLampStatus.Warning
 			? 'Not enough funds'
 			: certificateStatus != StatusLampStatus.Ready
 			? 'No certificate deployed'
