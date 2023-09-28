@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { tooltip } from '$lib/components/tooltip';
 	import type { DeploymentDetails, LeaseDetails } from '$lib/types/types';
 	import { useRequiredWallet } from '$lib/wallet/wallet';
 	import type { Writable } from 'svelte/store';
@@ -34,6 +35,14 @@
 	$: readyToAddLocation =
 		fundStatus == StatusLampStatus.Ready &&
 		certificateStatus == StatusLampStatus.Ready;
+
+	var addLocationStatusMessage: string;
+	$: addLocationStatusMessage =
+		fundStatus != StatusLampStatus.Ready
+			? 'Not enough funds'
+			: certificateStatus != StatusLampStatus.Ready
+			? 'No certificate deployed'
+			: '';
 </script>
 
 <AddLocationModal bind:open={openAddActiveLocationModal}></AddLocationModal>
@@ -57,7 +66,9 @@
 				class:bg-gray-500={!readyToAddLocation}
 				class:bg-blue-500={readyToAddLocation}
 				class="rounded-md px-6 py-2"
-				on:click={handleAddActiveLocation}>Add Location</button
+				on:click={handleAddActiveLocation}
+				title={addLocationStatusMessage}
+				use:tooltip>Add Location</button
 			>
 		</div>
 
