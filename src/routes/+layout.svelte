@@ -126,7 +126,7 @@
 	<div
 		class="xl:w-90 lg:w-60 md:w-80 w-80
 		absolute top-0 right-0 flex flex-col h-full items-center
-		rounded-l-2xl bg-black"
+		 bg-black"
 	>
 		<nav
 			class={`bg-gray-900 py-2 px-3 flex flex-row w-full  h-20 justify-center items-center `}
