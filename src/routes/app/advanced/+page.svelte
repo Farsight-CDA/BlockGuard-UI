@@ -47,23 +47,23 @@
 	/>
 
 	<div
-		class="w-full bg-neutral-900 rounded-md flex flex-col justify-center p-4 gap-4"
+		class="w-full bg-neutral-900 rounded-md flex flex-col justify-center p-4 gap-6"
 	>
-		<div class="w-full flex justify-between">
-			<h2 class="text-xl font-bold">Active Locations</h2>
+		<div class="w-full flex justify-between items-center">
+			<h2 class="text-2xl font-bold">Active Locations</h2>
 
 			<button
 				disabled={!readyToAddLocation}
 				class:bg-gray-500={!readyToAddLocation}
 				class:bg-blue-500={readyToAddLocation}
-				class="rounded-md px-4 py-1"
-				on:click={handleAddActiveLocation}>Add</button
+				class="rounded-md px-6 py-2"
+				on:click={handleAddActiveLocation}>Add Location</button
 			>
 		</div>
 
 		<ActiveDeploymentTable></ActiveDeploymentTable>
 
-		<h2 class="text-xl font-bold">Inactive Deployments</h2>
+		<h2 class="text-2xl font-bold">Inactive Deployments</h2>
 
 		<DeadDeploymentTable></DeadDeploymentTable>
 	</div>
