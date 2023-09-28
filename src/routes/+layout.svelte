@@ -106,7 +106,7 @@
 			</button>
 		</nav>
 		<div class="grow flex-1 min-h-0 bg-black -z-50">
-			<BackgroundAnimation count={50} />
+			<BackgroundAnimation count={$globalConfig?.useBubbleMode ? 50 : 0} />
 			<main
 				class={`w-full h-full overflow-y-auto 
 			${open == true ? 'rounded-br-2xl' : ''}`}
@@ -155,6 +155,30 @@
 							checked={$globalConfig?.useAdvancedMode}
 							on:change={(e) =>
 								globalConfig.setAdvancedMode(e.currentTarget.checked)}
+						/>
+						<div
+							class="w-11 h-6 bg-gray-200 rounded-full
+							peer dark:bg-gray-700 peer-checked:after:translate-x-full
+							after:absolute after:top-[2px] after:left-[2px] after:bg-white
+							after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"
+						></div>
+					</div>
+				</label>
+			</div>
+			<div class="bg-gray-900 p-4 rounded-2xl w-full">
+				<label class="flex justify-between items-center cursor-pointer">
+					<img class="h-6" src={SettingsIcon} alt="" />
+
+					<span class="ml-1 text-sm font-medium text-gray-300">
+						Bubble Mode
+					</span>
+					<div class="ml-auto relative inset-y-0 right-0 w-11 h-6">
+						<input
+							type="checkbox"
+							class="sr-only peer"
+							checked={$globalConfig?.useBubbleMode}
+							on:change={(e) =>
+								globalConfig.setBubbleMode(e.currentTarget.checked)}
 						/>
 						<div
 							class="w-11 h-6 bg-gray-200 rounded-full

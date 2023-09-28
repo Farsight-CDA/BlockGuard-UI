@@ -23,22 +23,27 @@
 
 	let bubbles: Bubble[] = [];
 
-	for (let i = 0; i < count; i++) {
-		const leon = Math.random() * 10 + 8;
-		const bubble: Bubble = {
-			position: reverseGausRandom(),
-			delay: leon % 8, // 0 - 7 and yes
-			hight: Math.random() * 100,
-			size: Math.random() * 0.4 + 0.1,
-			speed: leon,
-			rotation: Math.random() * 40,
-			r: Math.random(),
-			g: Math.random(),
-			b: Math.random()
-		};
-		console.log(bubble.position);
-		bubbles.push(bubble);
+	function init(count: number) {
+		bubbles = [];
+		for (let i = 0; i < count; i++) {
+			const leon = Math.random() * 10 + 8;
+			const bubble: Bubble = {
+				position: reverseGausRandom(),
+				delay: leon % 8, // 0 - 7 and yes
+				hight: Math.random() * 100,
+				size: Math.random() * 0.4 + 0.1,
+				speed: leon,
+				rotation: Math.random() * 40,
+				r: Math.random(),
+				g: Math.random(),
+				b: Math.random()
+			};
+			console.log(bubble.position);
+			bubbles.push(bubble);
+		}
 	}
+
+	$: init(count);
 </script>
 
 <div class="absolute w-full h-full overflow-hidden -z-50 top-0">

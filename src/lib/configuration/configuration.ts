@@ -3,6 +3,7 @@ import { NATIVE_API } from '$lib/native-api/native-api';
 import { get, writable } from 'svelte/store';
 
 export interface GlobalConfig {
+	useBubbleMode: boolean;
 	useAdvancedMode: boolean;
 	rpcUrl: string;
 }
@@ -61,6 +62,25 @@ function createGlobalConfig() {
 		}
 	}
 
+	async function setBubbleMode(useBubbleMode: boolean) {
+		var requiresReload: boolean = false;
+
+		update((prev) => {
+			if (prev.useBubbleMode == useBubbleMode) {
+				return prev;
+			}
+
+			prev.useBubbleMode = useBubbleMode;
+			requiresReload = true;
+			return prev;
+		});
+
+		if (requiresReload) {
+			await store();
+			await goto('/');
+		}
+	}
+
 	async function store() {
 		await NATIVE_API.saveFile(
 			CONFIG_STORAGE_FILE,
@@ -71,11 +91,13 @@ function createGlobalConfig() {
 	return {
 		subscribe,
 		setAdvancedMode,
+		setBubbleMode,
 		initialize
 	};
 }
 
 const DEFAULT_GLOBAL_CONFIG = {
 	useAdvancedMode: true,
+	useBubbleMode: true,
 	rpcUrl: 'https://rpc-akash.ecostake.com:443'
 } satisfies GlobalConfig;
