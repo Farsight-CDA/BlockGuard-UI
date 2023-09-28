@@ -70,7 +70,7 @@
 		{/if}
 		<button
 			disabled={!hasSavedMnemonics}
-			class="px-2 py-1 rounded-lg w-full bg-black drop-shadow-glow-black-100"
+			class="px-2 py-1 rounded-lg w-full bg-custom-blue drop-shadow-glow-black-100"
 			class:hover:drop-shadow-glow-red-100={!hasSavedMnemonics}
 			class:bg-green-400={hasSavedMnemonics}
 			class:hover:bg-red-400={!hasSavedMnemonics}

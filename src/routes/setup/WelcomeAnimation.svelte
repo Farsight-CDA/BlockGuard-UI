@@ -64,7 +64,7 @@
 		width: 100%;
 		z-index: 2;
 		height: 200%;
-		background: linear-gradient(to bottom, transparent 0%, black 40%);
+		background: linear-gradient(to bottom, transparent 0%, #111827 40%);
 		overflow: hidden;
 	}
 

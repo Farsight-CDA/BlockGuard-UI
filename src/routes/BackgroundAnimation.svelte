@@ -98,7 +98,7 @@
 		justify-content: center;
 		align-items: center;
 		position: absolute;
-		background-color: black;
+		background-color: #111827;
 		bottom: -15rem;
 		width: 15rem;
 		height: 15rem;

@@ -129,7 +129,7 @@
 		 bg-black"
 	>
 		<nav
-			class={`bg-gray-900 py-2 px-3 flex flex-row w-full  h-20 justify-center items-center `}
+			class={`bg-gray-900 py-2 px-3 flex flex-row w-full h-20 justify-center items-center `}
 		>
 			<div class="flex flex-row gap-3">
 				<h1 class="font-bold text-xl text-center">Settings</h1>
@@ -138,7 +138,7 @@
 
 		<div
 			class="xl:w-90 lg:w-60 md:w-80 w-80
-		 		   flex flex-col h-full items-center gap-5
+		 		   flex flex-col grow items-center gap-5
             	   rounded-l-2xl p-5"
 		>
 			<div class="bg-gray-900 p-4 rounded-2xl w-full">
