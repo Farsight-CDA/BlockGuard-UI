@@ -1,12 +1,12 @@
 <script lang="ts">
-	export const count = 6;
+	export let count: number = 6;
 
 	function reverseGausRandom() {
 		const randomValue = Math.random();
 
 		const gradientValue = Math.pow(randomValue, 2);
 
-		return Math.floor(gradientValue * 85);
+		return Math.floor(gradientValue * 120);
 	}
 
 	interface Bubble {
@@ -41,17 +41,13 @@
 	}
 </script>
 
-<div class="w-full h-full bg-red bg-black -z-50">
-	<div class="relative w-full h-full">
-		<slot />
-	</div>
-	<div class="absolute w-full h-full overflow-hidden -z-50 top-0">
-		{#each bubbles as b}
-			<div
-				class="bubble overflow-hidden -z-50"
-				style={`scale: ${b.size}; animation-duration: ${
-					b.speed
-				}s; animation-delay: ${b.delay}s; left: ${b.position}rem;
+<div class="absolute w-full h-full overflow-hidden -z-50 top-0">
+	{#each bubbles as b}
+		<div
+			class="bubble overflow-hidden -z-50"
+			style={`scale: ${b.size}; animation-duration: ${
+				b.speed
+			}s; animation-delay: ${b.delay}s; left: ${b.position}rem;
 				rotate: -${b.rotation}deg;
 				box-shadow:
 					inset 20px -10px 50px -20px rgb(${255 - b.r * 75}, ${255 - b.g * 30}, ${
@@ -60,18 +56,17 @@
 					inset -40px 12px 20px -40px rgb(${128 - b.r * 30}, ${128 - b.g * 10}, ${
 						128 - b.b * 30
 					});`}
-			>
-				<div
-					class="bubble-shine"
-					style={`scale: ${b.size}; 
+		>
+			<div
+				class="bubble-shine"
+				style={`scale: ${b.size}; 
 					box-shadow:
 					inset -5px -10px 70px 0px rgb(${0 + b.r * 5}, ${0 + b.g * 20}, ${
 						0 + b.b * 25
 					})`}
-				></div>
-			</div>
-		{/each}
-	</div>
+			></div>
+		</div>
+	{/each}
 </div>
 
 <style>
