@@ -4,11 +4,13 @@
 	export let y: number;
 </script>
 
-<div
-	class="border border-white bg-neutral-700 px-3 py-1 absolute z-50 rounded-md shadow-md"
-	style="
+{#if title.length > 0}
+	<div
+		class="border border-white bg-neutral-700 px-3 py-1 absolute z-50 rounded-md shadow-md"
+		style="
 		top: {y - 35}px;
 		left: {x - 5}px;"
->
-	{title}
-</div>
+	>
+		{title}
+	</div>
+{/if}
