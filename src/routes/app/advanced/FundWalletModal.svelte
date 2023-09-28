@@ -1,9 +1,14 @@
 <script lang="ts">
 	import Modal from '$lib/components/Modal.svelte';
+	import { useCurrentPrices } from '$lib/priceData';
 	import { useRequiredWallet } from '$lib/wallet/wallet';
+	import MasterCard from '$static/Mastercard_2019_logo.svg';
+	import Squid from '$static/Squid_Icon_Logo_Yellow.svg';
+	import Visa from '$static/Visa_Inc_logo.svg';
 	import { blur } from 'svelte/transition';
 
 	var wallet = useRequiredWallet();
+	var prices = useCurrentPrices();
 
 	export let open: () => Promise<void>;
 
@@ -30,72 +35,74 @@
 	var step: FundWalletStep = FundWalletStep.select;
 
 	function setStep(newStep: FundWalletStep) {
-		step = FundWalletStep.load;
-		setTimeout(() => {
-			step = newStep;
-		}, 1); ///eeeeeeh scheint so zu gehen ohne das es flackert hab schon in der AddLocationModal.svelte geschaut
+		step = newStep;
 	}
 </script>
 
 <Modal bind:open>
 	{#if step === FundWalletStep.select}
-		<div in:blur={{ duration: 200, delay: 0 }} class="m-6">
-			<div class="flex flex-col items-center pb-6" on:introstart on:outroend>
-				<h2 class="font-bold text-2xl">Fund your Wallet</h2>
-				<div>
-					<p>We surgest at least 5.5 akt</p>
-					<p>you have currently {$balance} akt</p>
-				</div>
+		<div in:blur={{ duration: 200, delay: 0 }} class="flex flex-col gap-4">
+			<h2 class="col-start-1 font-bold text-2xl text-center">
+				Fund your Wallet
+			</h2>
+			<div
+				class="col-start-1 col-end-3 grid grid-cols-2 text-right
+					 bg-gray-700 rounded-md p-2 w-full"
+			>
+				<p>We suggest at least:</p>
+				<p>{Math.ceil($prices.akt * 5.5 * 100) / 100}$</p>
+				<p>you have currently:</p>
+				<p>{Math.ceil($prices.akt * $balance * 100) / 100}$</p>
 			</div>
-			<div class="grid md:grid-cols-3 grid-cols-1 gap-4 pt-2">
+			<div class="grid grid-cols-2 gap-4">
 				<button
-					on:click={() => setStep(FundWalletStep.manual)}
-					class="bg-green-400 hover:bg-green-500 drop-shadow-glow-green-400 p-3 text-xl rounded-md w-full"
-					>Manual
+					on:click={() => null}
+					class="bg-gray-700 p-2 rounded-md"
+					disabled={true}
+					><p class="text-center text-sm">Deposit Fiat</p>
+					<div class="grid grid-cols-2 gap-1 place-items-center">
+						<img src={Squid} alt="" class="h-4" />
+						<img src={Visa} alt="" class="h-4" />
+					</div>
 				</button>
 				<button
 					on:click={() => null}
-					class="bg-gray-600 p-3 rounded-md w-full text-xl"
+					class="bg-gray-700 p-2 rounded-md"
 					disabled={true}
-					>Kado Money
-					<p
-						id="helper-checkbox-text"
-						class="text-xs font-light text-gray-500 dark:text-gray-300"
-					>
-						coming soon
-					</p></button
-				>
-				<button
-					on:click={() => null}
-					class="bg-gray-600 p-3 rounded-md w-full text-xl"
-					disabled={true}
-					>Skip API
-					<p
-						id="helper-checkbox-text"
-						class="text-xs font-light text-gray-500 dark:text-gray-300"
-					>
-						coming soon
-					</p></button
-				>
+					><p class="text-center text-sm">Deposit Fiat</p>
+					<div class="grid grid-cols-2 gap-1 place-items-center">
+						<img src={MasterCard} alt="" class="h-4" />
+						<img src={Visa} alt="" class="h-4" />
+					</div>
+				</button>
 			</div>
+			<button
+				on:click={() => setStep(FundWalletStep.manual)}
+				class="bg-green-400 hover:bg-green-500 drop-shadow-glow-green-400
+					text-xl rounded-md"
+				>Manual
+			</button>
 		</div>
 	{:else if step === FundWalletStep.manual}
-		<div in:blur={{ duration: 200, delay: 0 }} class="m-6">
-			<h2 class="font-bold text-xl ml-1">This is you address</h2>
-			<h2 class="font-bold text-sm mt-4 ml-1">Send funds to this address:</h2>
+		<div
+			in:blur={{ duration: 200, delay: 0 }}
+			class="grid grid-cols-1 gap-2 place-items-center"
+		>
+			<h2 class="font-bold text-2xl">This is your address</h2>
+			<h2 class="">Send funds to this address:</h2>
 			<button
 				on:click={copyToClipboard}
-				class=" bg-custom-pink rounded-md drop-shadow-glow-blue-400 w-full
-			 p-4 md:flex md:flex-row"
+				class=" bg-slate-950 rounded-md border border-gray-700 w-full
+			 p-2 md:flex md:flex-row"
 			>
 				<p>{part1}</p>
 				<p>{part2}</p>
 				<p>{part3}</p>
 			</button>
-			<div class="flex justify-center mt-5">
+			<div class="flex justify-center">
 				<button
 					on:click={() => setStep(FundWalletStep.select)}
-					class=" bg-red-400 rounded-md drop-shadow-glow-red-100 p-2
+					class=" bg-red-400 rounded-md hover:bg-red-500
 			pl-2 pr-2 md:flex md:flex-row"
 				>
 					Back to Selection
