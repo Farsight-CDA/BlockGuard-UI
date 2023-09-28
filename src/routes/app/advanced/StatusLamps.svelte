@@ -21,27 +21,27 @@
 	const WARNING_BALANCE = 5.1;
 	const CERTIFICATE_CLICKABLE_BALANCE = 0.05;
 
+	export let vpnClientLampStatus: StatusLampStatus = StatusLampStatus.Loading;
 	$: vpnClientLampStatus = convertVPNClientStatus($vpnClientStatus);
-	var vpnClientLampStatus = StatusLampStatus.Loading;
 
+	export let fundsLampStatus: StatusLampStatus = convertFundsStatus($balance);
 	$: fundsLampStatus = convertFundsStatus($balance);
-	var fundsLampStatus = convertFundsStatus($balance);
 
 	var certificationCreationPending: boolean = false;
 
+	export let certificateLampStatus: StatusLampStatus = convertCertificateStatus(
+		$certificate,
+		$balance,
+		certificationCreationPending
+	);
 	$: certificateLampStatus = convertCertificateStatus(
 		$certificate,
 		$balance,
 		certificationCreationPending
 	);
-	var certificateLampStatus = convertCertificateStatus(
-		$certificate,
-		$balance,
-		certificationCreationPending
-	);
 
+	export let connectionLampStatus: StatusLampStatus = StatusLampStatus.Loading;
 	$: connectionLampStatus = convertConnectionLampStatus($vpnConnection);
-	var connectionLampStatus = StatusLampStatus.Loading;
 
 	let openFundWalletModal: () => Promise<void>;
 
