@@ -116,7 +116,9 @@
 							<LoadingSpinner class="lg:w-1/12 w-1/6"></LoadingSpinner>
 						</div>
 					{:else}
-						<slot />
+						<div class="w-full flex min-h-full justify-center p-6">
+							<slot />
+						</div>
 					{/if}
 				</main>
 			</BackgroundAnimation>

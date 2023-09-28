@@ -6,10 +6,7 @@
 	};
 </script>
 
-<div class="relative h-full w-full">
-	<div class="w-full h-full relative bg-transparent z-10">
-		<slot />
-	</div>
+<div class="absolute w-full h-full inset-0">
 	<div class="landscape absolute top-0 -z-10">
 		<div
 			class="fade {triggerAnimation ? '-translate-y-full' : '-translate-y-0'}"
