@@ -108,7 +108,7 @@
 		<BackgroundAnimation>
 			<main
 				class={` h-full  w-full  overflow-y-auto flex justify-center
-			`}
+			${open == true ? 'rounded-br-2xl' : ''}`}
 			>
 				{#if !initialized}
 					<div class="w-full h-full flex justify-center items-center">
@@ -123,7 +123,7 @@
 	<div
 		class="xl:w-90 lg:w-60 md:w-80 w-80
 		absolute top-0 right-0 flex flex-col h-full items-center
-		 bg-black"
+		rounded-l-2xl bg-black"
 	>
 		<nav
 			class={`bg-gray-900 py-2 px-3 flex flex-row w-full  h-20 justify-center items-center `}
