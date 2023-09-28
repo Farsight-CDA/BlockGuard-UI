@@ -38,7 +38,6 @@
 				g: Math.random(),
 				b: Math.random()
 			};
-			console.log(bubble.position);
 			bubbles.push(bubble);
 		}
 	}
