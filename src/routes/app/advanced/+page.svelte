@@ -38,33 +38,35 @@
 
 <AddLocationModal bind:open={openAddActiveLocationModal}></AddLocationModal>
 
-<div class="gap-6 w-11/12 sm:w-2/3 xl:w-1/2">
-	<StatusLamps
-		bind:vpnClientLampStatus={clientStatus}
-		bind:fundsLampStatus={fundStatus}
-		bind:certificateLampStatus={certificateStatus}
-		bind:connectionLampStatus={connectionStatus}
-	/>
+<div class="w-full h-full flex justify-center p-6">
+	<div class="flex flex-col gap-6 w-11/12 sm:w-2/3 xl:w-1/2 my-auto">
+		<StatusLamps
+			bind:vpnClientLampStatus={clientStatus}
+			bind:fundsLampStatus={fundStatus}
+			bind:certificateLampStatus={certificateStatus}
+			bind:connectionLampStatus={connectionStatus}
+		/>
 
-	<div
-		class="w-full bg-neutral-900 rounded-md flex flex-col justify-center p-4 gap-4"
-	>
-		<div class="w-full flex justify-between">
-			<h2 class="text-xl font-bold">Active Locations</h2>
+		<div
+			class="w-full bg-neutral-900 rounded-md flex flex-col justify-center p-4 gap-4"
+		>
+			<div class="w-full flex justify-between">
+				<h2 class="text-xl font-bold">Active Locations</h2>
 
-			<button
-				disabled={!readyToAddLocation}
-				class:bg-gray-500={!readyToAddLocation}
-				class:bg-blue-500={readyToAddLocation}
-				class="rounded-md px-4 py-1"
-				on:click={handleAddActiveLocation}>Add</button
-			>
+				<button
+					disabled={!readyToAddLocation}
+					class:bg-gray-500={!readyToAddLocation}
+					class:bg-blue-500={readyToAddLocation}
+					class="rounded-md px-4 py-1"
+					on:click={handleAddActiveLocation}>Add</button
+				>
+			</div>
+
+			<ActiveDeploymentTable></ActiveDeploymentTable>
+
+			<h2 class="text-xl font-bold">Inactive Deployments</h2>
+
+			<DeadDeploymentTable></DeadDeploymentTable>
 		</div>
-
-		<ActiveDeploymentTable></ActiveDeploymentTable>
-
-		<h2 class="text-xl font-bold">Inactive Deployments</h2>
-
-		<DeadDeploymentTable></DeadDeploymentTable>
 	</div>
 </div>

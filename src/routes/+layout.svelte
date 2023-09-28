@@ -105,20 +105,22 @@
 				<img src={Gear} class="h-12 invert" alt="Settings" />
 			</button>
 		</nav>
-		<BackgroundAnimation>
-			<main
-				class={` h-full  w-full  overflow-y-auto flex justify-center
+		<div class="grow flex-1 min-h-0">
+			<BackgroundAnimation>
+				<main
+					class={`w-full h-full overflow-y-auto 
 			${open == true ? 'rounded-br-2xl' : ''}`}
-			>
-				{#if !initialized}
-					<div class="w-full h-full flex justify-center items-center">
-						<LoadingSpinner class="lg:w-1/12 w-1/6"></LoadingSpinner>
-					</div>
-				{:else}
-					<slot />
-				{/if}
-			</main>
-		</BackgroundAnimation>
+				>
+					{#if !initialized}
+						<div class="w-full h-full flex justify-center items-center">
+							<LoadingSpinner class="lg:w-1/12 w-1/6"></LoadingSpinner>
+						</div>
+					{:else}
+						<slot />
+					{/if}
+				</main>
+			</BackgroundAnimation>
+		</div>
 	</div>
 	<div
 		class="xl:w-90 lg:w-60 md:w-80 w-80
