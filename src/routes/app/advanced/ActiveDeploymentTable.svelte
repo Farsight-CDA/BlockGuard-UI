@@ -22,7 +22,11 @@
 	}
 
 	async function triggerConnectVPN(lease: LeaseDetails) {
-		if ($vpnConnection.isUpdating || lease.status == null) {
+		if (
+			$vpnConnection.isUpdating ||
+			lease.status == null ||
+			lease.status.forwardedPorts.length != 1
+		) {
 			return;
 		}
 
@@ -79,10 +83,15 @@
 								disabled={$vpnConnection.isUpdating}
 								on:click={triggerDisconnectVPN}>Disconnect</button
 							>
-						{:else if !$vpnConnection.isActive && !$vpnConnection.isUpdating}
+						{:else if !$vpnConnection.isUpdating}
 							<button
-								class="bg-green-800 px-2 py-1 rounded-md"
-								disabled={lease.status == null}
+								class="px-2 py-1 rounded-md"
+								class:bg-green-700={lease.status?.forwardedPorts.length == 1 &&
+									!$vpnConnection.isActive}
+								class:bg-gray-700={lease.status?.forwardedPorts.length != 1 ||
+									$vpnConnection.isActive}
+								disabled={lease.status?.forwardedPorts.length != 1 ||
+									$vpnConnection.isActive}
 								on:click={() => triggerConnectVPN(lease)}>Connect</button
 							>
 						{/if}
