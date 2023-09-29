@@ -26,6 +26,8 @@
 		openAddActiveLocationModal();
 	}
 
+	$: openAddActiveLocationModal?.();
+
 	var clientStatus: StatusLampStatus;
 	var fundStatus: StatusLampStatus;
 	var certificateStatus: StatusLampStatus;

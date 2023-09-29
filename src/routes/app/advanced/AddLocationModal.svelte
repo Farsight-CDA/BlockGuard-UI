@@ -7,7 +7,15 @@
 	import VPNSdlString from '$static/vpn-sdl.yaml';
 	import { MsgCreateDeployment } from '@playwo/akashjs/build/protobuf/akash/deployment/v1beta3/deploymentmsg';
 	import { SDL } from '@playwo/akashjs/build/sdl';
+	import type { Writable } from 'svelte/store';
 	import { scale } from 'svelte/transition';
+
+	var wallet = useRequiredWallet();
+
+	let averageBlockTime: Writable<number>;
+	$: averageBlockTime = $wallet.averageBlockTime;
+
+	$: blocksPerHour = 3600 / $averageBlockTime;
 
 	enum DeploymentStep {
 		None,
@@ -160,6 +168,16 @@
 
 		await close();
 	}
+
+	function shortenString(str: string | null) {
+		if (str == null) {
+			return '';
+		}
+		if (str.length <= 11) {
+			return str;
+		}
+		return str.slice(0, 4) + '...' + str.slice(str.length - 4, str.length);
+	}
 </script>
 
 <Modal bind:open={openInner} bind:close={closeInner}>
@@ -198,7 +216,7 @@
 
 			<table>
 				<thead>
-					<tr>
+					<tr class="text-sm md:text-xs">
 						<th> Location </th>
 						<th> Provider </th>
 						<th> Price </th>
@@ -206,27 +224,35 @@
 						<th> Actions </th>
 					</tr>
 				</thead>
-				<tbody class="text-center">
+				<tbody class="text-center text-sm p-1 rounded-md">
 					{#if bids != null}
 						{#each bids as bid}
 							<!-- svelte-ignore empty-block -->
 							{#await $wallet.getProviderDetails(bid.provider) then details}
 								<tr>
 									<td>
-										{details.region} ({details.country}, {details.city})
+										<p>{details.region}</p>
+										<p class="text-xs">({details.country}, {details.city})</p>
 									</td>
 									<td>
-										{details.organization}
-										{details.website}
+										{shortenString(details.organization)}
+										{shortenString(details.website)}
 									</td><td>
-										{bid.price} uakt / block
+										{(bid.price * 3600000) / $averageBlockTime / 1000000} $/hr
 									</td>
 									<td>
-										<p>DOWN: {details.networkDownload}</p>
-										<p>UP: {details.networkUpload}</p>
+										<p class="after:content-['_↑']">
+											{details.networkDownload}
+										</p>
+										<p class="after:content-['_↓']">
+											{details.networkUpload}
+										</p>
 									</td>
 									<td>
-										<button on:click={() => triggerAcceptBid(bid)}>
+										<button
+											class={'bg-slate-950 border border-gray-700  rounded-full px-3 py-1'}
+											on:click={() => triggerAcceptBid(bid)}
+										>
 											Select
 										</button>
 									</td>
