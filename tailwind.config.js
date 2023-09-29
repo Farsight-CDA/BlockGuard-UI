@@ -50,7 +50,7 @@ export default {
 			}
 		},
 		fontFamily: {
-			armata: ['Armata', 'sans']
+			armata: ['Armata', 'sans-serif']
 		}
 	},
 	plugins: []
