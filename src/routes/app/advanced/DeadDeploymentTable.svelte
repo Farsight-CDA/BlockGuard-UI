@@ -55,7 +55,7 @@
 				<td> Not Implemented </td>
 				<td>
 					<button
-						class="bg-red-600 px-3 py-1"
+						class="bg-red-800 px-2 py-1 rounded-md"
 						on:click={() => triggerCloseDeployment(deployment.dseq)}
 						disabled={isCloseActionRunning[deployment.dseq]}
 					>
