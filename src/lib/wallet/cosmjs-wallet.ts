@@ -285,8 +285,7 @@ export class CosmJSWallet implements Wallet {
 		const currentBlockTimestamp = await this.getBlockTimestamp(height);
 		const oldBlockTimestamp = await this.getBlockTimestamp(height - 1000);
 		return (
-			(currentBlockTimestamp.getUTCDate() - oldBlockTimestamp.getUTCDate()) /
-			1000
+			(currentBlockTimestamp.getTime() - oldBlockTimestamp.getTime()) / 1000
 		);
 	}
 
