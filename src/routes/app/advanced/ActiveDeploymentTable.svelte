@@ -82,6 +82,7 @@
 						{:else if !$vpnConnection.isActive && !$vpnConnection.isUpdating}
 							<button
 								class="bg-green-800 px-2 py-1 rounded-md"
+								disabled={lease.status == null}
 								on:click={() => triggerConnectVPN(lease)}>Connect</button
 							>
 						{/if}
