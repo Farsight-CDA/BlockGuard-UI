@@ -57,7 +57,7 @@
 			<div class="grid grid-cols-2 gap-4">
 				<button
 					on:click={() => null}
-					class="bg-gray-700 p-2 rounded-md"
+					class="bg-gray-700 p-2 rounded-md flex flex-col gap-2 items-center"
 					disabled={true}
 					><p class="text-center text-lg">Deposit Crypto</p>
 					<div class="grid grid-cols-1 gap-1 place-items-center">
@@ -66,7 +66,7 @@
 				</button>
 				<button
 					on:click={() => null}
-					class="bg-gray-700 p-2 rounded-md"
+					class="bg-gray-700 p-2 rounded-md flex flex-col gap-2 items-center"
 					disabled={true}
 					><p class="text-center text-lg">Deposit Fiat</p>
 					<div class="grid grid-cols-2 gap-1 place-items-center">
