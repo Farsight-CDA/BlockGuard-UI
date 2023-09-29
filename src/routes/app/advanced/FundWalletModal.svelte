@@ -59,17 +59,16 @@
 					on:click={() => null}
 					class="bg-gray-700 p-2 rounded-md"
 					disabled={true}
-					><p class="text-center text-sm">Deposit Fiat</p>
-					<div class="grid grid-cols-2 gap-1 place-items-center">
+					><p class="text-center text-lg">Deposit Crypto</p>
+					<div class="grid grid-cols-1 gap-1 place-items-center">
 						<img src={Squid} alt="" class="h-4" />
-						<img src={Visa} alt="" class="h-4" />
 					</div>
 				</button>
 				<button
 					on:click={() => null}
 					class="bg-gray-700 p-2 rounded-md"
 					disabled={true}
-					><p class="text-center text-sm">Deposit Fiat</p>
+					><p class="text-center text-lg">Deposit Fiat</p>
 					<div class="grid grid-cols-2 gap-1 place-items-center">
 						<img src={MasterCard} alt="" class="h-4" />
 						<img src={Visa} alt="" class="h-4" />
