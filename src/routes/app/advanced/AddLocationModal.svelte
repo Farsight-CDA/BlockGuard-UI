@@ -249,7 +249,7 @@
 						<th> Actions </th>
 					</tr>
 				</thead>
-				<tbody class="text-center text-sm p-1 rounded-md">
+				<tbody class="text-center text-sm p-1 rounded-md overflow:auto">
 					{#if bids != null}
 						{#each bids as bid}
 							<!-- svelte-ignore empty-block -->
