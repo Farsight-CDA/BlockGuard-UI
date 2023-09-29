@@ -83,15 +83,18 @@
 								disabled={$vpnConnection.isUpdating}
 								on:click={triggerDisconnectVPN}>Disconnect</button
 							>
-						{:else if !$vpnConnection.isUpdating}
+						{:else}
 							<button
 								class="px-2 py-1 rounded-md"
 								class:bg-green-700={lease.status?.forwardedPorts.length == 1 &&
-									!$vpnConnection.isActive}
+									!$vpnConnection.isActive &&
+									!$vpnConnection.isUpdating}
 								class:bg-gray-700={lease.status?.forwardedPorts.length != 1 ||
-									$vpnConnection.isActive}
+									$vpnConnection.isActive ||
+									$vpnConnection.isUpdating}
 								disabled={lease.status?.forwardedPorts.length != 1 ||
-									$vpnConnection.isActive}
+									$vpnConnection.isActive ||
+									$vpnConnection.isUpdating}
 								on:click={() => triggerConnectVPN(lease)}>Connect</button
 							>
 						{/if}
