@@ -76,6 +76,8 @@ export class CosmJSWallet implements Wallet {
 	private _certificate: CertificateInfo | null;
 	public balance: Writable<number> = writable(0);
 
+	public averageBlockTime: Writable<number> = writable(0);
+
 	public deployments: Writable<DeploymentDetails[]> = writable();
 	public leases: Writable<LeaseDetails[]> = writable();
 
@@ -394,6 +396,9 @@ export class CosmJSWallet implements Wallet {
 
 		const newBalance = await this.loadCurrentBalance();
 		this.balance.set(newBalance);
+
+		const newAverageBlockTime = await this.loadAverageBlockTime();
+		this.averageBlockTime.set(newAverageBlockTime);
 
 		const newDeployments = await this.loadCurrentDeployments();
 		this.deployments.set(
