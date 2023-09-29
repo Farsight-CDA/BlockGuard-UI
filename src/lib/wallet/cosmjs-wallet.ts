@@ -91,6 +91,11 @@ export class CosmJSWallet implements Wallet {
 		this.refresh.bind(this),
 		3000
 	);
+	private refreshAverageBlockTimeTimeout: NodeJS.Timeout = setInterval(
+		this.refreshAverageBlockTime.bind(this),
+		300000
+	);
+
 	private configUnsubscriber: Unsubscriber;
 
 	constructor(
@@ -284,6 +289,7 @@ export class CosmJSWallet implements Wallet {
 		const height = await this.msgClient.getHeight();
 		const currentBlockTimestamp = await this.getBlockTimestamp(height);
 		const oldBlockTimestamp = await this.getBlockTimestamp(height - 1000);
+
 		return (
 			(currentBlockTimestamp.getTime() - oldBlockTimestamp.getTime()) / 1000
 		);
@@ -383,6 +389,7 @@ export class CosmJSWallet implements Wallet {
 		await this.initializeClients();
 		this.initialized = true;
 		await this.refresh();
+		await this.refreshAverageBlockTime();
 	}
 
 	async initializeClients() {
@@ -398,9 +405,6 @@ export class CosmJSWallet implements Wallet {
 		const newBalance = await this.loadCurrentBalance();
 		this.balance.set(newBalance);
 
-		const newAverageBlockTime = await this.loadAverageBlockTime();
-		this.averageBlockTime.set(newAverageBlockTime);
-
 		const newDeployments = await this.loadCurrentDeployments();
 		this.deployments.set(
 			newDeployments.map((d) => DeploymentDetails.fromDeploymentResponse(d))
@@ -412,8 +416,18 @@ export class CosmJSWallet implements Wallet {
 		);
 	}
 
+	async refreshAverageBlockTime() {
+		if (!this.initialized) {
+			return;
+		}
+
+		const newAverageBlockTime = await this.loadAverageBlockTime();
+		this.averageBlockTime.set(newAverageBlockTime);
+	}
+
 	dispose() {
 		clearInterval(this.refreshTimeout);
+		clearInterval(this.refreshAverageBlockTimeTimeout);
 		this.configUnsubscriber();
 	}
 
