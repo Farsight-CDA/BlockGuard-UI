@@ -178,6 +178,22 @@
 		}
 		return str.slice(0, 4) + '...' + str.slice(str.length - 4, str.length);
 	}
+
+	enum PriceMode {
+		PerHour,
+		PerDolar
+	}
+
+	var priceMode: PriceMode = PriceMode.PerHour;
+
+	function changePriceMode() {
+		priceMode = (priceMode + 1) % 2;
+	}
+
+	function niceFlore(x: number, digits: number = 4) {
+		const y = Math.pow(10, digits);
+		return Math.floor(x * y) / y;
+	}
 </script>
 
 <Modal bind:open={openInner} bind:close={closeInner}>
@@ -219,7 +235,16 @@
 					<tr class="text-sm md:text-xs">
 						<th> Location </th>
 						<th> Provider </th>
-						<th> Price </th>
+						<th>
+							<button on:click={changePriceMode}>
+								Price {#if priceMode == PriceMode.PerHour}
+									$/hr
+								{:else}
+									$/d
+								{/if}</button
+							>
+						</th>
+
 						<th> Speed </th>
 						<th> Actions </th>
 					</tr>
@@ -238,7 +263,19 @@
 										{shortenString(details.organization)}
 										{shortenString(details.website)}
 									</td><td>
-										{(bid.price * 3600000) / $averageBlockTime / 1000000} $/hr
+										{#if priceMode == PriceMode.PerHour}
+											{niceFlore(
+												(bid.price * 3600000) / $averageBlockTime / 1000000,
+												5
+											)} $/h
+										{:else if priceMode == PriceMode.PerDolar}
+											1$ for
+											{niceFlore(
+												1 /
+													((bid.price * 3600000) / $averageBlockTime / 1000000),
+												3
+											)} hr
+										{/if}
 									</td>
 									<td>
 										<p class="after:content-['_↑']">
