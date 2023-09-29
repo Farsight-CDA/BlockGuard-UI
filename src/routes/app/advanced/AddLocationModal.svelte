@@ -285,10 +285,10 @@
 									</td>
 									<td>
 										<p class="after:content-['_↑']">
-											{details.networkDownload}
+											{details.networkDownload ?? '???'}
 										</p>
 										<p class="after:content-['_↓']">
-											{details.networkUpload}
+											{details.networkUpload ?? '???'}
 										</p>
 									</td>
 									<td>
