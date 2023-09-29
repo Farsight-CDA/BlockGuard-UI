@@ -139,6 +139,7 @@ export class CosmJSWallet implements Wallet {
 		const block = await this.msgClient.getBlock(height);
 		date = new Date(block.header.time);
 		this.blockTimestampCache.set(height, date);
+		setTimeout(() => this.blockTimestampCache.delete(height), 300000);
 		return date;
 	}
 
@@ -171,6 +172,7 @@ export class CosmJSWallet implements Wallet {
 
 		details = ProviderDetails.fromProvider(res.provider!);
 		this.providerDetailsCache.set(provider, details);
+		setTimeout(() => this.providerDetailsCache.delete(provider), 300000);
 		return details;
 	}
 
