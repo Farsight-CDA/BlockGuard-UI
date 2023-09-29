@@ -276,6 +276,16 @@ export class CosmJSWallet implements Wallet {
 		);
 	}
 
+	private async loadAverageBlockTime(): Promise<number> {
+		const height = await this.msgClient.getHeight();
+		const currentBlockTimestamp = await this.getBlockTimestamp(height);
+		const oldBlockTimestamp = await this.getBlockTimestamp(height - 1000);
+		return (
+			(currentBlockTimestamp.getUTCDate() - oldBlockTimestamp.getUTCDate()) /
+			1000
+		);
+	}
+
 	private async loadCurrentDeployments(): Promise<QueryDeploymentResponse[]> {
 		const res = await new DeploymentQueryClient(this.queryClient).Deployments(
 			QueryDeploymentsRequest.fromPartial({

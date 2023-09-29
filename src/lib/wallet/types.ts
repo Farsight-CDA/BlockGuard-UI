@@ -20,6 +20,8 @@ export interface Wallet {
 	certificate: Writable<CertificateInfo | null>;
 	balance: Writable<number>;
 
+	averageBlockTime: Writable<number>;
+
 	deployments: Writable<DeploymentDetails[]>;
 	leases: Writable<LeaseDetails[]>;
 
