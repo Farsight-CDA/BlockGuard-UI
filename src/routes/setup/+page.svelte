@@ -4,6 +4,13 @@
 	import ImportWalletModal from './ImportWalletModal.svelte';
 	import WelcomeAnimation from './WelcomeAnimation.svelte';
 
+	import Echo from '$lib/native-api/native-api';
+
+	async function echo() {
+		const { value } = await Echo.echo({ value: 'Hello World!' });
+		console.log('Response from native:', value);
+	}
+
 	let openCreateWalletModal: () => Promise<void>;
 	let openImportWalletModal: () => Promise<void>;
 
@@ -32,6 +39,10 @@
 		<button
 			class="bg-green-600 p-3 hover:bg-green-500 drop-shadow-glow-green-400 rounded-md"
 			on:click={handleCreateWallet}>Create Wallet <br /> (Recommended)</button
+		>
+		<button
+			class="bg-green-600 p-3 hover:bg-green-500 drop-shadow-glow-green-400 rounded-md"
+			on:click={echo}>echo</button
 		>
 		<button
 			class="bg-blue-600 hover:bg-blue-500 p-3 shadow-lg drop-shadow-glow-blue-400 rounded-md"
