@@ -257,7 +257,13 @@
 								<tr>
 									<td>
 										<p>{details.region}</p>
-										<p class="text-xs">({details.country}, {details.city})</p>
+										{#if details.country != null && details.city != null}
+											<p class="text-xs">({details.country}, {details.city})</p>
+										{:else if details.country == null && details.city != null}
+											<p class="text-xs">({details.city})</p>
+										{:else if details.country != null && details.city == null}
+											<p class="text-xs">({details.country})</p>
+										{/if}
 									</td>
 									<td>
 										{shortenString(details.organization)}
@@ -279,10 +285,10 @@
 									</td>
 									<td>
 										<p class="after:content-['_↑']">
-											{details.networkDownload}
+											{details.networkDownload ?? '???'}
 										</p>
 										<p class="after:content-['_↓']">
-											{details.networkUpload}
+											{details.networkUpload ?? '???'}
 										</p>
 									</td>
 									<td>

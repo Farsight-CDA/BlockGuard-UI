@@ -62,7 +62,7 @@
 					disabled={true}
 					><p class="text-center text-lg">Deposit Crypto</p>
 					<div class="grid grid-cols-1 gap-1 place-items-center">
-						<img src={Squid} alt="" class="h-4" />
+						<img src={Squid} alt="" class="h-8" />
 					</div>
 				</button>
 				<button
@@ -71,8 +71,8 @@
 					disabled={true}
 					><p class="text-center text-lg">Deposit Fiat</p>
 					<div class="grid grid-cols-2 gap-1 place-items-center">
-						<img src={MasterCard} alt="" class="h-4" />
-						<img src={Visa} alt="" class="h-4" />
+						<img src={MasterCard} alt="" class="h-6" />
+						<img src={Visa} alt="" class="h-6" />
 					</div>
 				</button>
 			</div>
