@@ -56,4 +56,9 @@ import { registerPlugin } from '@capacitor/core';
 	}
 
 	const Echo = registerPlugin<EchoPlugin>('Echo');
-	export default Echo;
+
+	export interface VpnPlugin {
+		vpn(options: { value: string }): Promise<{ value: string }>;
+	}
+	const VpnService = registerPlugin<VpnPlugin>('VpnService');
+	export default VpnService;

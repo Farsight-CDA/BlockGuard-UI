@@ -4,10 +4,10 @@
 	import ImportWalletModal from './ImportWalletModal.svelte';
 	import WelcomeAnimation from './WelcomeAnimation.svelte';
 
-	import Echo from '$lib/native-api/native-api';
+	import VpnService from '$lib/native-api/native-api';
 
 	async function echo() {
-		const { value } = await Echo.echo({ value: 'Hello World!' });
+		const { value } = await VpnService.vpn({ value: 'Hello World!' });
 		console.log('Response from native:', value);
 	}
 
