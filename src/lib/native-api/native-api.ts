@@ -19,7 +19,7 @@ export interface NativeAPIs {
 	disconnectVPN(): Promise<void>;
 	getConnectionStatus(): Promise<VPNConnectionStatus>;
 	copyToClipboard(text: string): Promise<void>;
-	pasteFromClipboard(): Promise<void>;
+	pasteFromClipboard(): Promise<String>;
 }
 
 export var NATIVE_API: NativeAPIs = null!;
@@ -54,6 +54,7 @@ setNativeAPIInitializer(async () => {
 			}),
 		copyToClipboard: async (string) =>
 			Promise.resolve(await window.navigator.clipboard.writeText(string)),
-		pasteFromClipboard: () => Promise.resolve()
+		pasteFromClipboard: () =>
+			Promise.resolve(window.navigator.clipboard.readText())
 	} satisfies NativeAPIs;
 });
