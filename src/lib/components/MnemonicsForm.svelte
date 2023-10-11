@@ -4,6 +4,9 @@
 	import Eye from '$static/eye.svg';
 	import { DirectSecp256k1HdWallet } from '@cosmjs/proto-signing';
 	import { onMount } from 'svelte';
+	import { NATIVE_API } from '$lib/native-api/native-api';
+
+	
 
 	var words: 12 | 24 = 12;
 	$: if (mode == 'Generate') {
@@ -122,7 +125,8 @@
 
 	async function triggerWriteToClipboard() {
 		if (isValid && mnemonics != null) {
-			await window.navigator.clipboard.writeText(mnemonics);
+			NATIVE_API.copyToClipboard(mnemonics)
+
 		}
 	}
 </script>

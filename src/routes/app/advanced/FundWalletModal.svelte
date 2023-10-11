@@ -1,5 +1,6 @@
 <script lang="ts">
 	import Modal from '$lib/components/Modal.svelte';
+	import { NATIVE_API } from '$lib/native-api/native-api';
 	import { useCurrentPrices } from '$lib/priceData';
 	import { useRequiredWallet } from '$lib/wallet/wallet';
 	import MasterCard from '$static/Mastercard_2019_logo.svg';
@@ -13,7 +14,7 @@
 	export let open: () => Promise<void>;
 
 	function copyToClipboard() {
-		navigator.clipboard.writeText($wallet.getAddress());
+		NATIVE_API.copyToClipboard($wallet.getAddress());
 	}
 
 	enum FundWalletStep {

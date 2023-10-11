@@ -18,6 +18,8 @@ export interface NativeAPIs {
 	connectVPN(host: string, username: string, password: string): Promise<void>;
 	disconnectVPN(): Promise<void>;
 	getConnectionStatus(): Promise<VPNConnectionStatus>;
+	copyToClipboard(text: string): Promise<void>;
+	pasteFromClipboard(): Promise<void>;
 }
 
 export var NATIVE_API: NativeAPIs = null!;
@@ -45,6 +47,13 @@ setNativeAPIInitializer(async () => {
 		connectVPN: (host, username, password) => Promise.resolve(),
 		disconnectVPN: () => Promise.resolve(),
 		getConnectionStatus: () =>
-			Promise.resolve({ status: 'Offline', incomingBytes: 0, outgoingBytes: 0 })
+			Promise.resolve({
+				status: 'Offline',
+				incomingBytes: 0,
+				outgoingBytes: 0
+			}),
+		copyToClipboard: async (string) =>
+			Promise.resolve(await window.navigator.clipboard.writeText(string)),
+		pasteFromClipboard: () => Promise.resolve()
 	} satisfies NativeAPIs;
 });
