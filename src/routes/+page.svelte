@@ -4,6 +4,7 @@
 	import { NATIVE_API } from '$lib/native-api/native-api';
 	import { useOptionalWallet } from '$lib/wallet/wallet';
 	import { onMount } from 'svelte';
+	import '../polifills';
 
 	var wallet = useOptionalWallet();
 	var globalConfig = useGlobalConfig();
