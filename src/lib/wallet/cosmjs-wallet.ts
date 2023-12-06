@@ -23,17 +23,17 @@ import {
 	QueryDeploymentResponse,
 	QueryDeploymentsRequest
 } from '@playwo/akashjs/build/protobuf/akash/deployment/v1beta3/query';
-import { Bid_State } from '@playwo/akashjs/build/protobuf/akash/market/v1beta3/bid';
+import { Bid_State } from '@playwo/akashjs/build/protobuf/akash/market/v1beta4/bid';
 import {
 	Lease_State,
 	MsgCreateLease
-} from '@playwo/akashjs/build/protobuf/akash/market/v1beta3/lease';
+} from '@playwo/akashjs/build/protobuf/akash/market/v1beta4/lease';
 import {
 	QueryClientImpl as MarketQueryClient,
 	QueryBidsRequest,
 	QueryLeaseResponse,
 	QueryLeasesRequest
-} from '@playwo/akashjs/build/protobuf/akash/market/v1beta3/query';
+} from '@playwo/akashjs/build/protobuf/akash/market/v1beta4/query';
 import {
 	QueryClientImpl as ProviderQueryClient,
 	QueryProviderRequest

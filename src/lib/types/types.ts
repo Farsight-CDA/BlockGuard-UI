@@ -1,11 +1,11 @@
 import type { Attribute } from '@playwo/akashjs/build/protobuf/akash/base/v1beta3/attribute';
 import type { Deployment_State } from '@playwo/akashjs/build/protobuf/akash/deployment/v1beta3/deployment';
 import type { QueryDeploymentResponse } from '@playwo/akashjs/build/protobuf/akash/deployment/v1beta3/query';
-import type { Lease_State } from '@playwo/akashjs/build/protobuf/akash/market/v1beta3/lease';
+import type { Lease_State } from '@playwo/akashjs/build/protobuf/akash/market/v1beta4/lease';
 import type {
 	QueryBidResponse,
 	QueryLeaseResponse
-} from '@playwo/akashjs/build/protobuf/akash/market/v1beta3/query';
+} from '@playwo/akashjs/build/protobuf/akash/market/v1beta4/query';
 import type { Provider } from '@playwo/akashjs/build/protobuf/akash/provider/v1beta3/provider';
 
 export interface DeploymentDetails {
