@@ -11,6 +11,7 @@
 		"eslint-plugin-svelte": "^2.33.1",
 		"libsodium-wrappers-sumo": "^0.7.13",
 		"postcss": "^8.4.29",
+		"postcss-nesting": "^12.1.2",
 		"prettier": "^3.0.3",
 		"prettier-plugin-svelte": "^3.0.3",
 		"semaphore-promise": "^1.4.2",
