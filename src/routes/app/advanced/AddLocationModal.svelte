@@ -10,7 +10,7 @@
 	import type { Writable } from 'svelte/store';
 	import { scale } from 'svelte/transition';
 
-	var wallet = useRequiredWallet();
+	const wallet = useRequiredWallet();
 
 	let averageBlockTime: Writable<number>;
 	$: averageBlockTime = $wallet.averageBlockTime;
@@ -41,14 +41,19 @@
 		retries: number;
 	}
 
-	var wallet = useRequiredWallet();
+	let sdl: SDL | null = null;
 
-	var USER = $wallet.getPrivateKeyOffset(0).toString()
-	var PASSWORD = $wallet.getPrivateKeyOffset(1).toString()
+	$:async () => {
+		var USER = (await $wallet.getPrivateKeyOffset(0)).toString()
+		var PASSWORD = (await $wallet.getPrivateKeyOffset(1)).toString()
 
-	VPNSdlString.replace("PLACEHOLDER_USER",USER)
-	VPNSdlString.replace("PLACEHOLDER_PASSWORD",PASSWORD)
-	var sdl: SDL = SDL.fromString(VPNSdlString);
+		VPNSdlString.replace("PLACEHOLDER_USER",USER)
+		VPNSdlString.replace("PLACEHOLDER_PASSWORD",PASSWORD)
+		sdl = SDL.fromString(VPNSdlString);
+
+		console.log("test")
+	}
+
 
 	var progress: DeploymentProgress = {
 		step: DeploymentStep.None,
