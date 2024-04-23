@@ -9,7 +9,7 @@ import type { Wallet } from './types';
 
 const WALLET_STORAGE_FILE = 'wallet.json';
 
-var WALLET: ReturnType<typeof createWalletStore> = null!;
+let WALLET: ReturnType<typeof createWalletStore> = null!;
 
 export function useRequiredWallet() {
 	return {
@@ -54,7 +54,7 @@ function createWalletStore() {
 		null,
 		() => () => dispose()
 	);
-	var wallet: CosmJSWallet | null = null;
+	let wallet: CosmJSWallet | null = null;
 
 	async function initialize() {
 		const content = await NATIVE_API.loadFile(WALLET_STORAGE_FILE);
