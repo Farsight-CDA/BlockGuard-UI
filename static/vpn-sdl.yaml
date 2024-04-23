@@ -1,16 +1,18 @@
 ---
-version: "2.0"
+version: "3.0"
 
 services:
   softether:
-    image: siomiz/softethervpn
+    image: leonmw/softeathervpn
     expose:
       - port: 443
         as: 443
         to:
           - global: true
     env:
-      - USERS=admin:notreallyasecretpassword
+      - INPUT=FarsightCDA
+      - USER=PLACEHOLDER_USER
+      - PASSWORD=PLACEHOLDER_PASSWORD
     volumes:
       - /dev/null:/usr/vpnserver/server_log
       - /dev/null:/usr/vpnserver/packet_log
@@ -25,7 +27,7 @@ profiles:
         memory:
           size: 512Mi
         storage:
-          size: 1Gi
+          size: 512Mi
         gpu:
           units: 0
   placement:
