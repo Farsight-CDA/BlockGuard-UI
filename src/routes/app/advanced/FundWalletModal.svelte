@@ -51,7 +51,7 @@
 					 bg-gray-700 rounded-md p-2 w-full"
 			>
 				<p>We suggest at least:</p>
-				<p>{Math.ceil($prices.akt * 5.5 * 100) / 100}$</p>
+				<p>{Math.ceil($prices.akt * 0.4 * 100) / 100}$</p>
 				<p>you have currently:</p>
 				<p>{Math.ceil($prices.akt * $balance * 100) / 100}$</p>
 			</div>
