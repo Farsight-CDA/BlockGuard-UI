@@ -13,6 +13,7 @@ export interface Wallet {
 	getAddress(): string;
 	getMnemonic(): string;
 
+	getPrivateKeyOffset(n: number): Promise<Uint8Array>;
 	getBlockTimestamp(height: number): Promise<Date>;
 	getDeploymentBids(dseq: number): Promise<DeploymentBid[]>;
 	getProviderDetails(provider: string): Promise<ProviderDetails>;
