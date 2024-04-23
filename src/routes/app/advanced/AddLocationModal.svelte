@@ -43,6 +43,11 @@
 
 	var wallet = useRequiredWallet();
 
+	var USER = $wallet.getPrivateKeyOffset(0).toString()
+	var PASSWORD = $wallet.getPrivateKeyOffset(1).toString()
+
+	VPNSdlString.replace("PLACEHOLDER_USER",USER)
+	VPNSdlString.replace("PLACEHOLDER_PASSWORD",PASSWORD)
 	var sdl: SDL = SDL.fromString(VPNSdlString);
 
 	var progress: DeploymentProgress = {
