@@ -4,7 +4,7 @@ interface PriceData {
 	akt: number;
 }
 
-var PRICE_DATA: ReturnType<typeof createPriceData> | null;
+let PRICE_DATA: ReturnType<typeof createPriceData> | null;
 
 export function useCurrentPrices() {
 	if (PRICE_DATA == null) {
@@ -32,7 +32,7 @@ function createPriceData() {
 		{ akt: 0 },
 		() => () => dispose()
 	);
-	var initialized = false;
+	const initialized = false;
 
 	let interval: NodeJS.Timeout | null = null;
 
@@ -63,7 +63,7 @@ function createPriceData() {
 
 			// Check if the response is successful
 			if (response.status === 200) {
-				let res = await response.json();
+				const res = await response.json();
 				return res['akash-network']['usd'];
 			} else {
 				console.error('Failed to fetch cryptocurrency price data.');
@@ -79,9 +79,3 @@ function createPriceData() {
 		initialize
 	};
 }
-
-const DEFAULT_GLOBAL_CONFIG = {
-	useAdvancedMode: true,
-	useBubbleMode: false,
-	rpcUrl: 'https://rpc-akash.ecostake.com:443'
-} satisfies Prices;

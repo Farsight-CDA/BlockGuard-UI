@@ -10,10 +10,10 @@ if (!String.prototype.replaceAll) {
 		if (
 			Object.prototype.toString.call(str).toLowerCase() === '[object regexp]'
 		) {
-			return this.replace(str, newStr);
+			return this.replace(str, <string>newStr);
 		}
 
 		// If a string
-		return this.replace(new RegExp(str, 'g'), newStr);
+		return this.replace(new RegExp(str, 'g'), <string>newStr);
 	};
 }
