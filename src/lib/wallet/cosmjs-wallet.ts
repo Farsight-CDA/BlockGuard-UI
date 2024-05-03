@@ -96,7 +96,7 @@ export class CosmJSWallet implements Wallet {
 	private initialized: boolean = false;
 	private refreshTimeout: NodeJS.Timeout = setInterval(
 		this.refresh.bind(this),
-		3000
+		10000
 	);
 	private refreshAverageBlockTimeTimeout: NodeJS.Timeout = setInterval(
 		this.refreshAverageBlockTime.bind(this),
@@ -373,7 +373,7 @@ export class CosmJSWallet implements Wallet {
 		const memo = 'BlockGuard';
 
 		const release = await this.txSemaphore.acquire();
-
+		console.log(message)
 		try {
 			const gas = Math.ceil(
 				gasMultiplicator *
