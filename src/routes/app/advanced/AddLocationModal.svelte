@@ -9,6 +9,7 @@
 	import { SDL } from '@playwo/akashjs/build/sdl';
 	import type { Writable } from 'svelte/store';
 	import { scale } from 'svelte/transition';
+	import { onMount } from 'svelte';
 
 	const wallet = useRequiredWallet();
 
@@ -43,16 +44,16 @@
 
 	let sdl: SDL | null = null;
 
-	$:async () => {
+
+	onMount(async () => {
 		var USER = (await $wallet.getPrivateKeyOffset(0)).toString()
 		var PASSWORD = (await $wallet.getPrivateKeyOffset(1)).toString()
 
-		VPNSdlString.replace("PLACEHOLDER_USER",USER)
-		VPNSdlString.replace("PLACEHOLDER_PASSWORD",PASSWORD)
+		VPNSdlString.replace("PLACEHOLDER_USER", USER)
+		VPNSdlString.replace("PLACEHOLDER_PASSWORD", PASSWORD)
 		sdl = SDL.fromString(VPNSdlString);
-
-		console.log("test")
-	}
+		console.log(sdl)
+	})
 
 
 	var progress: DeploymentProgress = {
@@ -95,7 +96,7 @@
 		dseq = Math.round(Math.random() * 100000000);
 		setProgress(DeploymentStep.Deploying);
 
-		openInner();
+		await openInner();
 
 		await moveForward(
 			DeploymentStep.AwaitBids,
@@ -139,10 +140,13 @@
 	}
 
 	async function triggerCreateDeployment() {
+		if (sdl === null){
+			throw Error(`Cannot create Deployment`);
+		}
 		const msg = MsgCreateDeployment.fromPartial({
 			deposit: {
 				denom: 'uakt',
-				amount: '5000000'
+				amount: '500000'
 			},
 			version: await sdl.manifestVersion(),
 			depositor: $wallet.getAddress(),
@@ -150,7 +154,7 @@
 				owner: $wallet.getAddress(),
 				dseq: dseq
 			},
-			groups: sdl.v3Groups()
+			groups: sdl.v3Groups() as any
 		});
 
 		await $wallet.createDeplyoment(msg);
@@ -165,6 +169,9 @@
 	}
 
 	async function triggerAcceptBid(bid: DeploymentBid) {
+		if (sdl === null){
+			throw Error("sdl null")
+		}
 		setProgress(DeploymentStep.Accepting);
 
 		await moveForward(DeploymentStep.SubmittingManifest, [6000], () =>
@@ -173,7 +180,7 @@
 		await moveForward(
 			DeploymentStep.Completed,
 			Array.from(Array(15).keys()).map((x) => 1000),
-			() => $wallet.submitManifest(dseq, bid.provider, sdl)
+			() => $wallet.submitManifest(dseq, bid.provider, sdl!)
 		);
 
 		await close();
