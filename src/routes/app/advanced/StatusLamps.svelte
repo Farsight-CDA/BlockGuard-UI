@@ -5,7 +5,7 @@
 	import { useVPNConnection } from '$lib/vpn/vpn-connection';
 	import type { CertificateInfo } from '$lib/wallet/types';
 	import { useRequiredWallet } from '$lib/wallet/wallet';
-	import { createCertificate } from '@playwo/akashjs/build/certificates';
+	import { createCertificate } from '@leonmw/akashjs/build/certificates';
 	import FundWalletModal from './FundWalletModal.svelte';
 	import StatusLamp, { StatusLampStatus } from './StatusLamp.svelte';
 

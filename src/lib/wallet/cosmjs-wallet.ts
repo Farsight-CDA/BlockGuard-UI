@@ -12,39 +12,39 @@ import {
 } from '$lib/types/types';
 import { base64ToUInt } from '$lib/utils/utils';
 import { DirectSecp256k1HdWallet } from '@cosmjs/proto-signing';
-import { MsgCreateCertificate } from '@playwo/akashjs/build/protobuf/akash/cert/v1beta3/cert';
-import { Deployment_State } from '@playwo/akashjs/build/protobuf/akash/deployment/v1beta3/deployment';
+import { MsgCreateCertificate } from '@leonmw/akashjs/build/protobuf/akash/cert/v1beta3/cert';
+import { Deployment_State } from '@leonmw/akashjs/build/protobuf/akash/deployment/v1beta3/deployment';
 import {
 	MsgCloseDeployment,
 	type MsgCreateDeployment
-} from '@playwo/akashjs/build/protobuf/akash/deployment/v1beta3/deploymentmsg';
+} from '@leonmw/akashjs/build/protobuf/akash/deployment/v1beta3/deploymentmsg';
 import {
 	QueryClientImpl as DeploymentQueryClient,
 	QueryDeploymentResponse,
 	QueryDeploymentsRequest
-} from '@playwo/akashjs/build/protobuf/akash/deployment/v1beta3/query';
-import { Bid_State } from '@playwo/akashjs/build/protobuf/akash/market/v1beta4/bid';
+} from '@leonmw/akashjs/build/protobuf/akash/deployment/v1beta3/query';
+import { Bid_State } from '@leonmw/akashjs/build/protobuf/akash/market/v1beta4/bid';
 import {
 	Lease_State,
 	MsgCreateLease
-} from '@playwo/akashjs/build/protobuf/akash/market/v1beta4/lease';
+} from '@leonmw/akashjs/build/protobuf/akash/market/v1beta4/lease';
 import {
 	QueryClientImpl as MarketQueryClient,
 	QueryBidsRequest,
 	QueryLeaseResponse,
 	QueryLeasesRequest
-} from '@playwo/akashjs/build/protobuf/akash/market/v1beta4/query';
+} from '@leonmw/akashjs/build/protobuf/akash/market/v1beta4/query';
 import {
 	QueryClientImpl as ProviderQueryClient,
 	QueryProviderRequest
-} from '@playwo/akashjs/build/protobuf/akash/provider/v1beta3/query';
-import { getMsgClient, getQueryClient } from '@playwo/akashjs/build/rpc/index';
-import type { SDL } from '@playwo/akashjs/build/sdl';
-import { messages } from '@playwo/akashjs/build/stargate';
+} from '@leonmw/akashjs/build/protobuf/akash/provider/v1beta3/query';
+import { getMsgClient, getQueryClient } from '@leonmw/akashjs/build/rpc/index';
+import type { SDL } from '@leonmw/akashjs/build/sdl';
+import { messages } from '@leonmw/akashjs/build/stargate';
 import type {
 	ProtobufRpcClient,
 	SigningStargateClient
-} from '@playwo/akashjs/node_modules/@cosmjs/stargate';
+} from '@leonmw/akashjs/node_modules/@cosmjs/stargate';
 import { toBase64 } from 'pvutils';
 import { Semaphore } from 'semaphore-promise';
 import {
@@ -68,7 +68,7 @@ interface StoredWallet {
 	certificate: string | null;
 }
 
-const GAS_PRICE = 2500 / 100000;
+const GAS_PRICE = 2500 / 1000000;
 
 export class CosmJSWallet implements Wallet {
 	private wallet: DirectSecp256k1HdWallet;
