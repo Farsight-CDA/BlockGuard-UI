@@ -44,7 +44,7 @@ import {
 	QueryClientImpl as ProviderQueryClient,
 	QueryProviderRequest
 } from '@leonmw/akashjs/build/protobuf/akash/provider/v1beta3/query';
-import { getMsgClient, getQueryClient } from '@leonmw/akashjs/build/rpc/index';
+import { getMsgClient, getQueryClient } from '@leonmw/akashjs/build/rpc';
 import type { SDL } from '@leonmw/akashjs/build/sdl';
 import { messages } from '@leonmw/akashjs/build/stargate';
 import { BroadcastTxError } from '@leonmw/akashjs/node_modules/@cosmjs/stargate/build/stargateclient';
@@ -379,7 +379,11 @@ export class CosmJSWallet implements Wallet {
 		);
 	}
 
-	private async sendTx(type: messages, messageBody: any) {
+	private async sendTx(
+		type: messages,
+		messageBody: any,
+		gasMultiplication: number = 1.35
+	) {
 		const message = {
 			typeUrl: type,
 			value: messageBody
@@ -399,7 +403,11 @@ export class CosmJSWallet implements Wallet {
 		}
 	}
 
-	private async trySendTx(type: messages, messageBody: any) {
+	private async trySendTx(
+		type: messages,
+		messageBody: any,
+		gasMultiplication: number = 1.35
+	) {
 		const message = {
 			typeUrl: type,
 			value: messageBody
@@ -416,10 +424,10 @@ export class CosmJSWallet implements Wallet {
 					amount: [
 						{
 							denom: 'uakt',
-							amount: `${Math.ceil(get(this.gasPrice) * gas)}`
+							amount: `${Math.ceil(get(this.gasPrice) * gas * gasMultiplication)}`
 						}
 					],
-					gas: `${gas}`
+					gas: `${gas * gasMultiplication}`
 				},
 				memo
 			);
