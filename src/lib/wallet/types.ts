@@ -27,7 +27,7 @@ export interface Wallet {
 	leases: Writable<LeaseDetails[]>;
 
 	broadcastCertificate(csr: string, publicKey: string): Promise<void>;
-	createDeplyoment(msg: MsgCreateDeployment): Promise<void>;
+	createDeployment(msg: MsgCreateDeployment): Promise<void>;
 	closeDeployment(dseq: number): Promise<void>;
 	createLease(
 		dseq: number,
