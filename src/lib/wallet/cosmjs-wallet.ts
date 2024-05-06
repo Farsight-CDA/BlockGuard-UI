@@ -88,7 +88,7 @@ export class CosmJSWallet implements Wallet {
 	public deployments: Writable<DeploymentDetails[]> = writable();
 	public leases: Writable<LeaseDetails[]> = writable();
 
-	public gasPrice: Writable<number> = writable(0.00001);
+	public gasPrice: Writable<number> = writable(0.0000001);
 
 	private blockTimestampCache: Map<number, Date> = new Map();
 	private providerDetailsCache: Map<string, ProviderDetails> = new Map();
@@ -419,8 +419,8 @@ export class CosmJSWallet implements Wallet {
 
 		const release = await this.txSemaphore.acquire();
 		const memo = 'BlockGuard';
+		const gas = await this.msgClient.simulate(this.address, [message], memo);
 		try {
-			const gas = await this.msgClient.simulate(this.address, [message], memo);
 			await this.msgClient.signAndBroadcast(
 				this.address,
 				[message],
@@ -445,8 +445,8 @@ export class CosmJSWallet implements Wallet {
 					throw broadcastError;
 				}
 				const requiredUAkt = parseFloat(match[1]);
-				const requiredAkt = requiredUAkt / 100000;
-				this.gasPrice.set(requiredAkt * 1.03); //multiply just to be safe
+				const requiredAkt = requiredUAkt / gas;
+				this.gasPrice.set(requiredAkt * 1.0001);
 			} else {
 				throw error;
 			}
