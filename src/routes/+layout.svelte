@@ -15,6 +15,8 @@
 	import '../app.css';
 	import BackgroundAnimation from './BackgroundAnimation.svelte';
 	import ExportMnemonicModal from './app/ExportMnemonicModal.svelte';
+	import { initializeUserSDL } from '$lib/sdl/sdl';
+	import { get } from 'svelte/store';
 
 	var wallet: ReturnType<typeof useOptionalWallet>;
 	var globalConfig: ReturnType<typeof useGlobalConfig>;
@@ -29,7 +31,25 @@
 		wallet = useOptionalWallet();
 		globalConfig = useGlobalConfig();
 
-		if (!nativeApiWorks || !globalConfigWorks || !priceWorks) {
+		if (get(wallet) == null){
+			await goto('/error');
+		}
+
+		function bytesToHex(bytes: Uint8Array): string {
+			const hex = [];
+			for (let i = 0; i < bytes.length; i++) {
+				const currentByte = bytes[i].toString(16).padStart(2, '0'); // Pad with zeros
+				hex.push(currentByte);
+			}
+			return hex.join('');
+		}
+
+		const USER = bytesToHex((await $wallet?.getPrivateKeyOffset(0))!);
+		const PASSWORD = bytesToHex((await $wallet?.getPrivateKeyOffset(1))!);
+
+		const userSdlWorks = initializeUserSDL(USER,PASSWORD)
+
+		if (!nativeApiWorks || !globalConfigWorks || !priceWorks || !userSdlWorks) {
 			await goto('/error');
 		} else {
 			if (!walletWorks) {
