@@ -1,7 +1,7 @@
 <script lang="ts">
 	import Modal from '$lib/components/Modal.svelte';
 	import { NATIVE_API } from '$lib/native-api/native-api';
-	import { useCurrentPrices } from '$lib/priceData';
+	import { useRequiredAktPrice } from '$lib/wallet/aktPrice';
 	import { useRequiredWallet } from '$lib/wallet/wallet';
 	import MasterCard from '$static/Mastercard_2019_logo.svg';
 	import Squid from '$static/Squid_Icon_Logo_Yellow.svg';
@@ -9,7 +9,7 @@
 	import { blur } from 'svelte/transition';
 
 	var wallet = useRequiredWallet();
-	var prices = useCurrentPrices();
+	var prices = useRequiredAktPrice();
 
 	export let open: () => Promise<void>;
 
@@ -51,9 +51,9 @@
 					 bg-gray-700 rounded-md p-2 w-full"
 			>
 				<p>We suggest at least:</p>
-				<p>{Math.ceil($prices.akt * 0.4 * 100) / 100}$</p>
+				<p>{Math.ceil($prices.usd * 0.4 * 100) / 100}$</p>
 				<p>you have currently:</p>
-				<p>{Math.ceil($prices.akt * $balance * 100) / 100}$</p>
+				<p>{Math.ceil($prices.usd * $balance * 100) / 100}$</p>
 			</div>
 			<div class="grid grid-cols-2 gap-4">
 				<button
