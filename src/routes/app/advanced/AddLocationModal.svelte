@@ -7,6 +7,7 @@
 	import VPNSdlString from '$static/vpn-sdl.yaml';
 	import { MsgCreateDeployment } from '@leonmw/akashjs/build/protobuf/akash/deployment/v1beta3/deploymentmsg';
 	import { SDL } from '@leonmw/akashjs/build/sdl';
+	import type { SDL as SDLType } from '@leonmw/akashjs/build/sdl';
 	import type { Writable } from 'svelte/store';
 	import { scale } from 'svelte/transition';
 	import { onMount } from 'svelte';
@@ -42,7 +43,7 @@
 		retries: number;
 	}
 
-	let sdl: SDL | null = null;
+	let sdl: SDLType | null = null;
 
 
 	onMount(async () => {
@@ -157,7 +158,7 @@
 			groups: sdl.v3Groups() as any
 		});
 
-		await $wallet.createDeplyoment(msg);
+		await $wallet.createDeployment(msg);
 	}
 
 	async function triggerGatherBids() {
