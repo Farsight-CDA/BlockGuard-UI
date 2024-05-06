@@ -12,6 +12,12 @@ import {
 } from '$lib/types/types';
 import { base64ToUInt } from '$lib/utils/utils';
 import { DirectSecp256k1HdWallet } from '@cosmjs/proto-signing';
+import {
+	QueryClientImpl as CertificateQueryClientImpl,
+	QueryCertificatesRequest,
+	CertificateResponse
+} from '@leonmw/akashjs/build/protobuf/akash/cert/v1beta3/query';
+import type { Certificate_State } from '@leonmw/akashjs/build/protobuf/akash/cert/v1beta3/cert';
 import { MsgCreateCertificate } from '@leonmw/akashjs/build/protobuf/akash/cert/v1beta3/cert';
 import { Deployment_State } from '@leonmw/akashjs/build/protobuf/akash/deployment/v1beta3/deployment';
 import {
