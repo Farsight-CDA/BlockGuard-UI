@@ -322,6 +322,23 @@ export class CosmJSWallet implements Wallet {
 		);
 	}
 
+	private async loadCurrentCertificates(
+		state?: Certificate_State
+	): Promise<CertificateResponse[]> {
+		const res = await new CertificateQueryClientImpl(
+			this.queryClient
+		).Certificates(
+			QueryCertificatesRequest.fromPartial({
+				filter: {
+					owner: this.address,
+					state: state?.toString()
+				},
+				pagination: { limit: 10 }
+			})
+		);
+		return res.certificates;
+	}
+
 	private async loadCurrentDeployments(): Promise<QueryDeploymentResponse[]> {
 		const res = await new DeploymentQueryClient(this.queryClient).Deployments(
 			QueryDeploymentsRequest.fromPartial({
