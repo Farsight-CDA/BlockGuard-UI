@@ -47,6 +47,7 @@ import {
 import { getMsgClient, getQueryClient } from '@leonmw/akashjs/build/rpc/index';
 import type { SDL } from '@leonmw/akashjs/build/sdl';
 import { messages } from '@leonmw/akashjs/build/stargate';
+import { BroadcastTxError } from '@leonmw/akashjs/node_modules/@cosmjs/stargate/build/stargateclient';
 import type {
 	ProtobufRpcClient,
 	SigningStargateClient
@@ -61,20 +62,13 @@ import {
 	type Writable
 } from 'svelte/store';
 import type { CertificateInfo, Wallet } from './types';
-import type {
-	Secp256k1Keypair,
-	HdPath
-} from '@cosmjs/crypto';
-import {
-	Slip10RawIndex  ,
-} from '@cosmjs/crypto';
+import type { Secp256k1Keypair, HdPath } from '@cosmjs/crypto';
+import { Slip10RawIndex } from '@cosmjs/crypto';
 
 interface StoredWallet {
 	mnemonics: string;
 	certificate: string | null;
 }
-
-const GAS_PRICE = 2500 / 1000000;
 
 export class CosmJSWallet implements Wallet {
 	private wallet: DirectSecp256k1HdWallet;
@@ -94,6 +88,8 @@ export class CosmJSWallet implements Wallet {
 	public deployments: Writable<DeploymentDetails[]> = writable();
 	public leases: Writable<LeaseDetails[]> = writable();
 
+	public gasPrice: Writable<number> = writable(0.00001);
+
 	private blockTimestampCache: Map<number, Date> = new Map();
 	private providerDetailsCache: Map<string, ProviderDetails> = new Map();
 
@@ -109,7 +105,7 @@ export class CosmJSWallet implements Wallet {
 		300000
 	);
 
-	private configUnsubscriber: Unsubscriber;
+	private configUnsubscribe: Unsubscriber;
 
 	constructor(
 		wallet: DirectSecp256k1HdWallet,
@@ -127,7 +123,7 @@ export class CosmJSWallet implements Wallet {
 		}
 		this.rpcUrl = currentRPCUrl;
 
-		this.configUnsubscriber = globalConfig.subscribe(async (config) => {
+		this.configUnsubscribe = globalConfig.subscribe(async (config) => {
 			if (config == null) {
 				throw Error('GLOBAL_CONFIG must be initialized before Wallet');
 			}
@@ -148,12 +144,11 @@ export class CosmJSWallet implements Wallet {
 	}
 
 	async getPrivateKeyOffset(n: number): Promise<Uint8Array> {
-
-		const path:HdPath = [
+		const path: HdPath = [
 			Slip10RawIndex.hardened(44),
 			Slip10RawIndex.hardened(1),
 			Slip10RawIndex.normal(n),
-			Slip10RawIndex.normal(69),
+			Slip10RawIndex.normal(69)
 		];
 		// eslint-disable-next-line @typescript-eslint/ban-ts-comment
 		// @ts-ignore
@@ -212,19 +207,19 @@ export class CosmJSWallet implements Wallet {
 
 	async broadcastCertificate(csr: string, publicKey: string): Promise<void> {
 		const encodedCsr = base64ToUInt(toBase64(csr!));
-		const encdodedPublicKey = base64ToUInt(toBase64(publicKey!));
+		const encodePublicKey = base64ToUInt(toBase64(publicKey!));
 
 		await this.sendTx(
 			messages.MsgCreateCertificate,
 			MsgCreateCertificate.fromPartial({
 				owner: this.address,
 				cert: encodedCsr,
-				pubkey: encdodedPublicKey
+				pubkey: encodePublicKey
 			})
 		);
 	}
 
-	async createDeplyoment(msg: MsgCreateDeployment): Promise<void> {
+	async createDeployment(msg: MsgCreateDeployment): Promise<void> {
 		await this.sendTx(messages.MsgCreateDeployment, msg);
 	}
 
@@ -384,25 +379,36 @@ export class CosmJSWallet implements Wallet {
 		);
 	}
 
-	private async sendTx(
-		type: messages,
-		messageBody: any,
-		gasMultiplicator: number = 1.35
-	) {
+	private async sendTx(type: messages, messageBody: any) {
 		const message = {
 			typeUrl: type,
 			value: messageBody
 		};
 		const memo = 'BlockGuard';
 
-		const release = await this.txSemaphore.acquire();
-		console.log(message)
 		try {
-			const gas = Math.ceil(
-				gasMultiplicator *
-					(await this.msgClient.simulate(this.address, [message], memo))
-			);
+			for (let i = 0; i < 3; i++) {
+				const check = await this.trySendTx(type, messageBody);
+				if (check) {
+					return;
+				}
+			}
+		} catch (error) {
+			console.error(`TX Failed: ${error}`);
+			throw error;
+		}
+	}
 
+	private async trySendTx(type: messages, messageBody: any) {
+		const message = {
+			typeUrl: type,
+			value: messageBody
+		};
+
+		const release = await this.txSemaphore.acquire();
+		const memo = 'BlockGuard';
+		try {
+			const gas = await this.msgClient.simulate(this.address, [message], memo);
 			await this.msgClient.signAndBroadcast(
 				this.address,
 				[message],
@@ -410,18 +416,31 @@ export class CosmJSWallet implements Wallet {
 					amount: [
 						{
 							denom: 'uakt',
-							amount: `${Math.ceil(GAS_PRICE * gas)}`
+							amount: `${Math.ceil(get(this.gasPrice) * gas)}`
 						}
 					],
 					gas: `${gas}`
 				},
 				memo
 			);
+			return true;
 		} catch (error) {
-			console.error(`TX Failed: ${error}`);
-			throw error;
+			if (error instanceof BroadcastTxError && error.code === 13) {
+				const broadcastError = error satisfies BroadcastTxError;
+				const regex = /required: (\d+)uakt/;
+				const match = broadcastError.message.match(regex);
+				if (match === null) {
+					throw broadcastError;
+				}
+				const requiredUAkt = parseFloat(match[1]);
+				const requiredAkt = requiredUAkt / 100000;
+				this.gasPrice.set(requiredAkt * 1.03); //multiply just to be safe
+			} else {
+				throw error;
+			}
+			return false; // Failure
 		} finally {
-			await new Promise((resolve) => setTimeout(resolve, 3000));
+			await new Promise((resolve) => setTimeout(resolve, 300));
 			release();
 		}
 	}
@@ -472,7 +491,7 @@ export class CosmJSWallet implements Wallet {
 	dispose() {
 		clearInterval(this.refreshTimeout);
 		clearInterval(this.refreshAverageBlockTimeTimeout);
-		this.configUnsubscriber();
+		this.configUnsubscribe();
 	}
 
 	//Serialization
