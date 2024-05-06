@@ -4,15 +4,14 @@
 	import type { DeploymentBid } from '$lib/types/types';
 	import { retry } from '$lib/utils/utils';
 	import { useRequiredWallet } from '$lib/wallet/wallet';
-	import VPNSdlString from '$static/vpn-sdl.yaml';
 	import { MsgCreateDeployment } from '@leonmw/akashjs/build/protobuf/akash/deployment/v1beta3/deploymentmsg';
-	import { SDL } from '@leonmw/akashjs/build/sdl';
-	import type { SDL as SDLType } from '@leonmw/akashjs/build/sdl';
 	import type { Writable } from 'svelte/store';
 	import { scale } from 'svelte/transition';
+	import { useRequiredUserSDL } from '$lib/sdl/sdl';
 	import { onMount } from 'svelte';
 
 	const wallet = useRequiredWallet();
+	const sdl = useRequiredUserSDL();
 
 	let averageBlockTime: Writable<number>;
 	$: averageBlockTime = $wallet.averageBlockTime;
@@ -42,20 +41,6 @@
 		step: DeploymentStep;
 		retries: number;
 	}
-
-	let sdl: SDLType | null = null;
-
-
-	onMount(async () => {
-		var USER = (await $wallet.getPrivateKeyOffset(0)).toString()
-		var PASSWORD = (await $wallet.getPrivateKeyOffset(1)).toString()
-
-		VPNSdlString.replace("PLACEHOLDER_USER", USER)
-		VPNSdlString.replace("PLACEHOLDER_PASSWORD", PASSWORD)
-		sdl = SDL.fromString(VPNSdlString);
-		console.log(sdl)
-	})
-
 
 	var progress: DeploymentProgress = {
 		step: DeploymentStep.None,
@@ -149,13 +134,13 @@
 				denom: 'uakt',
 				amount: '500000'
 			},
-			version: await sdl.manifestVersion(),
+			version: await $sdl.manifestVersion(),
 			depositor: $wallet.getAddress(),
 			id: {
 				owner: $wallet.getAddress(),
 				dseq: dseq
 			},
-			groups: sdl.v3Groups() as any
+			groups: $sdl.v3Groups() as any
 		});
 
 		await $wallet.createDeployment(msg);
@@ -181,7 +166,7 @@
 		await moveForward(
 			DeploymentStep.Completed,
 			Array.from(Array(15).keys()).map((x) => 1000),
-			() => $wallet.submitManifest(dseq, bid.provider, sdl!)
+			() => $wallet.submitManifest(dseq, bid.provider, $sdl)
 		);
 
 		await close();
