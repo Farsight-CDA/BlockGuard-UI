@@ -392,7 +392,11 @@ export class CosmJSWallet implements Wallet {
 
 		try {
 			for (let i = 0; i < 3; i++) {
-				const check = await this.trySendTx(type, messageBody);
+				const check = await this.trySendTx(
+					type,
+					messageBody,
+					gasMultiplication
+				);
 				if (check) {
 					return;
 				}
@@ -406,7 +410,7 @@ export class CosmJSWallet implements Wallet {
 	private async trySendTx(
 		type: messages,
 		messageBody: any,
-		gasMultiplication: number = 1.35
+		gasMultiplication: number
 	) {
 		const message = {
 			typeUrl: type,
@@ -427,7 +431,7 @@ export class CosmJSWallet implements Wallet {
 							amount: `${Math.ceil(get(this.gasPrice) * gas * gasMultiplication)}`
 						}
 					],
-					gas: `${gas * gasMultiplication}`
+					gas: `${Math.floor(gas * gasMultiplication)}`
 				},
 				memo
 			);
