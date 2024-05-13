@@ -84,10 +84,10 @@
 		const credentials = await $wallet.getVPNCredentials(dseq);
 
 		sdl = SDL.fromString(
-			VPNSdlString.replaceAll(
-				'PLACEHOLDER_USER',
-				credentials.username
-			).replaceAll('PLACEHOLDER_PASSWORD', credentials.password)
+			VPNSdlString.replace('PLACEHOLDER_USER', credentials.username).replace(
+				'PLACEHOLDER_PASSWORD',
+				credentials.password
+			)
 		);
 
 		setProgress(DeploymentStep.Deploying);
