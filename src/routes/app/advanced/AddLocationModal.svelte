@@ -1,17 +1,16 @@
 <script lang="ts">
 	import LoadingSpinner from '$lib/components/LoadingSpinner.svelte';
 	import Modal from '$lib/components/Modal.svelte';
+	import { SDL } from '$lib/sdl/copypasta';
 	import type { DeploymentBid } from '$lib/types/types';
 	import { retry } from '$lib/utils/utils';
 	import { useRequiredWallet } from '$lib/wallet/wallet';
-	import { MsgCreateDeployment } from '@leonmw/akashjs/build/protobuf/akash/deployment/v1beta3/deploymentmsg';
+	import VPNSdlString from '$static/vpn-sdl.yaml';
+	import { MsgCreateDeployment } from '@playwo/akash-api/akash/deployment/v1beta3';
 	import type { Writable } from 'svelte/store';
 	import { scale } from 'svelte/transition';
-	import { useRequiredUserSDL } from '$lib/sdl/sdl';
-	import { onMount } from 'svelte';
 
 	const wallet = useRequiredWallet();
-	const sdl = useRequiredUserSDL();
 
 	let averageBlockTime: Writable<number>;
 	$: averageBlockTime = $wallet.averageBlockTime;
@@ -48,6 +47,7 @@
 	};
 
 	var dseq: number = 0;
+	var sdl: SDL;
 
 	var refreshInterval: NodeJS.Timeout;
 
@@ -80,6 +80,16 @@
 	let openInner: () => Promise<void>;
 	export const open = async function open() {
 		dseq = Math.round(Math.random() * 100000000);
+
+		const USER = bytesToHex((await $wallet?.getPrivateKeyOffset(0))!);
+		const PASSWORD = bytesToHex((await $wallet?.getPrivateKeyOffset(1))!);
+		const sdl = SDL.fromString(
+			VPNSdlString.replaceAll('PLACEHOLDER_USER', USER).replaceAll(
+				'PLACEHOLDER_PASSWORD',
+				PASSWORD
+			)
+		);
+
 		setProgress(DeploymentStep.Deploying);
 
 		await openInner();
@@ -125,22 +135,28 @@
 		}
 	}
 
-	async function triggerCreateDeployment() {
-		if (sdl === null){
-			throw Error(`Cannot create Deployment`);
+	function bytesToHex(bytes: Uint8Array): string {
+		const hex = [];
+		for (let i = 0; i < bytes.length; i++) {
+			const currentByte = bytes[i].toString(16).padStart(2, '0'); // Pad with zeros
+			hex.push(currentByte);
 		}
+		return hex.join('');
+	}
+
+	async function triggerCreateDeployment() {
 		const msg = MsgCreateDeployment.fromPartial({
 			deposit: {
 				denom: 'uakt',
 				amount: '500000'
 			},
-			version: await $sdl.manifestVersion(),
+			version: await sdl.manifestVersion(),
 			depositor: $wallet.getAddress(),
 			id: {
 				owner: $wallet.getAddress(),
 				dseq: dseq
 			},
-			groups: $sdl.v3Groups() as any
+			groups: sdl.v3Groups() as any
 		});
 
 		await $wallet.createDeployment(msg);
@@ -155,9 +171,6 @@
 	}
 
 	async function triggerAcceptBid(bid: DeploymentBid) {
-		if (sdl === null){
-			throw Error("sdl null")
-		}
 		setProgress(DeploymentStep.Accepting);
 
 		await moveForward(DeploymentStep.SubmittingManifest, [6000], () =>
@@ -166,7 +179,7 @@
 		await moveForward(
 			DeploymentStep.Completed,
 			Array.from(Array(15).keys()).map((x) => 1000),
-			() => $wallet.submitManifest(dseq, bid.provider, $sdl)
+			() => $wallet.submitManifest(dseq, bid.provider, sdl)
 		);
 
 		await close();

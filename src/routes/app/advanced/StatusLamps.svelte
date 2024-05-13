@@ -1,11 +1,11 @@
 <script lang="ts">
+	import { createCertificate } from '$lib/certificate/certificate';
 	import type { VPNClientStatus } from '$lib/native-api/native-api';
 	import { useVPNClientStatus } from '$lib/vpn/client-status';
 	import type { VPNConnectionInfo } from '$lib/vpn/types';
 	import { useVPNConnection } from '$lib/vpn/vpn-connection';
 	import type { CertificateInfo } from '$lib/wallet/types';
 	import { useRequiredWallet } from '$lib/wallet/wallet';
-	import { createCertificate } from '@leonmw/akashjs/build/certificates';
 	import FundWalletModal from './FundWalletModal.svelte';
 	import StatusLamp, { StatusLampStatus } from './StatusLamp.svelte';
 

@@ -3,6 +3,8 @@ import {
 	type GlobalConfig
 } from '$lib/configuration/configuration';
 import { NATIVE_API } from '$lib/native-api/native-api';
+import { TxTypeUrl, getAkashTypeRegistry } from '$lib/registry/registry';
+import type { SDL } from '$lib/sdl/copypasta';
 import {
 	DeploymentBid,
 	DeploymentDetails,
@@ -11,47 +13,46 @@ import {
 	ProviderLeaseStatus
 } from '$lib/types/types';
 import { base64ToUInt } from '$lib/utils/utils';
-import { DirectSecp256k1HdWallet } from '@cosmjs/proto-signing';
+import type { HdPath, Secp256k1Keypair } from '@cosmjs/crypto';
+import { Slip10RawIndex } from '@cosmjs/crypto';
+import { DirectSecp256k1HdWallet, Registry } from '@cosmjs/proto-signing';
+import {
+	QueryClient,
+	SigningStargateClient,
+	createProtobufRpcClient,
+	type ProtobufRpcClient
+} from '@cosmjs/stargate';
+import { BroadcastTxError } from '@cosmjs/stargate/build/stargateclient';
+import { Tendermint37Client } from '@cosmjs/tendermint-rpc';
+import type { Certificate_State } from '@playwo/akash-api/akash/cert/v1beta3';
 import {
 	QueryClientImpl as CertificateQueryClientImpl,
-	QueryCertificatesRequest,
-	CertificateResponse
-} from '@leonmw/akashjs/build/protobuf/akash/cert/v1beta3/query';
-import type { Certificate_State } from '@leonmw/akashjs/build/protobuf/akash/cert/v1beta3/cert';
-import { MsgCreateCertificate } from '@leonmw/akashjs/build/protobuf/akash/cert/v1beta3/cert';
-import { Deployment_State } from '@leonmw/akashjs/build/protobuf/akash/deployment/v1beta3/deployment';
+	CertificateResponse,
+	MsgCreateCertificate,
+	QueryCertificatesRequest
+} from '@playwo/akash-api/akash/cert/v1beta3';
 import {
 	MsgCloseDeployment,
-	type MsgCreateDeployment
-} from '@leonmw/akashjs/build/protobuf/akash/deployment/v1beta3/deploymentmsg';
+	MsgCreateDeployment
+} from '@playwo/akash-api/akash/deployment/v1beta3';
 import {
 	QueryClientImpl as DeploymentQueryClient,
 	QueryDeploymentResponse,
 	QueryDeploymentsRequest
-} from '@leonmw/akashjs/build/protobuf/akash/deployment/v1beta3/query';
-import { Bid_State } from '@leonmw/akashjs/build/protobuf/akash/market/v1beta4/bid';
+} from '@playwo/akash-api/akash/deployment/v1beta3/query';
 import {
+	Bid_State,
 	Lease_State,
-	MsgCreateLease
-} from '@leonmw/akashjs/build/protobuf/akash/market/v1beta4/lease';
-import {
 	QueryClientImpl as MarketQueryClient,
+	MsgCreateLease,
 	QueryBidsRequest,
 	QueryLeaseResponse,
 	QueryLeasesRequest
-} from '@leonmw/akashjs/build/protobuf/akash/market/v1beta4/query';
+} from '@playwo/akash-api/akash/market/v1beta4';
 import {
 	QueryClientImpl as ProviderQueryClient,
 	QueryProviderRequest
-} from '@leonmw/akashjs/build/protobuf/akash/provider/v1beta3/query';
-import { getMsgClient, getQueryClient } from '@leonmw/akashjs/build/rpc';
-import type { SDL } from '@leonmw/akashjs/build/sdl';
-import { messages } from '@leonmw/akashjs/build/stargate';
-import { BroadcastTxError } from '@leonmw/akashjs/node_modules/@cosmjs/stargate/build/stargateclient';
-import type {
-	ProtobufRpcClient,
-	SigningStargateClient
-} from '@leonmw/akashjs/node_modules/@cosmjs/stargate';
+} from '@playwo/akash-api/akash/provider/v1beta3';
 import { toBase64 } from 'pvutils';
 import { Semaphore } from 'semaphore-promise';
 import {
@@ -62,8 +63,6 @@ import {
 	type Writable
 } from 'svelte/store';
 import type { CertificateInfo, Wallet } from './types';
-import type { Secp256k1Keypair, HdPath } from '@cosmjs/crypto';
-import { Slip10RawIndex } from '@cosmjs/crypto';
 
 interface StoredWallet {
 	mnemonics: string;
@@ -210,7 +209,7 @@ export class CosmJSWallet implements Wallet {
 		const encodePublicKey = base64ToUInt(toBase64(publicKey!));
 
 		await this.sendTx(
-			messages.MsgCreateCertificate,
+			TxTypeUrl.MsgCreateCertificate,
 			MsgCreateCertificate.fromPartial({
 				owner: this.address,
 				cert: encodedCsr,
@@ -220,12 +219,12 @@ export class CosmJSWallet implements Wallet {
 	}
 
 	async createDeployment(msg: MsgCreateDeployment): Promise<void> {
-		await this.sendTx(messages.MsgCreateDeployment, msg);
+		await this.sendTx(TxTypeUrl.MsgCreateDeployment, msg);
 	}
 
 	async closeDeployment(dseq: number): Promise<void> {
 		await this.sendTx(
-			messages.MsgCloseDeployment,
+			TxTypeUrl.MsgCloseDeployment,
 			MsgCloseDeployment.fromPartial({
 				id: {
 					owner: this.address,
@@ -242,7 +241,7 @@ export class CosmJSWallet implements Wallet {
 		provider: string
 	): Promise<void> {
 		await this.sendTx(
-			messages.MsgCreateLease,
+			TxTypeUrl.MsgCreateLease,
 			MsgCreateLease.fromPartial({
 				bidId: {
 					dseq: dseq,
@@ -339,7 +338,7 @@ export class CosmJSWallet implements Wallet {
 			QueryDeploymentsRequest.fromPartial({
 				filters: {
 					owner: this.address,
-					state: Deployment_State[Deployment_State.active]
+					state: 'active'
 				}
 			})
 		);
@@ -380,7 +379,7 @@ export class CosmJSWallet implements Wallet {
 	}
 
 	private async sendTx(
-		type: messages,
+		type: TxTypeUrl,
 		messageBody: any,
 		gasMultiplication: number = 1.35
 	) {
@@ -408,7 +407,7 @@ export class CosmJSWallet implements Wallet {
 	}
 
 	private async trySendTx(
-		type: messages,
+		type: TxTypeUrl,
 		messageBody: any,
 		gasMultiplication: number
 	) {
@@ -428,7 +427,9 @@ export class CosmJSWallet implements Wallet {
 					amount: [
 						{
 							denom: 'uakt',
-							amount: `${Math.ceil(get(this.gasPrice) * gas * gasMultiplication)}`
+							amount: `${Math.ceil(
+								get(this.gasPrice) * gas * gasMultiplication
+							)}`
 						}
 					],
 					gas: `${Math.floor(gas * gasMultiplication)}`
@@ -468,8 +469,16 @@ export class CosmJSWallet implements Wallet {
 	}
 
 	async initializeClients() {
-		this.msgClient = await getMsgClient(this.rpcUrl, this.wallet);
-		this.queryClient = await getQueryClient(this.rpcUrl);
+		this.msgClient = await SigningStargateClient.connectWithSigner(
+			this.rpcUrl,
+			this.wallet,
+			{
+				registry: new Registry(getAkashTypeRegistry())
+			}
+		);
+		this.queryClient = createProtobufRpcClient(
+			new QueryClient(await Tendermint37Client.connect(this.rpcUrl))
+		);
 	}
 
 	async refresh() {

@@ -5,8 +5,8 @@ import type {
 	ProviderDetails,
 	ProviderLeaseStatus
 } from '$lib/types/types';
-import type { MsgCreateDeployment } from '@leonmw/akashjs/build/protobuf/akash/deployment/v1beta3/deploymentmsg';
-import type { SDL } from '@leonmw/akashjs/build/sdl';
+import type { SDL } from '@akashnetwork/akashjs/build/sdl';
+import type { MsgCreateDeployment } from '@playwo/akash-api/akash/deployment/v1beta3';
 import type { Writable } from 'svelte/store';
 
 export interface Wallet {

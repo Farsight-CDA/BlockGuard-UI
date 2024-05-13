@@ -5,18 +5,17 @@
 		initializeGlobalConfig,
 		useGlobalConfig
 	} from '$lib/configuration/configuration';
-	import { initializeAktPrice } from '$lib/wallet/aktPrice';
 	import { initializeNativeAPI } from '$lib/native-api/native-api';
+	import { initializeAktPrice } from '$lib/wallet/aktPrice';
 	import { initializeWalletStore, useOptionalWallet } from '$lib/wallet/wallet';
 	import Gear from '$static/gear.svg';
 	import Logo from '$static/logo.webp';
 	import SettingsIcon from '$static/settings.svg';
 	import { onMount } from 'svelte';
+	import { get } from 'svelte/store';
 	import '../app.css';
 	import BackgroundAnimation from './BackgroundAnimation.svelte';
 	import ExportMnemonicModal from './app/ExportMnemonicModal.svelte';
-	import { initializeUserSDL } from '$lib/sdl/sdl';
-	import { get } from 'svelte/store';
 
 	var wallet: ReturnType<typeof useOptionalWallet>;
 	var globalConfig: ReturnType<typeof useGlobalConfig>;
@@ -31,25 +30,11 @@
 		wallet = useOptionalWallet();
 		globalConfig = useGlobalConfig();
 
-		if (get(wallet) == null){
+		if (get(wallet) == null) {
 			await goto('/error');
 		}
 
-		function bytesToHex(bytes: Uint8Array): string {
-			const hex = [];
-			for (let i = 0; i < bytes.length; i++) {
-				const currentByte = bytes[i].toString(16).padStart(2, '0'); // Pad with zeros
-				hex.push(currentByte);
-			}
-			return hex.join('');
-		}
-
-		const USER = bytesToHex((await $wallet?.getPrivateKeyOffset(0))!);
-		const PASSWORD = bytesToHex((await $wallet?.getPrivateKeyOffset(1))!);
-
-		const userSdlWorks = initializeUserSDL(USER,PASSWORD)
-
-		if (!nativeApiWorks || !globalConfigWorks || !priceWorks || !userSdlWorks) {
+		if (!nativeApiWorks || !globalConfigWorks || !priceWorks) {
 			await goto('/error');
 		} else {
 			if (!walletWorks) {

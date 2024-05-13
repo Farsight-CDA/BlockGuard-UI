@@ -1,12 +1,12 @@
-import type { Attribute } from '@leonmw/akashjs/build/protobuf/akash/base/v1beta3/attribute';
-import type { Deployment_State } from '@leonmw/akashjs/build/protobuf/akash/deployment/v1beta3/deployment';
-import type { QueryDeploymentResponse } from '@leonmw/akashjs/build/protobuf/akash/deployment/v1beta3/query';
-import type { Lease_State } from '@leonmw/akashjs/build/protobuf/akash/market/v1beta4/lease';
+import type { Attribute } from '@playwo/akash-api/akash/base/v1beta3';
+import type { Deployment_State } from '@playwo/akash-api/akash/deployment/v1beta3';
+import type { QueryDeploymentResponse } from '@playwo/akash-api/akash/deployment/v1beta3/query';
 import type {
+	Lease_State,
 	QueryBidResponse,
 	QueryLeaseResponse
-} from '@leonmw/akashjs/build/protobuf/akash/market/v1beta4/query';
-import type { Provider } from '@leonmw/akashjs/build/protobuf/akash/provider/v1beta3/provider';
+} from '@playwo/akash-api/akash/market/v1beta4';
+import type { Provider } from '@playwo/akash-api/akash/provider/v1beta3';
 
 export interface DeploymentDetails {
 	dseq: number;
@@ -161,3 +161,9 @@ function tryParseFloat(val: string | null) {
 		return null;
 	}
 }
+
+export const DeploymentState = {
+	invalid: 0,
+	active: 1,
+	closed: 2
+};
