@@ -61,6 +61,20 @@ export class SDL {
 		return new SDL(data, version, networkId);
 	}
 
+	static validate(yaml: string) {
+		console.warn('SDL.validate is deprecated. Use SDL.constructor directly.');
+		// TODO: this should really be cast to unknown, then assigned
+		// to v2 or v3 SDL only after being validated
+		const data = YAML.load(yaml) as v3Sdl;
+
+		for (const [name, profile] of Object.entries(data.profiles.compute || {})) {
+			this.validateGPU(name, profile.resources.gpu);
+			this.validateStorage(name, profile.resources.storage);
+		}
+
+		return data;
+	}
+
 	static validateGPU(name: string, gpu: v3ResourceGPU | undefined) {
 		if (gpu) {
 			if (typeof gpu.units === 'undefined') {
