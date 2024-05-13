@@ -32,6 +32,7 @@ import {
 	QueryCertificatesRequest
 } from '@playwo/akash-api/akash/cert/v1beta3';
 import {
+	Deployment_State,
 	MsgCloseDeployment,
 	MsgCreateDeployment
 } from '@playwo/akash-api/akash/deployment/v1beta3';
@@ -338,7 +339,7 @@ export class CosmJSWallet implements Wallet {
 			QueryDeploymentsRequest.fromPartial({
 				filters: {
 					owner: this.address,
-					state: 'active'
+					state: Deployment_State[Deployment_State.active]
 				}
 			})
 		);
