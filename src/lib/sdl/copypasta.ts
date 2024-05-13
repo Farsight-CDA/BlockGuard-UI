@@ -49,12 +49,12 @@ function isString(str: any): str is string {
 	return typeof str === 'string';
 }
 
-type NetworkVersion = 'beta2' | 'beta3';
+type NetworkVersion = 'beta3';
 
 export class SDL {
 	static fromString(
 		yaml: string,
-		version: NetworkVersion = 'beta2',
+		version: NetworkVersion = 'beta3',
 		networkId: string = 'akashnet-2'
 	) {
 		const data = YAML.load(yaml) as v3Sdl;
@@ -163,7 +163,7 @@ export class SDL {
 
 	constructor(
 		public readonly data: v2Sdl,
-		public readonly version: NetworkVersion = 'beta2',
+		public readonly version: NetworkVersion = 'beta3',
 		private readonly networkId: string = 'akashnet-2'
 	) {
 		this.validate();
@@ -799,9 +799,7 @@ export class SDL {
 	}
 
 	manifest(asString: boolean = false): v2Manifest | v3Manifest {
-		return this.version === 'beta2'
-			? this.v2Manifest(asString)
-			: this.v3Manifest(asString);
+		return this.v3Manifest(asString);
 	}
 
 	computeEndpointSequenceNumbers(sdl: v2Sdl) {
@@ -960,7 +958,7 @@ export class SDL {
 	}
 
 	groups() {
-		return this.version === 'beta2' ? this.v2Groups() : this.v3Groups();
+		return this.v3Groups();
 	}
 
 	v3Groups() {
