@@ -17,8 +17,8 @@
 	var balance = $wallet.balance;
 	var certificate = $wallet.certificate;
 
-	const READY_BALANCE = 0.4;
-	const WARNING_BALANCE = 0.31;
+	const READY_BALANCE = 1;
+	const WARNING_BALANCE = 0.75;
 	const CERTIFICATE_CLICKABLE_BALANCE = 0.05;
 
 	export let vpnClientLampStatus: StatusLampStatus = StatusLampStatus.Loading;
