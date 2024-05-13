@@ -2,7 +2,7 @@
 version: '2.0'
 services:
   softether:
-    image: leonmw/softeathervpn
+    image: leonmw/softethervpn
     expose:
       - port: 443
         as: 443
