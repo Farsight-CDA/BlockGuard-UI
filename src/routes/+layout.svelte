@@ -12,31 +12,56 @@
 	import Logo from '$static/logo.webp';
 	import SettingsIcon from '$static/settings.svg';
 	import { onMount } from 'svelte';
-	import { get } from 'svelte/store';
 	import '../app.css';
 	import BackgroundAnimation from './BackgroundAnimation.svelte';
 	import ExportMnemonicModal from './app/ExportMnemonicModal.svelte';
 
+	enum Status {
+		Uninitialized,
+		Ready,
+		Failed
+	}
+
+	var status:
+		| { status: Status.Uninitialized }
+		| { status: Status.Ready }
+		| { status: Status.Failed; reason: string } = {
+		status: Status.Uninitialized
+	};
+
 	var wallet: ReturnType<typeof useOptionalWallet>;
 	var globalConfig: ReturnType<typeof useGlobalConfig>;
 
-	var initialized: boolean = false;
-
 	onMount(async () => {
-		const nativeApiWorks = await initializeNativeAPI();
-		const globalConfigWorks = await initializeGlobalConfig();
-		const walletWorks = await initializeWalletStore();
-		const priceWorks = await initializeAktPrice();
-		wallet = useOptionalWallet();
-		globalConfig = useGlobalConfig();
+		try {
+			const nativeApiWorks = await initializeNativeAPI();
+			const globalConfigWorks = await initializeGlobalConfig();
+			const walletWorks = await initializeWalletStore();
+			const priceWorks = await initializeAktPrice();
+			wallet = useOptionalWallet();
+			globalConfig = useGlobalConfig();
 
-		if (get(wallet) == null) {
-			await goto('/error');
-		}
+			if (!priceWorks) {
+				status = {
+					status: Status.Failed,
+					reason: 'Failed to fetch the current AKT price.'
+				};
+				return;
+			} else if (!nativeApiWorks) {
+				status = {
+					status: Status.Failed,
+					reason: 'Unable to connect to native device bindings.'
+				};
+				return;
+			} else if (!globalConfigWorks) {
+				status = {
+					status: Status.Failed,
+					reason:
+						'Failed to load config. Try resetting or reinstalling the app.'
+				};
+				return;
+			}
 
-		if (!nativeApiWorks || !globalConfigWorks || !priceWorks) {
-			await goto('/error');
-		} else {
 			if (!walletWorks) {
 				await goto('/setup');
 			} else {
@@ -46,9 +71,12 @@
 					await goto('/app/simple');
 				}
 			}
-		}
 
-		initialized = true;
+			status = { status: Status.Ready };
+		} catch (error) {
+			status = { status: Status.Failed, reason: 'Exception: ' + error };
+			return;
+		}
 	});
 
 	let showConfirmation = false;
@@ -107,9 +135,11 @@
 				<h1 class="font-bold text-xl">BlockGuard</h1>
 			</div>
 
-			<button class={'z-10'} on:click={toggleSidebarAnimation}>
-				<img src={Gear} class="h-12 invert" alt="Settings" />
-			</button>
+			{#if status.status != Status.Failed}
+				<button class={'z-10'} on:click={toggleSidebarAnimation}>
+					<img src={Gear} class="h-12 invert" alt="Settings" />
+				</button>
+			{/if}
 		</nav>
 		<div class="grow flex-1 min-h-0 bg-black -z-50">
 			<BackgroundAnimation count={$globalConfig?.useBubbleMode ? 50 : 0} />
@@ -117,13 +147,20 @@
 				class={`w-full h-full overflow-y-auto 
 			${open == true ? 'rounded-br-2xl' : ''}`}
 			>
-				{#if !initialized}
+				{#if status.status == Status.Uninitialized}
 					<div class="w-full h-full flex justify-center items-center">
 						<LoadingSpinner class="lg:w-1/12 w-1/6"></LoadingSpinner>
 					</div>
-				{:else}
+				{:else if status.status == Status.Ready}
 					<div class="w-full flex min-h-full justify-center p-6">
 						<slot />
+					</div>
+				{:else if status.status == Status.Failed}
+					<div class="w-full flex flex-col min-h-full items-center p-6">
+						<h2 class="font-bold text-lg">
+							An error occured while starting the app
+						</h2>
+						<p>{status.reason}</p>
 					</div>
 				{/if}
 			</main>
