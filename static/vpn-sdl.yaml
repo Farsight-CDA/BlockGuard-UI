@@ -1,5 +1,5 @@
 ---
-version: "2.0"
+version: '2.0'
 services:
   softether:
     image: leonmw/softeathervpn
@@ -22,8 +22,6 @@ profiles:
           size: 512Mi
         storage:
           - size: 512Mi
-        gpu:
-          units: 0
   placement:
     akash:
       pricing:

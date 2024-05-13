@@ -81,13 +81,13 @@
 	export const open = async function open() {
 		dseq = Math.round(Math.random() * 100000000);
 
-		const USER = bytesToHex((await $wallet?.getPrivateKeyOffset(0))!);
-		const PASSWORD = bytesToHex((await $wallet?.getPrivateKeyOffset(1))!);
-		const sdl = SDL.fromString(
-			VPNSdlString.replaceAll('PLACEHOLDER_USER', USER).replaceAll(
-				'PLACEHOLDER_PASSWORD',
-				PASSWORD
-			)
+		const credentials = await $wallet.getVPNCredentials(dseq);
+
+		sdl = SDL.fromString(
+			VPNSdlString.replaceAll(
+				'PLACEHOLDER_USER',
+				credentials.username
+			).replaceAll('PLACEHOLDER_PASSWORD', credentials.password)
 		);
 
 		setProgress(DeploymentStep.Deploying);
@@ -133,15 +133,6 @@
 				//Can't close now
 				return false;
 		}
-	}
-
-	function bytesToHex(bytes: Uint8Array): string {
-		const hex = [];
-		for (let i = 0; i < bytes.length; i++) {
-			const currentByte = bytes[i].toString(16).padStart(2, '0'); // Pad with zeros
-			hex.push(currentByte);
-		}
-		return hex.join('');
 	}
 
 	async function triggerCreateDeployment() {

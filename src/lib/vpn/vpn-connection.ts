@@ -56,7 +56,12 @@ function createVPNConnection() {
 		}
 	}
 
-	async function connectVPNToLease(dseq: number, host: string) {
+	async function connectVPNToLease(
+		dseq: number,
+		host: string,
+		username: string,
+		password: string
+	) {
 		set({
 			isActive: true,
 			isUpdating: true,
@@ -66,8 +71,10 @@ function createVPNConnection() {
 			}
 		});
 
+		console.log('Starting to connect VPN client to ' + host);
+
 		try {
-			await NATIVE_API.connectVPN(host, VPN_USERNAME, VPN_PASSWORD);
+			await NATIVE_API.connectVPN(host, username, password);
 		} finally {
 			update((prev) => {
 				return { ...prev, isUpdating: false };
@@ -84,7 +91,7 @@ function createVPNConnection() {
 					? {
 							dseq: prev.connection.dseq,
 							status: 'Disconnecting'
-					  }
+						}
 					: { dseq: -1, status: 'Offline' }
 			};
 		});

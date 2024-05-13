@@ -30,9 +30,16 @@
 			return;
 		}
 
+		console.log('Lease Status: ', lease);
+
+		const vpnLink = `${lease.status.forwardedPorts[0].host}:${lease.status.forwardedPorts[0].externalPort}`;
+		const credentials = await $wallet.getVPNCredentials(lease.dseq);
+
 		await vpnConnection.connectVPNToLease(
 			lease.dseq,
-			`${lease.status.forwardedPorts[0].host}:${lease.status.forwardedPorts[0].externalPort}`
+			vpnLink,
+			credentials.username,
+			credentials.password
 		);
 	}
 

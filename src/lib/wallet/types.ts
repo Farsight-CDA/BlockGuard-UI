@@ -1,3 +1,4 @@
+import type { SDL } from '$lib/sdl/copypasta';
 import type {
 	DeploymentBid,
 	DeploymentDetails,
@@ -5,7 +6,6 @@ import type {
 	ProviderDetails,
 	ProviderLeaseStatus
 } from '$lib/types/types';
-import type { SDL } from '@akashnetwork/akashjs/build/sdl';
 import type { MsgCreateDeployment } from '@playwo/akash-api/akash/deployment/v1beta3';
 import type { Writable } from 'svelte/store';
 
@@ -13,7 +13,9 @@ export interface Wallet {
 	getAddress(): string;
 	getMnemonic(): string;
 
-	getPrivateKeyOffset(n: number): Promise<Uint8Array>;
+	getVPNCredentials(
+		index: number
+	): Promise<{ username: string; password: string }>;
 	getBlockTimestamp(height: number): Promise<Date>;
 	getDeploymentBids(dseq: number): Promise<DeploymentBid[]>;
 	getProviderDetails(provider: string): Promise<ProviderDetails>;

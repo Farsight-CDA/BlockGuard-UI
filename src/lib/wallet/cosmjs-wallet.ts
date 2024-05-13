@@ -143,17 +143,32 @@ export class CosmJSWallet implements Wallet {
 		return this.wallet.mnemonic;
 	}
 
-	async getPrivateKeyOffset(n: number): Promise<Uint8Array> {
+	private bytesToHex(bytes: Uint8Array): string {
+		const hex = [];
+		for (let i = 0; i < bytes.length; i++) {
+			const currentByte = bytes[i].toString(16).padStart(2, '0'); // Pad with zeros
+			hex.push(currentByte);
+		}
+		return hex.join('');
+	}
+
+	async getVPNCredentials(
+		index: number
+	): Promise<{ username: string; password: string }> {
 		const path: HdPath = [
 			Slip10RawIndex.hardened(44),
 			Slip10RawIndex.hardened(1),
-			Slip10RawIndex.normal(n),
-			Slip10RawIndex.normal(69)
+			Slip10RawIndex.normal(index),
+			Slip10RawIndex.normal(69 + index)
 		];
 		// eslint-disable-next-line @typescript-eslint/ban-ts-comment
 		// @ts-ignore
 		const keypair: Secp256k1Keypair = await this.wallet.getKeyPair(path);
-		return keypair.privkey;
+
+		return {
+			username: this.bytesToHex(keypair.pubkey),
+			password: this.bytesToHex(keypair.privkey)
+		};
 	}
 
 	async getBlockTimestamp(height: number): Promise<Date> {
