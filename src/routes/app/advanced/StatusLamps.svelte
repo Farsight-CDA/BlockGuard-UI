@@ -73,10 +73,12 @@
 	) {
 		if (isPending) {
 			return StatusLampStatus.Loading;
-		} else if (balance < CERTIFICATE_CLICKABLE_BALANCE) {
-			return StatusLampStatus.Error;
 		} else if (certificate == null) {
-			return StatusLampStatus.ActionRequired;
+			if (balance < CERTIFICATE_CLICKABLE_BALANCE) {
+				return StatusLampStatus.Error;
+			} else {
+				return StatusLampStatus.ActionRequired;
+			}
 		} else {
 			return StatusLampStatus.Ready;
 		}
