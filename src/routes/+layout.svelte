@@ -108,12 +108,16 @@
 		block = true;
 	}
 
-	function closeaaaa() {
+	function closeSidebar() {
 		if (block) {
 			return block;
 		}
 		block = true;
 		open = false;
+	}
+
+	function reload() {
+		location.reload();
 	}
 </script>
 
@@ -127,7 +131,7 @@
 				open ? 'xl:w-[calc(100%-22rem)] lg:w-[calc(100%-15rem)]' : 'lg:w-full'
 			} `}
 		style={` transition: all 0.5s ease-out `}
-		on:click={closeaaaa}
+		on:click={closeSidebar}
 	>
 		<nav class={`bg-gray-900 py-2 px-3 flex h-20 flex-row justify-between `}>
 			<div class="flex flex-row gap-3 items-center">
@@ -161,6 +165,11 @@
 							An error occured while starting the app
 						</h2>
 						<p>{status.reason}</p>
+
+						<button
+							class="mt-auto mb-auto px-3 py-2 bg-yellow-500 font-bold rounded-md"
+							on:click={reload}>Reload</button
+						>
 					</div>
 				{/if}
 			</main>
