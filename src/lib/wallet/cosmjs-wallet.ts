@@ -98,11 +98,11 @@ export class CosmJSWallet implements Wallet {
 	private initialized: boolean = false;
 	private refreshTimeout: NodeJS.Timeout = setInterval(
 		this.refresh.bind(this),
-		10000
+		12000
 	);
 	private refreshAverageBlockTimeTimeout: NodeJS.Timeout = setInterval(
 		this.refreshAverageBlockTime.bind(this),
-		300000
+		600000
 	);
 
 	private configUnsubscribe: Unsubscriber;
@@ -433,8 +433,10 @@ export class CosmJSWallet implements Wallet {
 		};
 
 		const release = await this.txSemaphore.acquire();
+
 		const memo = 'BlockGuard';
 		const gas = await this.msgClient.simulate(this.address, [message], memo);
+
 		try {
 			await this.msgClient.signAndBroadcast(
 				this.address,
@@ -454,19 +456,16 @@ export class CosmJSWallet implements Wallet {
 			);
 			return true;
 		} catch (error) {
-			if (error instanceof BroadcastTxError && error.code === 13) {
-				const broadcastError = error satisfies BroadcastTxError;
-				const regex = /required: (\d+)uakt/;
-				const match = broadcastError.message.match(regex);
-				if (match === null) {
-					throw broadcastError;
-				}
-				const requiredUAkt = parseFloat(match[1]);
-				const requiredAkt = requiredUAkt / gas;
-				this.gasPrice.set(requiredAkt * 1.0001);
-			} else {
+			if (!(error instanceof BroadcastTxError) || error.code != 13) {
 				throw error;
 			}
+			const match = error.message.match(/required: (\d+)uakt/);
+
+			if (match === null) {
+				throw error;
+			}
+
+			this.gasPrice.set((1.0001 * parseFloat(match[1])) / gas);
 			return false; // Failure
 		} finally {
 			await new Promise((resolve) => setTimeout(resolve, 300));
@@ -502,18 +501,22 @@ export class CosmJSWallet implements Wallet {
 			return;
 		}
 
-		const newBalance = await this.loadCurrentBalance();
-		this.balance.set(newBalance);
+		try {
+			const newBalance = await this.loadCurrentBalance();
+			this.balance.set(newBalance);
 
-		const newDeployments = await this.loadCurrentDeployments();
-		this.deployments.set(
-			newDeployments.map((d) => DeploymentDetails.fromDeploymentResponse(d))
-		);
+			const newDeployments = await this.loadCurrentDeployments();
+			this.deployments.set(
+				newDeployments.map((d) => DeploymentDetails.fromDeploymentResponse(d))
+			);
 
-		const newLeases = await this.loadCurrentLeases();
-		this.leases.set(
-			await Promise.all(newLeases.map((x) => this.loadLeaseDetails(x)))
-		);
+			const newLeases = await this.loadCurrentLeases();
+			this.leases.set(
+				await Promise.all(newLeases.map((x) => this.loadLeaseDetails(x)))
+			);
+		} catch (error) {
+			console.error('Failed to refresh cosmjs-wallet.', error);
+		}
 	}
 
 	async refreshAverageBlockTime() {
@@ -521,8 +524,15 @@ export class CosmJSWallet implements Wallet {
 			return;
 		}
 
-		const newAverageBlockTime = await this.loadAverageBlockTime();
-		this.averageBlockTime.set(newAverageBlockTime);
+		try {
+			const newAverageBlockTime = await this.loadAverageBlockTime();
+			this.averageBlockTime.set(newAverageBlockTime);
+		} catch (error) {
+			console.error(
+				'Failed to refresh average block time in cosmjs-wallet.',
+				error
+			);
+		}
 	}
 
 	dispose() {
