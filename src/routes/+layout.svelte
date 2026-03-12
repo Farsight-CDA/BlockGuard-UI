@@ -2,11 +2,13 @@
 	import { goto } from '$app/navigation';
 	import LoadingSpinner from '$lib/components/LoadingSpinner.svelte';
 	import {
+		DEFAULT_RPC_URL,
 		initializeGlobalConfig,
 		useGlobalConfig
 	} from '$lib/configuration/configuration';
 	import { initializeNativeAPI } from '$lib/native-api/native-api';
 	import { initializeAktPrice } from '$lib/wallet/aktPrice';
+	import { getWalletErrorMessage } from '$lib/wallet/errors';
 	import { initializeWalletStore, useOptionalWallet } from '$lib/wallet/wallet';
 	import Gear from '$static/gear.svg';
 	import Logo from '$static/logo.webp';
@@ -74,12 +76,20 @@
 
 			status = { status: Status.Ready };
 		} catch (error) {
-			status = { status: Status.Failed, reason: 'Exception: ' + error };
+			status = { status: Status.Failed, reason: getWalletErrorMessage(error) };
 			return;
 		}
 	});
 
 	let showConfirmation = false;
+	let rpcUrlInput = DEFAULT_RPC_URL;
+	let rpcUrlDirty = false;
+	let isSavingRpcUrl = false;
+	let rpcUrlMessage: { tone: 'success' | 'error'; text: string } | null = null;
+
+	$: if ($globalConfig != null && !rpcUrlDirty && rpcUrlInput != $globalConfig.rpcUrl) {
+		rpcUrlInput = $globalConfig.rpcUrl;
+	}
 
 	async function logout() {
 		if (showConfirmation) {
@@ -118,6 +128,55 @@
 
 	function reload() {
 		location.reload();
+	}
+
+	function handleAdvancedModeChange(event: Event) {
+		const target = event.currentTarget as HTMLInputElement;
+		void globalConfig.setAdvancedMode(target.checked);
+	}
+
+	function handleBubbleModeChange(event: Event) {
+		const target = event.currentTarget as HTMLInputElement;
+		void globalConfig.setBubbleMode(target.checked);
+	}
+
+	function handleRpcUrlInput(event: Event) {
+		const target = event.currentTarget as HTMLInputElement;
+		rpcUrlInput = target.value;
+		rpcUrlDirty = true;
+		rpcUrlMessage = null;
+	}
+
+	async function saveRpcUrl() {
+		if (globalConfig == null) {
+			return;
+		}
+
+		isSavingRpcUrl = true;
+		rpcUrlMessage = null;
+
+		try {
+			const normalizedRpcUrl = await globalConfig.setRpcUrl(rpcUrlInput);
+			rpcUrlInput = normalizedRpcUrl;
+			rpcUrlDirty = false;
+			rpcUrlMessage = {
+				tone: 'success',
+				text: 'RPC URL saved. BlockGuard will reconnect automatically.'
+			};
+		} catch (error) {
+			rpcUrlMessage = {
+				tone: 'error',
+				text: getWalletErrorMessage(error)
+			};
+		} finally {
+			isSavingRpcUrl = false;
+		}
+	}
+
+	async function useRecommendedRpcUrl() {
+		rpcUrlInput = DEFAULT_RPC_URL;
+		rpcUrlDirty = true;
+		await saveRpcUrl();
 	}
 </script>
 
@@ -205,8 +264,7 @@
 							type="checkbox"
 							class="sr-only peer"
 							checked={$globalConfig?.useAdvancedMode}
-							on:change={(e) =>
-								globalConfig.setAdvancedMode(e.currentTarget.checked)}
+							on:change={handleAdvancedModeChange}
 						/>
 						<div
 							class="w-11 h-6 bg-gray-200 rounded-full
@@ -229,8 +287,7 @@
 							type="checkbox"
 							class="sr-only peer"
 							checked={$globalConfig?.useBubbleMode}
-							on:change={(e) =>
-								globalConfig.setBubbleMode(e.currentTarget.checked)}
+							on:change={handleBubbleModeChange}
 						/>
 						<div
 							class="w-11 h-6 bg-gray-200 rounded-full
@@ -240,6 +297,54 @@
 						></div>
 					</div>
 				</label>
+			</div>
+			<div class="bg-gray-900 p-4 rounded-2xl w-full flex flex-col gap-3">
+				<div class="flex items-center gap-3">
+					<img class="h-6" src={SettingsIcon} alt="" />
+					<div>
+						<p class="text-sm font-medium text-gray-300">Akash RPC URL</p>
+						<p class="text-xs text-gray-400">
+							Recommended: `https://akash-rpc.publicnode.com/`
+						</p>
+					</div>
+				</div>
+
+				<input
+					type="url"
+					class="w-full rounded-md border border-gray-700 bg-black px-3 py-2 text-sm text-white"
+					placeholder="https://akash-rpc.publicnode.com/"
+					value={rpcUrlInput}
+					on:input={handleRpcUrlInput}
+					spellcheck="false"
+					autocomplete="off"
+				/>
+
+				<div class="flex gap-2">
+					<button
+						class="flex-1 rounded-md bg-blue-600 px-3 py-2 text-sm font-medium disabled:bg-gray-700"
+						disabled={!rpcUrlDirty || isSavingRpcUrl}
+						on:click={saveRpcUrl}
+					>
+						{isSavingRpcUrl ? 'Saving...' : 'Save RPC'}
+					</button>
+					<button
+						class="rounded-md bg-gray-700 px-3 py-2 text-sm font-medium"
+						disabled={isSavingRpcUrl}
+						on:click={useRecommendedRpcUrl}
+					>
+						Use Default
+					</button>
+				</div>
+
+				{#if rpcUrlMessage != null}
+					<p
+						class:text-green-300={rpcUrlMessage.tone == 'success'}
+						class:text-red-200={rpcUrlMessage.tone == 'error'}
+						class="text-xs"
+					>
+						{rpcUrlMessage.text}
+					</p>
+				{/if}
 			</div>
 
 			{#if $wallet != null}

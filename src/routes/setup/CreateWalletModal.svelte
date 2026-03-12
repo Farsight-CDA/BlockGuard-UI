@@ -2,6 +2,7 @@
 	import { goto } from '$app/navigation';
 	import MnemonicsForm from '$lib/components/MnemonicsForm.svelte';
 	import Modal from '$lib/components/Modal.svelte';
+	import { getWalletErrorMessage } from '$lib/wallet/errors';
 	import { useOptionalWallet } from '$lib/wallet/wallet';
 	import { scale } from 'svelte/transition';
 
@@ -10,18 +11,30 @@
 	var generatedMnemonics: string | null;
 
 	var hasSavedMnemonics: boolean = false;
+	let errorMessage: string | null = null;
+	let isSaving = false;
 
 	export const open = async function open() {
 		generatedMnemonics = null;
 		hasSavedMnemonics = false;
+		errorMessage = null;
 		await innerOpen();
 	};
 
 	let innerOpen: () => Promise<void>;
 
 	async function triggerSaveAndGoToApp() {
-		await wallet.create(generatedMnemonics!);
-		await goto('/');
+		errorMessage = null;
+		isSaving = true;
+
+		try {
+			await wallet.create(generatedMnemonics!);
+			await goto('/');
+		} catch (error) {
+			errorMessage = getWalletErrorMessage(error);
+		} finally {
+			isSaving = false;
+		}
 	}
 </script>
 
@@ -69,13 +82,17 @@
 			</span>
 		{/if}
 		<button
-			disabled={!hasSavedMnemonics}
+			disabled={!hasSavedMnemonics || isSaving}
 			class="px-2 py-1 rounded-lg w-full bg-custom-blue drop-shadow-glow-black-100"
 			class:hover:drop-shadow-glow-red-100={!hasSavedMnemonics}
 			class:bg-green-400={hasSavedMnemonics}
 			class:hover:bg-red-400={!hasSavedMnemonics}
 			class:drop-shadow-glow-green-400={hasSavedMnemonics}
-			on:click={triggerSaveAndGoToApp}>Go to App</button
+			on:click={triggerSaveAndGoToApp}
+		>{isSaving ? 'Connecting...' : 'Go to App'}</button
 		>
+		{#if errorMessage != null}
+			<p class="w-full text-sm text-red-200">{errorMessage}</p>
+		{/if}
 	</div>
 </Modal>
