@@ -458,7 +458,9 @@ export class SDL {
 
 	serviceResourceGpu(resource: v3ResourceGPU | undefined, asString: boolean) {
 		const value = resource?.units || 0;
-		const numVal = isString(value) ? Buffer.from(value, 'ascii') : value;
+		const numVal = isString(value)
+			? new TextEncoder().encode(value)
+			: value;
 		const strVal = !isString(value) ? value.toString() : value;
 
 		return resource?.attributes

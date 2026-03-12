@@ -105,7 +105,7 @@
 		}, 5000);
 	}
 
-	export let openExportMnemonicModal: () => Promise<void>;
+	let openExportMnemonicModal: () => Promise<void>;
 	let block = true;
 	let open = false;
 	function toggleSidebarAnimation() {

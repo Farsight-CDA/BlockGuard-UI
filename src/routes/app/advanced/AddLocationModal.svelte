@@ -3,10 +3,10 @@
 	import Modal from '$lib/components/Modal.svelte';
 	import { SDL } from '$lib/sdl/copypasta';
 	import type { DeploymentBid } from '$lib/types/types';
+	import type { CreateDeploymentMsg } from '$lib/wallet/types';
 	import { retry } from '$lib/utils/utils';
 	import { useRequiredWallet } from '$lib/wallet/wallet';
 	import VPNSdlString from '$static/vpn-sdl.yaml';
-	import { MsgCreateDeployment } from '@playwo/akash-api/akash/deployment/v1beta3';
 	import type { Writable } from 'svelte/store';
 	import { scale } from 'svelte/transition';
 
@@ -136,27 +136,30 @@
 	}
 
 	async function triggerCreateDeployment() {
-		const msg = MsgCreateDeployment.fromPartial({
+		const msg: CreateDeploymentMsg = {
 			deposit: {
-				denom: 'uakt',
-				amount: '500000'
+				amount: {
+					denom: 'uakt',
+					amount: '500000'
+				},
+				sources: [1]
 			},
-			version: await sdl.manifestVersion(),
-			depositor: $wallet.getAddress(),
+			hash: await sdl.manifestVersion(),
 			id: {
 				owner: $wallet.getAddress(),
 				dseq: dseq
 			},
 			groups: sdl.v3Groups() as any
-		});
+		};
 
 		await $wallet.createDeployment(msg);
 	}
 
 	async function triggerGatherBids() {
-		bids = await $wallet.getDeploymentBids(dseq);
+		const newBids = await $wallet.getDeploymentBids(dseq);
+		bids = newBids;
 
-		if (bids.length == 0) {
+		if (newBids.length == 0) {
 			throw Error('No bids received');
 		}
 	}
@@ -165,7 +168,7 @@
 		setProgress(DeploymentStep.Accepting);
 
 		await moveForward(DeploymentStep.SubmittingManifest, [6000], () =>
-			$wallet.createLease(dseq, bid.gseq, bid.oseq, bid.provider)
+			$wallet.createLease(dseq, bid.gseq, bid.oseq, bid.provider, bid.bseq)
 		);
 		await moveForward(
 			DeploymentStep.Completed,

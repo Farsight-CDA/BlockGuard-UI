@@ -3,8 +3,6 @@
 		"@cosmjs/crypto": "^0.32.3",
 		"@cosmjs/proto-signing": "^0.32.3",
 		"@cosmjs/stargate": "^0.32.3",
-		"@cosmjs/tendermint-rpc": "^0.32.3",
-		"@playwo/akash-api": "^0.1.0",
 		"@sveltejs/adapter-static": "^3.0.1",
 		"@sveltejs/kit": "^2.0.0",
 		"@sveltejs/vite-plugin-svelte": "^3.0.0",
