@@ -1,21 +1,20 @@
-import { BitString, Integer, PrintableString } from 'asn1js';
-import { arrayBufferToString, toBase64 } from 'pvutils';
+import { BitString, Integer, PrintableString, Utf8String } from 'asn1js';
 
 import {
 	AttributeTypeAndValue,
 	BasicConstraints,
 	Certificate,
 	ExtKeyUsage,
-	// eslint-disable-next-line @typescript-eslint/no-var-requires
 	Extension,
 	getAlgorithmParameters
-} from 'pkijs/build';
+} from 'pkijs';
 const HASH_ALG = 'SHA-256';
 const SIGN_ALG = 'ECDSA';
 
 export interface pems {
 	csr: string;
 	publicKey: string;
+	publicKeyBytes: Uint8Array;
 	privateKey: string;
 }
 
@@ -45,26 +44,30 @@ export async function createCertificate(
 	);
 
 	const cert = await createCSR(keyPair, HASH_ALG, {
-		commonName: address
+		commonName: address,
+		validityDays: options.validityDays
 	});
 
-	setValidityPeriod(cert, new Date(), options.validityDays); // Good from today for 365 days
-
-	const certBER = cert.toSchema(true).toBER(false);
-	const spki = await crypto.subtle.exportKey('spki', keyPair.publicKey);
-	const pkcs8 = await crypto.subtle.exportKey('pkcs8', keyPair.privateKey);
+	const certBER = new Uint8Array(cert.toSchema(true).toBER(false));
+	const spki = new Uint8Array(
+		await crypto.subtle.exportKey('spki', keyPair.publicKey)
+	);
+	const pkcs8 = new Uint8Array(
+		await crypto.subtle.exportKey('pkcs8', keyPair.privateKey)
+	);
 
 	return {
-		csr: `-----BEGIN CERTIFICATE-----\n${formatPEM(toBase64(arrayBufferToString(certBER)))}\n-----END CERTIFICATE-----`,
-		privateKey: `-----BEGIN PRIVATE KEY-----\n${formatPEM(toBase64(arrayBufferToString(pkcs8)))}\n-----END PRIVATE KEY-----`,
-		publicKey: `-----BEGIN EC PUBLIC KEY-----\n${formatPEM(toBase64(arrayBufferToString(spki)))}\n-----END EC PUBLIC KEY-----`
+		csr: toPem('CERTIFICATE', certBER),
+		privateKey: toPem('PRIVATE KEY', pkcs8),
+		publicKey: toPem('PUBLIC KEY', spki),
+		publicKeyBytes: spki
 	};
 }
 
 async function createCSR(
 	keyPair: CryptoKeyPair,
 	hashAlg: string,
-	{ commonName }: { commonName: string }
+	{ commonName, validityDays }: { commonName: string; validityDays: number }
 ) {
 	const cert = new Certificate();
 	cert.version = 2;
@@ -85,6 +88,15 @@ async function createCSR(
 			type: '2.5.4.3', // Common name
 			value: new PrintableString({
 				value: commonName
+			}) as any
+		})
+	);
+
+	cert.subject.typesAndValues.push(
+		new AttributeTypeAndValue({
+			type: '2.23.133.2.6',
+			value: new Utf8String({
+				value: 'v0.0.1'
 			}) as any
 		})
 	);
@@ -142,8 +154,23 @@ async function createCSR(
 	//endregion
 
 	await cert.subjectPublicKeyInfo.importKey(keyPair.publicKey);
+	setValidityPeriod(cert, new Date(), validityDays);
 	await cert.sign(keyPair.privateKey, hashAlg);
 	return cert;
+}
+
+function toPem(label: string, bytes: Uint8Array) {
+	return `-----BEGIN ${label}-----\n${formatPEM(bytesToBase64(bytes))}\n-----END ${label}-----`;
+}
+
+function bytesToBase64(bytes: Uint8Array) {
+	let binary = '';
+
+	for (let i = 0; i < bytes.length; i++) {
+		binary += String.fromCharCode(bytes[i]);
+	}
+
+	return btoa(binary);
 }
 
 // add line break every 64th character
@@ -156,11 +183,7 @@ function setValidityPeriod(
 	startDate: Date,
 	durationInDays: number
 ) {
-	// Normalize to midnight
 	const start = new Date(startDate);
-	start.setHours(0);
-	start.setMinutes(0);
-	start.setSeconds(0);
 	const end = new Date(start.getTime() + durationInDays * 24 * 60 * 60 * 1000);
 
 	cert.notBefore.value = start;
