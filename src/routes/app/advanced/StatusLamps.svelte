@@ -16,6 +16,7 @@
 
 	var balance = $wallet.balance;
 	var certificate = $wallet.certificate;
+	let certificateError: string | null = null;
 
 	const READY_BALANCE = 1;
 	const WARNING_BALANCE = 0.75;
@@ -105,12 +106,15 @@
 	async function triggerUpdateCertificate() {
 		try {
 			certificationCreationPending = true;
+			certificateError = null;
 			const cert = await createCertificate($wallet.getAddress());
 			console.log('Created');
-			await $wallet.broadcastCertificate(cert.csr, cert.publicKey);
+			await $wallet.broadcastCertificate(cert.csr, cert.publicKeyBytes);
 			console.log('Broadcasted');
 			await wallet.setCertificate(cert.csr, cert.publicKey, cert.privateKey);
 			console.log('SET');
+		} catch (error) {
+			certificateError = error instanceof Error ? error.message : `${error}`;
 		} finally {
 			certificationCreationPending = false;
 		}
@@ -138,3 +142,7 @@
 	/>
 	<StatusLamp name="Connection" status={connectionLampStatus} />
 </div>
+
+{#if certificateError != null}
+	<p class="mt-3 text-sm text-red-200">{certificateError}</p>
+{/if}

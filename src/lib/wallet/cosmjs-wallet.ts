@@ -16,9 +16,7 @@ import { base64ToUInt } from '$lib/utils/utils';
 import type { HdPath, Secp256k1Keypair } from '@cosmjs/crypto';
 import { Slip10RawIndex } from '@cosmjs/crypto';
 import { DirectSecp256k1HdWallet, Registry } from '@cosmjs/proto-signing';
-import {
-	SigningStargateClient,
-} from '@cosmjs/stargate';
+import { SigningStargateClient } from '@cosmjs/stargate';
 import { BroadcastTxError } from '@cosmjs/stargate/build/stargateclient';
 import { toBase64 } from 'pvutils';
 import { Semaphore } from 'semaphore-promise';
@@ -203,18 +201,17 @@ export class CosmJSWallet implements Wallet {
 
 	//Transactions
 
-	async broadcastCertificate(csr: string, publicKey: string): Promise<void> {
+	async broadcastCertificate(
+		csr: string,
+		publicKey: Uint8Array
+	): Promise<void> {
 		const encodedCsr = base64ToUInt(toBase64(csr!));
-		const encodePublicKey = base64ToUInt(toBase64(publicKey!));
 
-		await this.sendTx(
-			TxTypeUrl.MsgCreateCertificate,
-			{
-				owner: this.address,
-				cert: encodedCsr,
-				pubkey: encodePublicKey
-			}
-		);
+		await this.sendTx(TxTypeUrl.MsgCreateCertificate, {
+			owner: this.address,
+			cert: encodedCsr,
+			pubkey: publicKey
+		});
 	}
 
 	async createDeployment(msg: CreateDeploymentMsg): Promise<void> {
@@ -222,15 +219,12 @@ export class CosmJSWallet implements Wallet {
 	}
 
 	async closeDeployment(dseq: number): Promise<void> {
-		await this.sendTx(
-			TxTypeUrl.MsgCloseDeployment,
-			{
-				id: {
-					owner: this.address,
-					dseq: dseq
-				}
+		await this.sendTx(TxTypeUrl.MsgCloseDeployment, {
+			id: {
+				owner: this.address,
+				dseq: dseq
 			}
-		);
+		});
 	}
 
 	async createLease(
@@ -240,19 +234,16 @@ export class CosmJSWallet implements Wallet {
 		provider: string,
 		bseq: number
 	): Promise<void> {
-		await this.sendTx(
-			TxTypeUrl.MsgCreateLease,
-			{
-				bidId: {
-					dseq: dseq,
-					gseq: gseq,
-					oseq: oseq,
-					provider: provider,
-					owner: this.address,
-					bseq: bseq
-				}
+		await this.sendTx(TxTypeUrl.MsgCreateLease, {
+			bidId: {
+				dseq: dseq,
+				gseq: gseq,
+				oseq: oseq,
+				provider: provider,
+				owner: this.address,
+				bseq: bseq
 			}
-		);
+		});
 	}
 
 	// Provider
@@ -318,7 +309,9 @@ export class CosmJSWallet implements Wallet {
 	}
 
 	private async loadCurrentDeployments(): Promise<{ deployment?: any }[]> {
-		const res = await this.fetchAkashRestJson<{ deployments: { deployment?: any }[] }>(
+		const res = await this.fetchAkashRestJson<{
+			deployments: { deployment?: any }[];
+		}>(
 			`akash/deployment/v1beta4/deployments/list?filters.owner=${encodeURIComponent(this.address)}&filters.state=active`
 		);
 		return res.deployments ?? [];
@@ -331,9 +324,9 @@ export class CosmJSWallet implements Wallet {
 		return res.leases ?? [];
 	}
 
-	private async loadLeaseDetails(
-		lease: { lease?: any }
-	): Promise<LeaseDetails> {
+	private async loadLeaseDetails(lease: {
+		lease?: any;
+	}): Promise<LeaseDetails> {
 		const leaseId = lease.lease?.id ?? lease.lease?.leaseId;
 		const providerDetails = await this.getProviderDetails(
 			leaseId?.provider ?? ''
@@ -523,7 +516,9 @@ export class CosmJSWallet implements Wallet {
 		const response = await fetch(new URL(path, this.getRestUrl()).toString());
 
 		if (!response.ok) {
-			throw Error(`REST query failed with (${response.status}): ${await response.text()}`);
+			throw Error(
+				`REST query failed with (${response.status}): ${await response.text()}`
+			);
 		}
 
 		return (await response.json()) as T;
