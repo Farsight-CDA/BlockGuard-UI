@@ -1,9 +1,8 @@
 <script lang="ts">
 	import LoadingSpinner from '$lib/components/LoadingSpinner.svelte';
-	import type { LeaseDetails } from '$lib/types/types';
+	import { formatLeaseState, type LeaseDetails } from '$lib/types/types';
 	import { useVPNConnection } from '$lib/vpn/vpn-connection';
 	import { useRequiredWallet } from '$lib/wallet/wallet';
-	import { Lease_State } from '@playwo/akash-api/akash/market/v1beta4';
 	import type { Writable } from 'svelte/store';
 
 	var wallet = useRequiredWallet();
@@ -71,7 +70,7 @@
 					{lease.providerDetails.region}
 				</td>
 				<td>
-					<p>{Lease_State[lease.state]}</p>
+					<p>{formatLeaseState(lease.state)}</p>
 				</td>
 				<td>
 					{#if lease.status == null}

@@ -17,43 +17,9 @@ import type { HdPath, Secp256k1Keypair } from '@cosmjs/crypto';
 import { Slip10RawIndex } from '@cosmjs/crypto';
 import { DirectSecp256k1HdWallet, Registry } from '@cosmjs/proto-signing';
 import {
-	QueryClient,
 	SigningStargateClient,
-	createProtobufRpcClient,
-	type ProtobufRpcClient
 } from '@cosmjs/stargate';
 import { BroadcastTxError } from '@cosmjs/stargate/build/stargateclient';
-import { Tendermint37Client } from '@cosmjs/tendermint-rpc';
-import type { Certificate_State } from '@playwo/akash-api/akash/cert/v1beta3';
-import {
-	QueryClientImpl as CertificateQueryClientImpl,
-	CertificateResponse,
-	MsgCreateCertificate,
-	QueryCertificatesRequest
-} from '@playwo/akash-api/akash/cert/v1beta3';
-import {
-	Deployment_State,
-	MsgCloseDeployment,
-	MsgCreateDeployment
-} from '@playwo/akash-api/akash/deployment/v1beta3';
-import {
-	QueryClientImpl as DeploymentQueryClient,
-	QueryDeploymentResponse,
-	QueryDeploymentsRequest
-} from '@playwo/akash-api/akash/deployment/v1beta3/query';
-import {
-	Bid_State,
-	Lease_State,
-	QueryClientImpl as MarketQueryClient,
-	MsgCreateLease,
-	QueryBidsRequest,
-	QueryLeaseResponse,
-	QueryLeasesRequest
-} from '@playwo/akash-api/akash/market/v1beta4';
-import {
-	QueryClientImpl as ProviderQueryClient,
-	QueryProviderRequest
-} from '@playwo/akash-api/akash/provider/v1beta3';
 import { toBase64 } from 'pvutils';
 import { Semaphore } from 'semaphore-promise';
 import {
@@ -68,7 +34,20 @@ import {
 	getWalletErrorMessage,
 	wrapAkashRpcConnectionError
 } from './errors';
-import type { CertificateInfo, Wallet } from './types';
+import type { CertificateInfo, CreateDeploymentMsg, Wallet } from './types';
+
+const DEFAULT_AKASH_REST_URL = 'https://akash-rest.publicnode.com/';
+const KNOWN_REST_URLS: Record<string, string> = {
+	'rpc-akash.ecostake.com': 'https://rest-akash.ecostake.com/',
+	'akash-rpc.polkachu.com': 'https://akash-api.polkachu.com/',
+	'akash-rpc.kleomedes.network': 'https://akash-api.kleomedes.network/',
+	'akash-mainnet-rpc.cosmonautstakes.com':
+		'https://akash-mainnet-rest.cosmonautstakes.com/',
+	'akash-rpc.w3coins.io': 'https://akash-api.w3coins.io/',
+	'akash-rpc.publicnode.com': DEFAULT_AKASH_REST_URL,
+	'akash.rpc.arcturian.tech': 'https://akash.api.arcturian.tech/',
+	'akash.api.pocket.network': 'https://akash.api.pocket.network/'
+};
 
 interface StoredWallet {
 	mnemonics: string;
@@ -80,7 +59,6 @@ export class CosmJSWallet implements Wallet {
 	private address: string = null!;
 
 	private msgClient: SigningStargateClient = null!;
-	private queryClient: ProtobufRpcClient = null!;
 	private rpcUrl: string;
 	private connectedRpcUrl: string | null = null;
 
@@ -199,17 +177,11 @@ export class CosmJSWallet implements Wallet {
 	}
 
 	async getDeploymentBids(dseq: number): Promise<DeploymentBid[]> {
-		const res = await new MarketQueryClient(this.queryClient).Bids(
-			QueryBidsRequest.fromPartial({
-				filters: {
-					dseq: dseq,
-					owner: this.address,
-					state: Bid_State[Bid_State.open]
-				}
-			})
+		const res = await this.fetchAkashRestJson<{ bids: { bid?: any }[] }>(
+			`akash/market/v1beta5/bids/list?filters.owner=${encodeURIComponent(this.address)}&filters.dseq=${dseq}&filters.state=open`
 		);
 
-		return res.bids.map((b) => DeploymentBid.fromBidResponse(b));
+		return (res.bids ?? []).map((bid) => DeploymentBid.fromBidResponse(bid));
 	}
 
 	async getProviderDetails(provider: string): Promise<ProviderDetails> {
@@ -219,13 +191,11 @@ export class CosmJSWallet implements Wallet {
 			return details;
 		}
 
-		const res = await new ProviderQueryClient(this.queryClient).Provider(
-			QueryProviderRequest.fromPartial({
-				owner: provider
-			})
+		const res = await this.fetchAkashRestJson<{ provider?: any }>(
+			`akash/provider/v1beta4/providers/${encodeURIComponent(provider)}`
 		);
 
-		details = ProviderDetails.fromProvider(res.provider!);
+		details = ProviderDetails.fromProvider(res.provider ?? {});
 		this.providerDetailsCache.set(provider, details);
 		setTimeout(() => this.providerDetailsCache.delete(provider), 300000);
 		return details;
@@ -239,27 +209,27 @@ export class CosmJSWallet implements Wallet {
 
 		await this.sendTx(
 			TxTypeUrl.MsgCreateCertificate,
-			MsgCreateCertificate.fromPartial({
+			{
 				owner: this.address,
 				cert: encodedCsr,
 				pubkey: encodePublicKey
-			})
+			}
 		);
 	}
 
-	async createDeployment(msg: MsgCreateDeployment): Promise<void> {
+	async createDeployment(msg: CreateDeploymentMsg): Promise<void> {
 		await this.sendTx(TxTypeUrl.MsgCreateDeployment, msg);
 	}
 
 	async closeDeployment(dseq: number): Promise<void> {
 		await this.sendTx(
 			TxTypeUrl.MsgCloseDeployment,
-			MsgCloseDeployment.fromPartial({
+			{
 				id: {
 					owner: this.address,
 					dseq: dseq
 				}
-			})
+			}
 		);
 	}
 
@@ -267,19 +237,21 @@ export class CosmJSWallet implements Wallet {
 		dseq: number,
 		gseq: number,
 		oseq: number,
-		provider: string
+		provider: string,
+		bseq: number
 	): Promise<void> {
 		await this.sendTx(
 			TxTypeUrl.MsgCreateLease,
-			MsgCreateLease.fromPartial({
+			{
 				bidId: {
 					dseq: dseq,
 					gseq: gseq,
 					oseq: oseq,
 					provider: provider,
-					owner: this.address
+					owner: this.address,
+					bseq: bseq
 				}
-			})
+			}
 		);
 	}
 
@@ -345,59 +317,33 @@ export class CosmJSWallet implements Wallet {
 		);
 	}
 
-	private async loadCurrentCertificates(
-		state?: Certificate_State
-	): Promise<CertificateResponse[]> {
-		const res = await new CertificateQueryClientImpl(
-			this.queryClient
-		).Certificates(
-			QueryCertificatesRequest.fromPartial({
-				filter: {
-					owner: this.address,
-					state: state?.toString()
-				},
-				pagination: { limit: 10 }
-			})
+	private async loadCurrentDeployments(): Promise<{ deployment?: any }[]> {
+		const res = await this.fetchAkashRestJson<{ deployments: { deployment?: any }[] }>(
+			`akash/deployment/v1beta4/deployments/list?filters.owner=${encodeURIComponent(this.address)}&filters.state=active`
 		);
-		return res.certificates;
+		return res.deployments ?? [];
 	}
 
-	private async loadCurrentDeployments(): Promise<QueryDeploymentResponse[]> {
-		const res = await new DeploymentQueryClient(this.queryClient).Deployments(
-			QueryDeploymentsRequest.fromPartial({
-				filters: {
-					owner: this.address,
-					state: Deployment_State[Deployment_State.active]
-				}
-			})
+	private async loadCurrentLeases(): Promise<{ lease?: any }[]> {
+		const res = await this.fetchAkashRestJson<{ leases: { lease?: any }[] }>(
+			`akash/market/v1beta5/leases/list?filters.owner=${encodeURIComponent(this.address)}&filters.state=active`
 		);
-		return res.deployments;
-	}
-
-	private async loadCurrentLeases(): Promise<QueryLeaseResponse[]> {
-		const res = await new MarketQueryClient(this.queryClient).Leases(
-			QueryLeasesRequest.fromPartial({
-				filters: {
-					owner: this.address,
-					state: Lease_State[Lease_State.active]
-				}
-			})
-		);
-		return res.leases;
+		return res.leases ?? [];
 	}
 
 	private async loadLeaseDetails(
-		lease: QueryLeaseResponse
+		lease: { lease?: any }
 	): Promise<LeaseDetails> {
+		const leaseId = lease.lease?.id ?? lease.lease?.leaseId;
 		const providerDetails = await this.getProviderDetails(
-			lease.lease!.leaseId!.provider
+			leaseId?.provider ?? ''
 		);
 
 		const providerStatus = await this.getProviderLeaseStatus(
-			lease.lease!.leaseId!.dseq.toNumber(),
-			lease.lease!.leaseId!.gseq,
-			lease.lease!.leaseId!.oseq,
-			lease.lease!.leaseId!.provider
+			parseInt(`${leaseId?.dseq ?? 0}`, 10),
+			parseInt(`${leaseId?.gseq ?? 0}`, 10),
+			parseInt(`${leaseId?.oseq ?? 0}`, 10),
+			leaseId?.provider ?? ''
 		).catch(() => null);
 
 		return LeaseDetails.fromLeaseResponse(
@@ -505,12 +451,8 @@ export class CosmJSWallet implements Wallet {
 					registry: new Registry(getAkashTypeRegistry())
 				}
 			);
-			const queryClient = createProtobufRpcClient(
-				new QueryClient(await Tendermint37Client.connect(this.rpcUrl))
-			);
 
 			this.msgClient = msgClient;
-			this.queryClient = queryClient;
 			this.connectedRpcUrl = this.rpcUrl;
 		} catch (error) {
 			throw wrapAkashRpcConnectionError(this.rpcUrl, error);
@@ -575,6 +517,25 @@ export class CosmJSWallet implements Wallet {
 
 		this.rpcError.set(getWalletErrorMessage(walletError));
 		console.error('Failed to refresh cosmjs-wallet.', walletError);
+	}
+
+	private async fetchAkashRestJson<T>(path: string): Promise<T> {
+		const response = await fetch(new URL(path, this.getRestUrl()).toString());
+
+		if (!response.ok) {
+			throw Error(`REST query failed with (${response.status}): ${await response.text()}`);
+		}
+
+		return (await response.json()) as T;
+	}
+
+	private getRestUrl() {
+		try {
+			const rpc = new URL(this.rpcUrl);
+			return KNOWN_REST_URLS[rpc.hostname] ?? DEFAULT_AKASH_REST_URL;
+		} catch {
+			return DEFAULT_AKASH_REST_URL;
+		}
 	}
 
 	dispose() {
