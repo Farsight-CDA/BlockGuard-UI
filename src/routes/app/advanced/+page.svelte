@@ -20,6 +20,9 @@
 	var leases: Writable<LeaseDetails[]>;
 	$: leases = $wallet!.leases;
 
+	var rpcError: Writable<string | null>;
+	$: rpcError = $wallet!.rpcError;
+
 	let openAddActiveLocationModal: () => Promise<void>;
 
 	function handleAddActiveLocation() {
@@ -33,13 +36,16 @@
 
 	var readyToAddLocation: boolean;
 	$: readyToAddLocation =
+		$rpcError == null &&
 		(fundStatus == StatusLampStatus.Ready ||
 			fundStatus == StatusLampStatus.Warning) &&
 		certificateStatus == StatusLampStatus.Ready;
 
 	var addLocationStatusMessage: string;
 	$: addLocationStatusMessage =
-		fundStatus != StatusLampStatus.Ready &&
+		$rpcError != null
+			? $rpcError
+			: fundStatus != StatusLampStatus.Ready &&
 		fundStatus != StatusLampStatus.Warning
 			? 'Not enough funds'
 			: certificateStatus != StatusLampStatus.Ready
@@ -60,6 +66,12 @@
 	<div
 		class="w-full bg-neutral-900 rounded-md flex flex-col justify-center p-4 gap-6"
 	>
+		{#if $rpcError != null}
+			<div class="rounded-md border border-red-500 bg-red-950/40 px-4 py-3 text-sm text-red-100">
+				{$rpcError}
+			</div>
+		{/if}
+
 		<div class="w-full flex justify-between items-center">
 			<h2 class="text-2xl font-bold">Active Locations</h2>
 

@@ -9,6 +9,7 @@ export interface GlobalConfig {
 }
 
 const CONFIG_STORAGE_FILE = 'config.json';
+export const DEFAULT_RPC_URL = 'https://akash-rpc.publicnode.com/';
 
 var GLOBAL_CONFIG: ReturnType<typeof createGlobalConfig> | null;
 
@@ -35,12 +36,10 @@ export async function initializeGlobalConfig() {
 
 function createGlobalConfig() {
 	const { subscribe, set, update } = writable<GlobalConfig>(null!);
-	var initialized = false;
 
 	async function initialize() {
 		const gcJson = await NATIVE_API.loadFile(CONFIG_STORAGE_FILE);
-		set(gcJson == null ? DEFAULT_GLOBAL_CONFIG : JSON.parse(gcJson));
-		initialized = true;
+		set(normalizeGlobalConfig(gcJson == null ? DEFAULT_GLOBAL_CONFIG : JSON.parse(gcJson)));
 	}
 
 	async function setAdvancedMode(useAdvancedMode: boolean) {
@@ -81,6 +80,33 @@ function createGlobalConfig() {
 		}
 	}
 
+	async function setRpcUrl(rpcUrl: string) {
+		const normalizedRpcUrl = normalizeRpcUrl(rpcUrl);
+		let didChange = false;
+
+		update((prev) => {
+			if (prev.rpcUrl == normalizedRpcUrl) {
+				return prev;
+			}
+
+			didChange = true;
+			return {
+				...prev,
+				rpcUrl: normalizedRpcUrl
+			};
+		});
+
+		if (didChange) {
+			await store();
+		}
+
+		return normalizedRpcUrl;
+	}
+
+	async function resetRpcUrl() {
+		return await setRpcUrl(DEFAULT_RPC_URL);
+	}
+
 	async function store() {
 		await NATIVE_API.saveFile(
 			CONFIG_STORAGE_FILE,
@@ -92,6 +118,8 @@ function createGlobalConfig() {
 		subscribe,
 		setAdvancedMode,
 		setBubbleMode,
+		setRpcUrl,
+		resetRpcUrl,
 		initialize
 	};
 }
@@ -99,5 +127,42 @@ function createGlobalConfig() {
 const DEFAULT_GLOBAL_CONFIG = {
 	useAdvancedMode: true,
 	useBubbleMode: false,
-	rpcUrl: 'https://rpc-akash.ecostake.com/'
+	rpcUrl: DEFAULT_RPC_URL
 } satisfies GlobalConfig;
+
+function normalizeGlobalConfig(config: Partial<GlobalConfig>): GlobalConfig {
+	return {
+		useAdvancedMode: config.useAdvancedMode ?? DEFAULT_GLOBAL_CONFIG.useAdvancedMode,
+		useBubbleMode: config.useBubbleMode ?? DEFAULT_GLOBAL_CONFIG.useBubbleMode,
+		rpcUrl: normalizeRpcUrl(config.rpcUrl ?? DEFAULT_GLOBAL_CONFIG.rpcUrl)
+	};
+}
+
+function normalizeRpcUrl(rpcUrl: string): string {
+	const trimmedRpcUrl = rpcUrl.trim();
+
+	if (trimmedRpcUrl.length == 0) {
+		throw Error('RPC URL is required.');
+	}
+
+	let parsedUrl: URL;
+
+	try {
+		parsedUrl = new URL(trimmedRpcUrl);
+	} catch {
+		throw Error('RPC URL must be a valid absolute URL.');
+	}
+
+	if (parsedUrl.protocol != 'http:' && parsedUrl.protocol != 'https:') {
+		throw Error('RPC URL must start with http:// or https://.');
+	}
+
+	parsedUrl.hash = '';
+	parsedUrl.search = '';
+
+	if (parsedUrl.pathname == '') {
+		parsedUrl.pathname = '/';
+	}
+
+	return parsedUrl.toString();
+}

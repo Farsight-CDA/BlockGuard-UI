@@ -22,6 +22,7 @@ export interface Wallet {
 
 	certificate: Writable<CertificateInfo | null>;
 	balance: Writable<number>;
+	rpcError: Writable<string | null>;
 
 	averageBlockTime: Writable<number>;
 

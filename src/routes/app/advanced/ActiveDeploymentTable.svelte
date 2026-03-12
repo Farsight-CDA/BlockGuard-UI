@@ -58,7 +58,7 @@
 		</tr>
 	</thead>
 	<tbody class="before:content-[' '] before:block before:h-2">
-		{#each $leases.sort((a, b) => a.createdAtHeight - b.createdAtHeight) as lease}
+		{#each [...$leases].sort((a, b) => a.createdAtHeight - b.createdAtHeight) as lease}
 			<tr
 				class:border={$vpnConnection.isActive &&
 					$vpnConnection.connection.dseq == lease.dseq}

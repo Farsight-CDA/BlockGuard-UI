@@ -63,6 +63,11 @@ import {
 	type Unsubscriber,
 	type Writable
 } from 'svelte/store';
+import {
+	getAkashRpcError,
+	getWalletErrorMessage,
+	wrapAkashRpcConnectionError
+} from './errors';
 import type { CertificateInfo, Wallet } from './types';
 
 interface StoredWallet {
@@ -77,16 +82,18 @@ export class CosmJSWallet implements Wallet {
 	private msgClient: SigningStargateClient = null!;
 	private queryClient: ProtobufRpcClient = null!;
 	private rpcUrl: string;
+	private connectedRpcUrl: string | null = null;
 
 	public certificate: Writable<CertificateInfo | null> =
 		writable<CertificateInfo | null>(null);
 	private _certificate: CertificateInfo | null;
 	public balance: Writable<number> = writable(0);
+	public rpcError: Writable<string | null> = writable(null);
 
 	public averageBlockTime: Writable<number> = writable(0);
 
-	public deployments: Writable<DeploymentDetails[]> = writable();
-	public leases: Writable<LeaseDetails[]> = writable();
+	public deployments: Writable<DeploymentDetails[]> = writable([]);
+	public leases: Writable<LeaseDetails[]> = writable([]);
 
 	public gasPrice: Writable<number> = writable(0.0000001);
 
@@ -123,13 +130,19 @@ export class CosmJSWallet implements Wallet {
 		}
 		this.rpcUrl = currentRPCUrl;
 
-		this.configUnsubscribe = globalConfig.subscribe(async (config) => {
+		this.configUnsubscribe = globalConfig.subscribe((config) => {
 			if (config == null) {
 				throw Error('GLOBAL_CONFIG must be initialized before Wallet');
 			}
 
+			const rpcUrlChanged = this.rpcUrl !== config.rpcUrl;
 			this.rpcUrl = config.rpcUrl;
-			await this.initializeClients();
+
+			if (!this.initialized || !rpcUrlChanged) {
+				return;
+			}
+
+			void this.reconnectClients();
 		});
 	}
 
@@ -484,20 +497,38 @@ export class CosmJSWallet implements Wallet {
 	}
 
 	async initializeClients() {
-		this.msgClient = await SigningStargateClient.connectWithSigner(
-			this.rpcUrl,
-			this.wallet,
-			{
-				registry: new Registry(getAkashTypeRegistry())
-			}
-		);
-		this.queryClient = createProtobufRpcClient(
-			new QueryClient(await Tendermint37Client.connect(this.rpcUrl))
-		);
+		try {
+			const msgClient = await SigningStargateClient.connectWithSigner(
+				this.rpcUrl,
+				this.wallet,
+				{
+					registry: new Registry(getAkashTypeRegistry())
+				}
+			);
+			const queryClient = createProtobufRpcClient(
+				new QueryClient(await Tendermint37Client.connect(this.rpcUrl))
+			);
+
+			this.msgClient = msgClient;
+			this.queryClient = queryClient;
+			this.connectedRpcUrl = this.rpcUrl;
+		} catch (error) {
+			throw wrapAkashRpcConnectionError(this.rpcUrl, error);
+		}
+	}
+
+	private async reconnectClients() {
+		try {
+			await this.initializeClients();
+			await this.refresh();
+			await this.refreshAverageBlockTime();
+		} catch (error) {
+			this.handleWalletLoadError(error);
+		}
 	}
 
 	async refresh() {
-		if (!this.initialized) {
+		if (!this.initialized || this.connectedRpcUrl != this.rpcUrl) {
 			return;
 		}
 
@@ -514,13 +545,14 @@ export class CosmJSWallet implements Wallet {
 			this.leases.set(
 				await Promise.all(newLeases.map((x) => this.loadLeaseDetails(x)))
 			);
+			this.rpcError.set(null);
 		} catch (error) {
-			console.error('Failed to refresh cosmjs-wallet.', error);
+			this.handleWalletLoadError(error);
 		}
 	}
 
 	async refreshAverageBlockTime() {
-		if (!this.initialized) {
+		if (!this.initialized || this.connectedRpcUrl != this.rpcUrl) {
 			return;
 		}
 
@@ -528,11 +560,21 @@ export class CosmJSWallet implements Wallet {
 			const newAverageBlockTime = await this.loadAverageBlockTime();
 			this.averageBlockTime.set(newAverageBlockTime);
 		} catch (error) {
-			console.error(
-				'Failed to refresh average block time in cosmjs-wallet.',
-				error
-			);
+			this.handleWalletLoadError(error, false);
 		}
+	}
+
+	private handleWalletLoadError(error: unknown, clearData: boolean = true) {
+		const akashRpcError = getAkashRpcError(this.rpcUrl, error);
+		const walletError = akashRpcError ?? error;
+
+		if (clearData) {
+			this.deployments.set([]);
+			this.leases.set([]);
+		}
+
+		this.rpcError.set(getWalletErrorMessage(walletError));
+		console.error('Failed to refresh cosmjs-wallet.', walletError);
 	}
 
 	dispose() {
