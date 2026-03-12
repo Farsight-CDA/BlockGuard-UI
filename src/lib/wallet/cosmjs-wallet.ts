@@ -33,6 +33,7 @@ import {
 import type { CertificateInfo, CreateDeploymentMsg, Wallet } from './types';
 
 const DEFAULT_AKASH_REST_URL = 'https://akash-rest.publicnode.com/';
+const DEFAULT_AVERAGE_BLOCK_TIME_SECONDS = 6;
 const KNOWN_REST_URLS: Record<string, string> = {
 	'rpc-akash.ecostake.com': 'https://rest-akash.ecostake.com/',
 	'akash-rpc.polkachu.com': 'https://akash-api.polkachu.com/',
@@ -64,7 +65,9 @@ export class CosmJSWallet implements Wallet {
 	public balance: Writable<number> = writable(0);
 	public rpcError: Writable<string | null> = writable(null);
 
-	public averageBlockTime: Writable<number> = writable(0);
+	public averageBlockTime: Writable<number> = writable(
+		DEFAULT_AVERAGE_BLOCK_TIME_SECONDS
+	);
 
 	public deployments: Writable<DeploymentDetails[]> = writable([]);
 	public leases: Writable<LeaseDetails[]> = writable([]);
@@ -159,16 +162,22 @@ export class CosmJSWallet implements Wallet {
 	}
 
 	async getBlockTimestamp(height: number): Promise<Date> {
-		var date = this.blockTimestampCache.get(height);
+		const normalizedHeight = Math.trunc(height);
+
+		if (normalizedHeight <= 0) {
+			throw Error(`Block height must be greater than 0, got ${height}`);
+		}
+
+		var date = this.blockTimestampCache.get(normalizedHeight);
 
 		if (date != null) {
 			return date;
 		}
 
-		const block = await this.msgClient.getBlock(height);
+		const block = await this.msgClient.getBlock(normalizedHeight);
 		date = new Date(block.header.time);
-		this.blockTimestampCache.set(height, date);
-		setTimeout(() => this.blockTimestampCache.delete(height), 300000);
+		this.blockTimestampCache.set(normalizedHeight, date);
+		setTimeout(() => this.blockTimestampCache.delete(normalizedHeight), 300000);
 		return date;
 	}
 
@@ -295,12 +304,30 @@ export class CosmJSWallet implements Wallet {
 
 	private async loadAverageBlockTime(): Promise<number> {
 		const height = await this.msgClient.getHeight();
-		const currentBlockTimestamp = await this.getBlockTimestamp(height);
-		const oldBlockTimestamp = await this.getBlockTimestamp(height - 1000);
+		const fallbackAverageBlockTime =
+			get(this.averageBlockTime) || DEFAULT_AVERAGE_BLOCK_TIME_SECONDS;
 
-		return (
-			(currentBlockTimestamp.getTime() - oldBlockTimestamp.getTime()) / 1000
-		);
+		if (height <= 1) {
+			return fallbackAverageBlockTime;
+		}
+
+		const sampleHeight = Math.max(1, height - 1000);
+		const sampledBlockCount = height - sampleHeight;
+
+		if (sampledBlockCount <= 0) {
+			return fallbackAverageBlockTime;
+		}
+
+		const currentBlockTimestamp = await this.getBlockTimestamp(height);
+		const oldBlockTimestamp = await this.getBlockTimestamp(sampleHeight);
+		const sampledTimespan =
+			(currentBlockTimestamp.getTime() - oldBlockTimestamp.getTime()) / 1000;
+
+		if (sampledTimespan <= 0) {
+			return fallbackAverageBlockTime;
+		}
+
+		return sampledTimespan / sampledBlockCount;
 	}
 
 	private async loadCurrentDeployments(): Promise<{ deployment?: any }[]> {

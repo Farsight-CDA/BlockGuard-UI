@@ -11,11 +11,11 @@
 	import { scale } from 'svelte/transition';
 
 	const wallet = useRequiredWallet();
+	const MIN_BID_POLL_DELAY_MS = 3000;
+	const BID_POLL_ATTEMPTS = 20;
 
 	let averageBlockTime: Writable<number>;
 	$: averageBlockTime = $wallet.averageBlockTime;
-
-	$: blocksPerHour = 3600 / $averageBlockTime;
 
 	enum DeploymentStep {
 		None,
@@ -52,12 +52,40 @@
 	var refreshInterval: NodeJS.Timeout;
 
 	var bids: DeploymentBid[] | null = null;
+	var failureMessage: string | null = null;
 
 	function setProgress(step: DeploymentStep) {
 		progress = {
 			step: step,
 			retries: 0
 		};
+	}
+
+	function getBidPollDelay() {
+		return Math.max(
+			Math.round($averageBlockTime * 1000),
+			MIN_BID_POLL_DELAY_MS
+		);
+	}
+
+	function getBidPollingSchedule() {
+		return Array.from({ length: BID_POLL_ATTEMPTS }, () => getBidPollDelay());
+	}
+
+	function getErrorMessage(error: unknown) {
+		if (error instanceof Error) {
+			return error.message;
+		}
+
+		return 'Unexpected error';
+	}
+
+	function getBidPricePerHour(bid: DeploymentBid) {
+		if ($averageBlockTime <= 0) {
+			return null;
+		}
+
+		return (bid.price * 3600000) / $averageBlockTime / 1000000;
 	}
 
 	async function moveForward(
@@ -72,6 +100,7 @@
 			}, retries);
 			setProgress(targetStep);
 		} catch (error) {
+			failureMessage = getErrorMessage(error);
 			setProgress(DeploymentStep.Failed);
 			throw error;
 		}
@@ -80,6 +109,8 @@
 	let openInner: () => Promise<void>;
 	export const open = async function open() {
 		dseq = Math.round(Math.random() * 100000000);
+		bids = null;
+		failureMessage = null;
 
 		const credentials = await $wallet.getVPNCredentials(dseq);
 
@@ -94,19 +125,23 @@
 
 		await openInner();
 
-		await moveForward(
-			DeploymentStep.AwaitBids,
-			[6000],
-			triggerCreateDeployment
-		);
+		try {
+			await moveForward(
+				DeploymentStep.AwaitBids,
+				[6000],
+				triggerCreateDeployment
+			);
 
-		await new Promise((resolve) => setTimeout(resolve, 3000));
+			await new Promise((resolve) => setTimeout(resolve, getBidPollDelay()));
 
-		await moveForward(
-			DeploymentStep.Choosing,
-			[1000, 2000, 3000, 4000, 5000, 6000, 7000],
-			triggerGatherBids
-		);
+			await moveForward(
+				DeploymentStep.Choosing,
+				getBidPollingSchedule(),
+				triggerGatherBids
+			);
+		} catch {
+			return;
+		}
 	};
 
 	let closeInner: () => void;
@@ -160,7 +195,9 @@
 		bids = newBids;
 
 		if (newBids.length == 0) {
-			throw Error('No bids received');
+			throw Error(
+				'No bids received yet. The network may still be indexing the deployment or no providers matched it.'
+			);
 		}
 	}
 
@@ -237,6 +274,11 @@
 			<p>Attempt: {progress.retries}</p>
 		{:else if progress.step == DeploymentStep.Failed}
 			<p>Failed!</p>
+			{#if failureMessage != null}
+				<p class="max-w-sm text-center text-sm text-red-300">
+					{failureMessage}
+				</p>
+			{/if}
 		{:else if progress.step == DeploymentStep.Choosing}
 			<p>Choose your provider</p>
 
@@ -262,6 +304,7 @@
 				<tbody class="text-center text-sm p-1 rounded-md overflow:auto">
 					{#if bids != null}
 						{#each bids as bid}
+							{@const pricePerHour = getBidPricePerHour(bid)}
 							<!-- svelte-ignore empty-block -->
 							{#await $wallet.getProviderDetails(bid.provider) then details}
 								<tr>
@@ -279,18 +322,13 @@
 										{shortenString(details.organization)}
 										{shortenString(details.website)}
 									</td><td>
-										{#if priceMode == PriceMode.PerHour}
-											{niceFlore(
-												(bid.price * 3600000) / $averageBlockTime / 1000000,
-												5
-											)} $/h
+										{#if pricePerHour == null}
+											...
+										{:else if priceMode == PriceMode.PerHour}
+											{niceFlore(pricePerHour, 5)} $/h
 										{:else if priceMode == PriceMode.PerDolar}
 											1$ for
-											{niceFlore(
-												1 /
-													((bid.price * 3600000) / $averageBlockTime / 1000000),
-												3
-											)} hr
+											{niceFlore(1 / pricePerHour, 3)} hr
 										{/if}
 									</td>
 									<td>

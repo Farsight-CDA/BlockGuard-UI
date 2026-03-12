@@ -28,6 +28,10 @@
 			isCloseActionRunning[dseq] = false;
 		}
 	}
+
+	function hasKnownCreationHeight(deployment: DeploymentDetails) {
+		return deployment.createdAtHeight > 0;
+	}
 </script>
 
 <table class="text-center">
@@ -42,15 +46,19 @@
 		{#each deadDeployments as deployment}
 			<tr>
 				<td>
-					{#await $wallet.getBlockTimestamp(deployment.createdAtHeight)}
-						<LoadingSpinner></LoadingSpinner>
-					{:then blockTimestamp}
-						<p>
-							{toTimespanString(
-								new Date().getTime() - blockTimestamp.getTime()
-							)}
-						</p>
-					{/await}
+					{#if hasKnownCreationHeight(deployment)}
+						{#await $wallet.getBlockTimestamp(deployment.createdAtHeight)}
+							<LoadingSpinner></LoadingSpinner>
+						{:then blockTimestamp}
+							<p>
+								{toTimespanString(
+									new Date().getTime() - blockTimestamp.getTime()
+								)}
+							</p>
+						{/await}
+					{:else}
+						<p>Unknown</p>
+					{/if}
 				</td>
 				<td> Not Implemented </td>
 				<td>

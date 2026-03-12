@@ -19,8 +19,10 @@ interface RawDeploymentId {
 interface RawDeployment {
 	id?: RawDeploymentId;
 	deploymentId?: RawDeploymentId;
+	deployment_id?: RawDeploymentId;
 	state?: string | number;
 	createdAt?: string | number;
+	created_at?: string | number;
 }
 
 interface RawLeaseId extends RawDeploymentId {
@@ -33,22 +35,26 @@ interface RawLeaseId extends RawDeploymentId {
 interface RawLease {
 	id?: RawLeaseId;
 	leaseId?: RawLeaseId;
+	lease_id?: RawLeaseId;
 	state?: string | number;
 	price?: {
 		amount?: string;
 		denom?: string;
 	};
 	createdAt?: string | number;
+	created_at?: string | number;
 }
 
 interface RawBid {
 	id?: RawLeaseId;
 	bidId?: RawLeaseId;
+	bid_id?: RawLeaseId;
 	price?: {
 		amount?: string;
 		denom?: string;
 	};
 	createdAt?: string | number;
+	created_at?: string | number;
 }
 
 interface RawProvider {
@@ -71,11 +77,15 @@ export interface DeploymentDetails {
 export const DeploymentDetails = {
 	fromDeploymentResponse(response: { deployment?: RawDeployment }) {
 		const deployment = response.deployment ?? {};
-		const deploymentId = deployment.id ?? deployment.deploymentId ?? {};
+		const deploymentId =
+			deployment.id ??
+			deployment.deploymentId ??
+			deployment.deployment_id ??
+			{};
 
 		return {
 			dseq: toNumber(deploymentId.dseq),
-			createdAtHeight: toNumber(deployment.createdAt),
+			createdAtHeight: toNumber(deployment.createdAt ?? deployment.created_at),
 			state: normalizeDeploymentState(deployment.state)
 		} satisfies DeploymentDetails;
 	}
@@ -98,14 +108,14 @@ export const LeaseDetails = {
 		providerStatus: ProviderLeaseStatus | null
 	) {
 		const lease = response.lease ?? {};
-		const leaseId = lease.id ?? lease.leaseId ?? {};
+		const leaseId = lease.id ?? lease.leaseId ?? lease.lease_id ?? {};
 
 		return {
 			dseq: toNumber(leaseId.dseq),
 			gseq: toNumber(leaseId.gseq),
 			oseq: toNumber(leaseId.oseq),
 			state: normalizeLeaseState(lease.state),
-			createdAtHeight: toNumber(lease.createdAt),
+			createdAtHeight: toNumber(lease.createdAt ?? lease.created_at),
 			providerDetails,
 			status: providerStatus
 		} satisfies LeaseDetails;
@@ -124,10 +134,10 @@ export interface DeploymentBid {
 export const DeploymentBid = {
 	fromBidResponse(response: { bid?: RawBid }) {
 		const bid = response.bid ?? {};
-		const bidId = bid.id ?? bid.bidId ?? {};
+		const bidId = bid.id ?? bid.bidId ?? bid.bid_id ?? {};
 
 		return {
-			createdAtHeight: toNumber(bid.createdAt),
+			createdAtHeight: toNumber(bid.createdAt ?? bid.created_at),
 			provider: bidId.provider ?? '',
 			price: parseFloat(bid.price?.amount ?? '0'),
 			oseq: toNumber(bidId.oseq),
@@ -241,7 +251,9 @@ function toNumber(value: string | number | undefined) {
 	return 0;
 }
 
-function normalizeDeploymentState(state: string | number | undefined): DeploymentState {
+function normalizeDeploymentState(
+	state: string | number | undefined
+): DeploymentState {
 	if (typeof state == 'string') {
 		return state;
 	}
