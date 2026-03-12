@@ -12,13 +12,11 @@ import {
 	ProviderDetails,
 	ProviderLeaseStatus
 } from '$lib/types/types';
-import { base64ToUInt } from '$lib/utils/utils';
 import type { HdPath, Secp256k1Keypair } from '@cosmjs/crypto';
 import { Slip10RawIndex } from '@cosmjs/crypto';
 import { DirectSecp256k1HdWallet, Registry } from '@cosmjs/proto-signing';
 import { SigningStargateClient } from '@cosmjs/stargate';
 import { BroadcastTxError } from '@cosmjs/stargate/build/stargateclient';
-import { toBase64 } from 'pvutils';
 import { Semaphore } from 'semaphore-promise';
 import {
 	get,
@@ -201,16 +199,13 @@ export class CosmJSWallet implements Wallet {
 
 	//Transactions
 
-	async broadcastCertificate(
-		csr: string,
-		publicKey: Uint8Array
-	): Promise<void> {
-		const encodedCsr = base64ToUInt(toBase64(csr!));
+	async broadcastCertificate(csr: string, publicKey: string): Promise<void> {
+		const encoder = new TextEncoder();
 
 		await this.sendTx(TxTypeUrl.MsgCreateCertificate, {
 			owner: this.address,
-			cert: encodedCsr,
-			pubkey: publicKey
+			cert: encoder.encode(csr),
+			pubkey: encoder.encode(publicKey)
 		});
 	}
 
