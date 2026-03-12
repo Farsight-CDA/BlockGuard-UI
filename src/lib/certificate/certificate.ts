@@ -14,7 +14,6 @@ const SIGN_ALG = 'ECDSA';
 export interface pems {
 	csr: string;
 	publicKey: string;
-	publicKeyBytes: Uint8Array;
 	privateKey: string;
 }
 
@@ -59,8 +58,7 @@ export async function createCertificate(
 	return {
 		csr: toPem('CERTIFICATE', certBER),
 		privateKey: toPem('PRIVATE KEY', pkcs8),
-		publicKey: toPem('PUBLIC KEY', spki),
-		publicKeyBytes: spki
+		publicKey: toPem('EC PUBLIC KEY', spki)
 	};
 }
 
