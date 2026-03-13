@@ -15,7 +15,10 @@ import {
 import type { HdPath, Secp256k1Keypair } from '@cosmjs/crypto';
 import { Slip10RawIndex } from '@cosmjs/crypto';
 import { DirectSecp256k1HdWallet, Registry } from '@cosmjs/proto-signing';
-import { SigningStargateClient } from '@cosmjs/stargate';
+import {
+	assertIsDeliverTxSuccess,
+	SigningStargateClient
+} from '@cosmjs/stargate';
 import { BroadcastTxError } from '@cosmjs/stargate/build/stargateclient';
 import { Semaphore } from 'semaphore-promise';
 import {
@@ -412,7 +415,7 @@ export class CosmJSWallet implements Wallet {
 		const gas = await this.msgClient.simulate(this.address, [message], memo);
 
 		try {
-			await this.msgClient.signAndBroadcast(
+			const result = await this.msgClient.signAndBroadcast(
 				this.address,
 				[message],
 				{
@@ -428,6 +431,7 @@ export class CosmJSWallet implements Wallet {
 				},
 				memo
 			);
+			assertIsDeliverTxSuccess(result);
 			return true;
 		} catch (error) {
 			if (!(error instanceof BroadcastTxError) || error.code != 13) {
