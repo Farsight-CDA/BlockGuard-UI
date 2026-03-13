@@ -13,9 +13,11 @@ interface RawAttribute {
 	value?: string;
 }
 
+type NumericLike = string | number | bigint | { toString(): string };
+
 interface RawDeploymentId {
 	owner?: string;
-	dseq?: string | number;
+	dseq?: NumericLike;
 }
 
 interface RawDeployment {
@@ -23,15 +25,15 @@ interface RawDeployment {
 	deploymentId?: RawDeploymentId;
 	deployment_id?: RawDeploymentId;
 	state?: string | number;
-	createdAt?: string | number;
-	created_at?: string | number;
+	createdAt?: NumericLike;
+	created_at?: NumericLike;
 }
 
 interface RawLeaseId extends RawDeploymentId {
-	gseq?: string | number;
-	oseq?: string | number;
+	gseq?: NumericLike;
+	oseq?: NumericLike;
 	provider?: string;
-	bseq?: string | number;
+	bseq?: NumericLike;
 }
 
 interface RawLease {
@@ -43,8 +45,8 @@ interface RawLease {
 		amount?: string;
 		denom?: string;
 	};
-	createdAt?: string | number;
-	created_at?: string | number;
+	createdAt?: NumericLike;
+	created_at?: NumericLike;
 }
 
 interface RawBid {
@@ -55,8 +57,8 @@ interface RawBid {
 		amount?: string;
 		denom?: string;
 	};
-	createdAt?: string | number;
-	created_at?: string | number;
+	createdAt?: NumericLike;
+	created_at?: NumericLike;
 }
 
 interface RawProvider {
@@ -241,13 +243,21 @@ function tryParseFloat(value: string | null) {
 	}
 }
 
-function toNumber(value: string | number | undefined) {
+function toNumber(value: NumericLike | undefined) {
 	if (typeof value == 'number') {
 		return value;
 	}
 
+	if (typeof value == 'bigint') {
+		return Number(value);
+	}
+
 	if (typeof value == 'string') {
 		return parseInt(value, 10);
+	}
+
+	if (value != null) {
+		return parseInt(value.toString(), 10);
 	}
 
 	return 0;

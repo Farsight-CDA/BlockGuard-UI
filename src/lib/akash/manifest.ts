@@ -1,8 +1,4 @@
-import {
-	generateManifest,
-	generateManifestVersion,
-	manifestToSortedJSON
-} from '@akashnetwork/chain-sdk/web';
+import { SDL } from '@akashnetwork/chain-sdk/web';
 
 export interface DeploymentManifest {
 	groupSpecs: any[];
@@ -13,32 +9,25 @@ export interface DeploymentManifest {
 export async function buildDeploymentManifest(
 	sdl: string
 ): Promise<DeploymentManifest> {
-	const generatedManifest = generateManifest(sdl);
+	let parsedSDL: SDL;
 
-	if (generatedManifest.ok !== true) {
-		throw new Error(formatManifestError(generatedManifest.value));
+	try {
+		parsedSDL = SDL.fromString(sdl);
+	} catch (error) {
+		throw new Error(formatManifestError(error));
 	}
 
 	return {
-		groupSpecs: generatedManifest.value.groupSpecs,
-		sortedManifest: manifestToSortedJSON(generatedManifest.value.groups),
-		hash: await generateManifestVersion(generatedManifest.value.groups)
+		groupSpecs: parsedSDL.v3Groups(),
+		sortedManifest: parsedSDL.manifestSortedJSON(),
+		hash: await parsedSDL.manifestVersion()
 	};
 }
 
-function formatManifestError(
-	errors: Array<{ instancePath?: string; message?: string }>
-) {
-	const firstError = errors[0];
-
-	if (firstError == null) {
-		return 'Invalid Akash SDL.';
+function formatManifestError(error: unknown) {
+	if (error instanceof Error) {
+		return error.message;
 	}
 
-	const location =
-		firstError.instancePath != null && firstError.instancePath.length > 0
-			? firstError.instancePath
-			: 'SDL';
-
-	return `${location}: ${firstError.message ?? 'invalid Akash SDL.'}`;
+	return 'Invalid Akash SDL.';
 }
