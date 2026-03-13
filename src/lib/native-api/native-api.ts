@@ -6,7 +6,6 @@ import {
 	MTLSFetch,
 	SoftEtherStatus
 } from '$lib/wailsjs/go/main/App';
-import type { HttpMethod } from '@sveltejs/kit';
 
 type HttpMethod =
 	| 'GET'

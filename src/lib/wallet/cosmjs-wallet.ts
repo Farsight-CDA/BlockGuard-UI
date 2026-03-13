@@ -117,6 +117,7 @@ export class CosmJSWallet implements Wallet {
 		setInterval(this.refreshAverageBlockTime.bind(this), 600000);
 
 	private configUnsubscribe: Unsubscriber;
+	private reconnectPromise: Promise<void> | null = null;
 
 	constructor(
 		wallet: DirectSecp256k1HdWallet,
@@ -585,18 +586,38 @@ export class CosmJSWallet implements Wallet {
 	}
 
 	private async reconnectClients() {
-		try {
-			await this.initializeClients();
-			await this.refresh();
-			await this.refreshAverageBlockTime();
-		} catch (error) {
-			this.handleWalletLoadError(error);
+		if (this.reconnectPromise != null) {
+			await this.reconnectPromise;
+			return;
 		}
+
+		this.reconnectPromise = (async () => {
+			try {
+				await this.initializeClients();
+				this.rpcError.set(null);
+				await this.refresh();
+				await this.refreshAverageBlockTime();
+			} catch (error) {
+				this.handleWalletLoadError(error);
+			} finally {
+				this.reconnectPromise = null;
+			}
+		})();
+
+		await this.reconnectPromise;
 	}
 
 	async refresh() {
-		if (!this.initialized || this.connectedRpcUrl != this.rpcUrl) {
+		if (!this.initialized) {
 			return;
+		}
+
+		if (this.connectedRpcUrl != this.rpcUrl || this.chainSdk == null) {
+			await this.reconnectClients();
+
+			if (this.connectedRpcUrl != this.rpcUrl || this.chainSdk == null) {
+				return;
+			}
 		}
 
 		try {
@@ -619,8 +640,16 @@ export class CosmJSWallet implements Wallet {
 	}
 
 	async refreshAverageBlockTime() {
-		if (!this.initialized || this.connectedRpcUrl != this.rpcUrl) {
+		if (!this.initialized) {
 			return;
+		}
+
+		if (this.connectedRpcUrl != this.rpcUrl || this.chainSdk == null) {
+			await this.reconnectClients();
+
+			if (this.connectedRpcUrl != this.rpcUrl || this.chainSdk == null) {
+				return;
+			}
 		}
 
 		try {
@@ -640,7 +669,6 @@ export class CosmJSWallet implements Wallet {
 			this.leases.set([]);
 		}
 
-		this.chainSdk = null;
 		this.rpcError.set(getWalletErrorMessage(walletError));
 		console.error('Failed to refresh cosmjs-wallet.', walletError);
 	}
