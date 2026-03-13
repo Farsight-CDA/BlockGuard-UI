@@ -742,9 +742,9 @@ export class SDL {
 
 	v3ManifestServiceParams(
 		params: v2ServiceParams | undefined
-	): v3ManifestServiceParams | null {
+	): v3ManifestServiceParams | undefined {
 		if (params === undefined) {
-			return null;
+			return undefined;
 		}
 
 		return {
@@ -795,6 +795,8 @@ export class SDL {
 		const service = this.data.services[name];
 		const deployment = this.data.deployment[name];
 		const profile = this.data.profiles.compute[deployment[placement].profile];
+		const params = this.v3ManifestServiceParams(service.params);
+		const credentials = service.credentials ?? undefined;
 
 		return {
 			name: name,
@@ -810,8 +812,8 @@ export class SDL {
 			),
 			count: deployment[placement].count,
 			expose: this.v3ManifestExpose(service),
-			params: this.v3ManifestServiceParams(service.params),
-			credentials: service.credentials || null
+			...(params !== undefined ? { params } : {}),
+			...(credentials !== undefined ? { credentials } : {})
 		};
 	}
 
