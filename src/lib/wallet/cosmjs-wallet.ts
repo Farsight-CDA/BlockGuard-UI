@@ -13,16 +13,22 @@ import {
 import type { ProviderLeaseStatusResponse } from '$lib/types/responses';
 import {
 	createChainNodeWebSDK,
-	getMessageType,
 	type ChainNodeWebSDK,
 	type TxClient
 } from '@akashnetwork/chain-sdk/web';
+import { MsgCreateCertificate } from '@akashnetwork/chain-sdk/private-types/akash.v1';
+import {
+	MsgCreateDeployment,
+	MsgCloseDeployment
+} from '@akashnetwork/chain-sdk/private-types/akash.v1beta4';
+import { MsgCreateLease } from '@akashnetwork/chain-sdk/private-types/akash.v1beta5';
 import type { HdPath, Secp256k1Keypair } from '@cosmjs/crypto';
 import { Slip10RawIndex } from '@cosmjs/crypto';
 import {
 	DirectSecp256k1HdWallet,
 	Registry,
-	type EncodeObject
+	type EncodeObject,
+	type GeneratedType
 } from '@cosmjs/proto-signing';
 import {
 	SigningStargateClient,
@@ -58,6 +64,13 @@ const KNOWN_REST_URLS: Record<string, string> = {
 	'akash.rpc.arcturian.tech': 'https://akash.api.arcturian.tech/',
 	'akash.api.pocket.network': 'https://akash.api.pocket.network/'
 };
+
+const TX_MESSAGE_TYPES = {
+	'/akash.cert.v1.MsgCreateCertificate': MsgCreateCertificate,
+	'/akash.deployment.v1beta4.MsgCreateDeployment': MsgCreateDeployment,
+	'/akash.deployment.v1beta4.MsgCloseDeployment': MsgCloseDeployment,
+	'/akash.market.v1beta5.MsgCreateLease': MsgCreateLease
+} as const;
 
 interface StoredWallet {
 	mnemonics: string;
@@ -488,13 +501,17 @@ export class CosmJSWallet implements Wallet {
 				continue;
 			}
 
-			const messageType = getMessageType(message.typeUrl);
+			const messageType =
+				TX_MESSAGE_TYPES[message.typeUrl as keyof typeof TX_MESSAGE_TYPES];
 
 			if (messageType == null) {
 				throw new Error(`Unsupported Akash message type: ${message.typeUrl}`);
 			}
 
-			this.txRegistry.register(message.typeUrl, messageType);
+			this.txRegistry.register(
+				message.typeUrl,
+				messageType as unknown as GeneratedType
+			);
 		}
 	}
 
