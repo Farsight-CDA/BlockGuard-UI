@@ -1,4 +1,7 @@
 {
+	"dependencies": {
+		"@akashnetwork/chain-sdk": "1.0.0-alpha.25"
+	},
 	"devDependencies": {
 		"@cosmjs/crypto": "^0.32.3",
 		"@cosmjs/proto-signing": "^0.32.3",
@@ -7,24 +10,16 @@
 		"@sveltejs/kit": "^2.0.0",
 		"@sveltejs/vite-plugin-svelte": "^3.0.0",
 		"@types/eslint": "^8.56.0",
-		"@types/js-yaml": "^4.0.9",
-		"@types/json-stable-stringify": "^1.0.36",
 		"@typescript-eslint/eslint-plugin": "^7.0.0",
 		"@typescript-eslint/parser": "^7.0.0",
-		"asn1js": "^3.0.5",
 		"autoprefixer": "^10.4.15",
 		"eslint": "^8.56.0",
 		"eslint-config-prettier": "^9.1.0",
 		"eslint-plugin-svelte": "^2.35.1",
-		"js-yaml": "^4.1.0",
-		"json-stable-stringify": "^1.1.1",
-		"libsodium-wrappers-sumo": "^0.7.13",
-		"pkijs": "^3.0.16",
 		"postcss": "^8.4.29",
 		"postcss-nesting": "^12.1.2",
 		"prettier": "^3.1.1",
 		"prettier-plugin-svelte": "^3.1.2",
-		"pvutils": "^1.1.3",
 		"semaphore-promise": "^1.4.2",
 		"svelte": "^4.2.7",
 		"svelte-check": "^3.6.0",

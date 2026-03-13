@@ -1,4 +1,3 @@
-import type { SDL } from '$lib/sdl/copypasta';
 import type {
 	DeploymentBid,
 	DeploymentDetails,
@@ -54,7 +53,11 @@ export interface Wallet {
 		provider: string,
 		bseq: number
 	): Promise<void>;
-	submitManifest(dseq: number, provider: string, sdl: SDL): Promise<void>;
+	submitManifest(
+		dseq: number,
+		provider: string,
+		sortedManifest: string
+	): Promise<void>;
 	getProviderLeaseStatus(
 		dseq: number,
 		gseq: number,

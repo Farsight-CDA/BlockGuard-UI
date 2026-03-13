@@ -1,3 +1,5 @@
+import type { ProviderLeaseStatusResponse } from './responses';
+
 export type DeploymentState = 'invalid' | 'active' | 'closed' | string;
 export type LeaseState =
 	| 'invalid'
