@@ -5,6 +5,78 @@
 		<link rel="icon" href="%sveltekit.assets%/logo.webp" />
 		<link href="%sveltekit.assets%/fonts/Armata-Regular.ttf" rel="stylesheet" />
 		<meta name="viewport" content="width=device-width" />
+		<script>
+			(function () {
+				if (typeof globalThis.Buffer !== 'undefined') {
+					return;
+				}
+
+				function bytesFromBase64(value) {
+					if (typeof Uint8Array.fromBase64 === 'function') {
+						return Uint8Array.fromBase64(value);
+					}
+
+					var binary = globalThis.atob(value);
+					var bytes = new Uint8Array(binary.length);
+
+					for (var i = 0; i < binary.length; i++) {
+						bytes[i] = binary.charCodeAt(i);
+					}
+
+					return bytes;
+				}
+
+				function bytesToBase64(value) {
+					if (typeof value.toBase64 === 'function') {
+						return value.toBase64();
+					}
+
+					var binary = '';
+
+					for (var i = 0; i < value.length; i++) {
+						binary += globalThis.String.fromCharCode(value[i]);
+					}
+
+					return globalThis.btoa(binary);
+				}
+
+				class BrowserBuffer extends Uint8Array {
+					static from(value, encoding) {
+						if (typeof value === 'string') {
+							if (encoding === 'base64') {
+								return new BrowserBuffer(bytesFromBase64(value));
+							}
+
+							var bytes = new Uint8Array(value.length);
+
+							for (var i = 0; i < value.length; i++) {
+								bytes[i] = value.charCodeAt(i) & 255;
+							}
+
+							return new BrowserBuffer(bytes);
+						}
+
+						return new BrowserBuffer(value);
+					}
+
+					toString(encoding) {
+						if (encoding === 'base64') {
+							return bytesToBase64(this);
+						}
+
+						var chars = new Array(this.length);
+
+						for (var i = 0; i < this.length; i++) {
+							chars[i] = globalThis.String.fromCharCode(this[i]);
+						}
+
+						return chars.join('');
+					}
+				}
+
+				globalThis.Buffer = BrowserBuffer;
+			})();
+		</script>
 		%sveltekit.head%
 	</head>
 	<body data-sveltekit-preload-data="hover" class="w-full h-full">

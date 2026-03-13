@@ -370,15 +370,26 @@ export class CosmJSWallet implements Wallet {
 	}
 
 	private async loadCurrentDeployments(): Promise<{ deployment?: any }[]> {
-		const res =
-			await this.requireChainSdk().akash.deployment.v1beta4.getDeployments({
-				filters: {
-					owner: this.address,
-					state: 'active'
-				}
-			});
+		const url = new URL(
+			'akash/deployment/v1beta4/deployments/list',
+			this.getRestUrl()
+		);
+		url.searchParams.set('filters.owner', this.address);
+		url.searchParams.set('filters.state', 'active');
 
-		return res.deployments ?? [];
+		const response = await fetch(url);
+
+		if (!response.ok) {
+			throw new Error(
+				`Failed to load deployments: HTTP ${response.status} ${response.statusText}`
+			);
+		}
+
+		const data = (await response.json()) as {
+			deployments?: { deployment?: any }[];
+		};
+
+		return data.deployments ?? [];
 	}
 
 	private async loadCurrentLeases(): Promise<{ lease?: any }[]> {
