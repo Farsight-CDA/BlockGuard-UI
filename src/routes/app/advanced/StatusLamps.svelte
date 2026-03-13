@@ -1,11 +1,11 @@
 <script lang="ts">
-	import { createCertificate } from '$lib/certificate/certificate';
 	import type { VPNClientStatus } from '$lib/native-api/native-api';
 	import { useVPNClientStatus } from '$lib/vpn/client-status';
 	import type { VPNConnectionInfo } from '$lib/vpn/types';
 	import { useVPNConnection } from '$lib/vpn/vpn-connection';
 	import type { CertificateInfo } from '$lib/wallet/types';
 	import { useRequiredWallet } from '$lib/wallet/wallet';
+	import { certificateManager } from '@akashnetwork/chain-sdk/web';
 	import FundWalletModal from './FundWalletModal.svelte';
 	import StatusLamp, { StatusLampStatus } from './StatusLamp.svelte';
 
@@ -111,12 +111,9 @@
 		try {
 			certificationCreationPending = true;
 			certificateError = null;
-			const cert = await createCertificate($wallet.getAddress());
-			console.log('Created');
-			await $wallet.broadcastCertificate(cert.csr, cert.publicKey);
-			console.log('Broadcasted');
-			await wallet.setCertificate(cert.csr, cert.publicKey, cert.privateKey);
-			console.log('SET');
+			const cert = await certificateManager.generatePEM($wallet.getAddress());
+			await $wallet.broadcastCertificate(cert.cert, cert.publicKey);
+			await wallet.setCertificate(cert.cert, cert.publicKey, cert.privateKey);
 		} catch (error) {
 			certificateError = error instanceof Error ? error.message : `${error}`;
 		} finally {

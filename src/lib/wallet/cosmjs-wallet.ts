@@ -3,8 +3,6 @@ import {
 	type GlobalConfig
 } from '$lib/configuration/configuration';
 import { NATIVE_API } from '$lib/native-api/native-api';
-import { TxTypeUrl, getAkashTypeRegistry } from '$lib/registry/registry';
-import type { SDL } from '$lib/sdl/copypasta';
 import {
 	DeploymentBid,
 	DeploymentDetails,
@@ -12,12 +10,24 @@ import {
 	ProviderDetails,
 	ProviderLeaseStatus
 } from '$lib/types/types';
+import type { ProviderLeaseStatusResponse } from '$lib/types/responses';
+import {
+	createChainNodeWebSDK,
+	getMessageType,
+	type ChainNodeWebSDK,
+	type TxClient
+} from '@akashnetwork/chain-sdk/web';
 import type { HdPath, Secp256k1Keypair } from '@cosmjs/crypto';
 import { Slip10RawIndex } from '@cosmjs/crypto';
-import { DirectSecp256k1HdWallet, Registry } from '@cosmjs/proto-signing';
 import {
-	assertIsDeliverTxSuccess,
-	SigningStargateClient
+	DirectSecp256k1HdWallet,
+	Registry,
+	type EncodeObject
+} from '@cosmjs/proto-signing';
+import {
+	SigningStargateClient,
+	type DeliverTxResponse,
+	type StdFee
 } from '@cosmjs/stargate';
 import { BroadcastTxError } from '@cosmjs/stargate/build/stargateclient';
 import { Semaphore } from 'semaphore-promise';
@@ -59,8 +69,11 @@ export class CosmJSWallet implements Wallet {
 	private address: string = null!;
 
 	private msgClient: SigningStargateClient = null!;
+	private chainSdk: ChainNodeWebSDK | null = null;
 	private rpcUrl: string;
 	private connectedRpcUrl: string | null = null;
+	private readonly txRegistry = new Registry();
+	private readonly sdkTxClient: TxClient;
 
 	public certificate: Writable<CertificateInfo | null> =
 		writable<CertificateInfo | null>(null);
@@ -83,14 +96,12 @@ export class CosmJSWallet implements Wallet {
 	private txSemaphore: Semaphore = new Semaphore(1);
 
 	private initialized: boolean = false;
-	private refreshTimeout: NodeJS.Timeout = setInterval(
+	private refreshTimeout: ReturnType<typeof setInterval> = setInterval(
 		this.refresh.bind(this),
 		12000
 	);
-	private refreshAverageBlockTimeTimeout: NodeJS.Timeout = setInterval(
-		this.refreshAverageBlockTime.bind(this),
-		600000
-	);
+	private refreshAverageBlockTimeTimeout: ReturnType<typeof setInterval> =
+		setInterval(this.refreshAverageBlockTime.bind(this), 600000);
 
 	private configUnsubscribe: Unsubscriber;
 
@@ -100,6 +111,9 @@ export class CosmJSWallet implements Wallet {
 		globalConfig: Readable<GlobalConfig>
 	) {
 		this.wallet = wallet;
+		this.sdkTxClient = {
+			signAndBroadcast: this.signAndBroadcastMessages.bind(this)
+		};
 
 		this._certificate = certificate;
 		this.certificate.set(certificate);
@@ -185,9 +199,13 @@ export class CosmJSWallet implements Wallet {
 	}
 
 	async getDeploymentBids(dseq: number): Promise<DeploymentBid[]> {
-		const res = await this.fetchAkashRestJson<{ bids: { bid?: any }[] }>(
-			`akash/market/v1beta5/bids/list?filters.owner=${encodeURIComponent(this.address)}&filters.dseq=${dseq}&filters.state=open`
-		);
+		const res = await this.requireChainSdk().akash.market.v1beta5.getBids({
+			filters: {
+				owner: this.address,
+				dseq: dseq,
+				state: 'open'
+			}
+		});
 
 		return (res.bids ?? []).map((bid) => DeploymentBid.fromBidResponse(bid));
 	}
@@ -199,8 +217,10 @@ export class CosmJSWallet implements Wallet {
 			return details;
 		}
 
-		const res = await this.fetchAkashRestJson<{ provider?: any }>(
-			`akash/provider/v1beta4/providers/${encodeURIComponent(provider)}`
+		const res = await this.requireChainSdk().akash.provider.v1beta4.getProvider(
+			{
+				owner: provider
+			}
 		);
 
 		details = ProviderDetails.fromProvider(res.provider ?? {});
@@ -214,7 +234,7 @@ export class CosmJSWallet implements Wallet {
 	async broadcastCertificate(csr: string, publicKey: string): Promise<void> {
 		const encoder = new TextEncoder();
 
-		await this.sendTx(TxTypeUrl.MsgCreateCertificate, {
+		await this.requireChainSdk().akash.cert.v1.createCertificate({
 			owner: this.address,
 			cert: encoder.encode(csr),
 			pubkey: encoder.encode(publicKey)
@@ -222,11 +242,11 @@ export class CosmJSWallet implements Wallet {
 	}
 
 	async createDeployment(msg: CreateDeploymentMsg): Promise<void> {
-		await this.sendTx(TxTypeUrl.MsgCreateDeployment, msg);
+		await this.requireChainSdk().akash.deployment.v1beta4.createDeployment(msg);
 	}
 
 	async closeDeployment(dseq: number): Promise<void> {
-		await this.sendTx(TxTypeUrl.MsgCloseDeployment, {
+		await this.requireChainSdk().akash.deployment.v1beta4.closeDeployment({
 			id: {
 				owner: this.address,
 				dseq: dseq
@@ -241,7 +261,7 @@ export class CosmJSWallet implements Wallet {
 		provider: string,
 		bseq: number
 	): Promise<void> {
-		await this.sendTx(TxTypeUrl.MsgCreateLease, {
+		await this.requireChainSdk().akash.market.v1beta5.createLease({
 			bidId: {
 				dseq: dseq,
 				gseq: gseq,
@@ -258,14 +278,14 @@ export class CosmJSWallet implements Wallet {
 	async submitManifest(
 		dseq: number,
 		provider: string,
-		sdl: SDL
+		sortedManifest: string
 	): Promise<void> {
 		const providerDetails = await this.getProviderDetails(provider);
 
 		await NATIVE_API.mtlsFetch(
 			'PUT',
 			new URL(`deployment/${dseq}/manifest`, providerDetails.hostUri).href,
-			sdl.manifestSortedJSON(),
+			sortedManifest,
 			this._certificate!.csr,
 			this._certificate!.privkey
 		);
@@ -299,10 +319,13 @@ export class CosmJSWallet implements Wallet {
 	}
 
 	private async loadCurrentBalance(): Promise<number> {
-		return (
-			parseInt((await this.msgClient.getBalance(this.address, 'uakt')).amount) /
-			1000000
-		);
+		const response =
+			await this.requireChainSdk().cosmos.bank.v1beta1.getBalance({
+				address: this.address,
+				denom: 'uakt'
+			});
+
+		return parseInt(response.balance?.amount ?? '0', 10) / 1000000;
 	}
 
 	private async loadAverageBlockTime(): Promise<number> {
@@ -334,18 +357,25 @@ export class CosmJSWallet implements Wallet {
 	}
 
 	private async loadCurrentDeployments(): Promise<{ deployment?: any }[]> {
-		const res = await this.fetchAkashRestJson<{
-			deployments: { deployment?: any }[];
-		}>(
-			`akash/deployment/v1beta4/deployments/list?filters.owner=${encodeURIComponent(this.address)}&filters.state=active`
-		);
+		const res =
+			await this.requireChainSdk().akash.deployment.v1beta4.getDeployments({
+				filters: {
+					owner: this.address,
+					state: 'active'
+				}
+			});
+
 		return res.deployments ?? [];
 	}
 
 	private async loadCurrentLeases(): Promise<{ lease?: any }[]> {
-		const res = await this.fetchAkashRestJson<{ leases: { lease?: any }[] }>(
-			`akash/market/v1beta5/leases/list?filters.owner=${encodeURIComponent(this.address)}&filters.state=active`
-		);
+		const res = await this.requireChainSdk().akash.market.v1beta5.getLeases({
+			filters: {
+				owner: this.address,
+				state: 'active'
+			}
+		});
+
 		return res.leases ?? [];
 	}
 
@@ -371,68 +401,49 @@ export class CosmJSWallet implements Wallet {
 		);
 	}
 
-	private async sendTx(
-		type: TxTypeUrl,
-		messageBody: any,
-		gasMultiplication: number = 1.35
-	) {
-		const message = {
-			typeUrl: type,
-			value: messageBody
-		};
-		const memo = 'BlockGuard';
-
-		try {
-			for (let i = 0; i < 3; i++) {
-				const check = await this.trySendTx(
-					type,
-					messageBody,
-					gasMultiplication
-				);
-				if (check) {
-					return;
-				}
-			}
-		} catch (error) {
-			console.error(`TX Failed: ${error}`);
-			throw error;
+	private async signAndBroadcastMessages(
+		messages: EncodeObject[],
+		options?: {
+			fee?: Partial<StdFee>;
+			memo?: string;
 		}
+	): Promise<DeliverTxResponse> {
+		for (let i = 0; i < 3; i++) {
+			const response = await this.trySignAndBroadcastMessages(
+				messages,
+				options
+			);
+
+			if (response != null) {
+				return response;
+			}
+		}
+
+		throw new Error(
+			'Failed to broadcast transaction after retrying gas price updates.'
+		);
 	}
 
-	private async trySendTx(
-		type: TxTypeUrl,
-		messageBody: any,
-		gasMultiplication: number
+	private async trySignAndBroadcastMessages(
+		messages: EncodeObject[],
+		options?: {
+			fee?: Partial<StdFee>;
+			memo?: string;
+		}
 	) {
-		const message = {
-			typeUrl: type,
-			value: messageBody
-		};
-
 		const release = await this.txSemaphore.acquire();
 
-		const memo = 'BlockGuard';
-		const gas = await this.msgClient.simulate(this.address, [message], memo);
+		const memo = options?.memo ?? 'BlockGuard';
+		this.ensureMessageTypesRegistered(messages);
+		const gas = await this.msgClient.simulate(this.address, messages, memo);
 
 		try {
-			const result = await this.msgClient.signAndBroadcast(
+			return await this.msgClient.signAndBroadcast(
 				this.address,
-				[message],
-				{
-					amount: [
-						{
-							denom: 'uakt',
-							amount: `${Math.ceil(
-								get(this.gasPrice) * gas * gasMultiplication
-							)}`
-						}
-					],
-					gas: `${Math.floor(gas * gasMultiplication)}`
-				},
+				messages,
+				this.buildTxFee(gas, options?.fee),
 				memo
 			);
-			assertIsDeliverTxSuccess(result);
-			return true;
 		} catch (error) {
 			if (!(error instanceof BroadcastTxError) || error.code != 13) {
 				throw error;
@@ -444,11 +455,55 @@ export class CosmJSWallet implements Wallet {
 			}
 
 			this.gasPrice.set((1.0001 * parseFloat(match[1])) / gas);
-			return false; // Failure
+			return null;
 		} finally {
 			await new Promise((resolve) => setTimeout(resolve, 300));
 			release();
 		}
+	}
+
+	private buildTxFee(gas: number, providedFee?: Partial<StdFee>): StdFee {
+		const gasMultiplier = 1.35;
+		const estimatedFee: StdFee = {
+			amount: [
+				{
+					denom: 'uakt',
+					amount: `${Math.ceil(get(this.gasPrice) * gas * gasMultiplier)}`
+				}
+			],
+			gas: `${Math.floor(gas * gasMultiplier)}`
+		};
+
+		return {
+			...estimatedFee,
+			...providedFee,
+			amount: providedFee?.amount ?? estimatedFee.amount,
+			gas: providedFee?.gas ?? estimatedFee.gas
+		};
+	}
+
+	private ensureMessageTypesRegistered(messages: EncodeObject[]) {
+		for (const message of messages) {
+			if (this.txRegistry.lookupType(message.typeUrl) != null) {
+				continue;
+			}
+
+			const messageType = getMessageType(message.typeUrl);
+
+			if (messageType == null) {
+				throw new Error(`Unsupported Akash message type: ${message.typeUrl}`);
+			}
+
+			this.txRegistry.register(message.typeUrl, messageType);
+		}
+	}
+
+	private requireChainSdk() {
+		if (this.chainSdk == null) {
+			throw new Error('Akash SDK has not been initialized yet.');
+		}
+
+		return this.chainSdk;
 	}
 
 	//Lifetime
@@ -467,11 +522,25 @@ export class CosmJSWallet implements Wallet {
 				this.rpcUrl,
 				this.wallet,
 				{
-					registry: new Registry(getAkashTypeRegistry())
+					registry: this.txRegistry
 				}
 			);
 
 			this.msgClient = msgClient;
+			this.chainSdk = createChainNodeWebSDK({
+				query: {
+					baseUrl: this.getRestUrl(),
+					transportOptions: {
+						retry: {
+							maxAttempts: 3,
+							maxDelayMs: 5000
+						}
+					}
+				},
+				tx: {
+					signer: this.sdkTxClient
+				}
+			});
 			this.connectedRpcUrl = this.rpcUrl;
 		} catch (error) {
 			throw wrapAkashRpcConnectionError(this.rpcUrl, error);
@@ -534,20 +603,9 @@ export class CosmJSWallet implements Wallet {
 			this.leases.set([]);
 		}
 
+		this.chainSdk = null;
 		this.rpcError.set(getWalletErrorMessage(walletError));
 		console.error('Failed to refresh cosmjs-wallet.', walletError);
-	}
-
-	private async fetchAkashRestJson<T>(path: string): Promise<T> {
-		const response = await fetch(new URL(path, this.getRestUrl()).toString());
-
-		if (!response.ok) {
-			throw Error(
-				`REST query failed with (${response.status}): ${await response.text()}`
-			);
-		}
-
-		return (await response.json()) as T;
 	}
 
 	private getRestUrl() {

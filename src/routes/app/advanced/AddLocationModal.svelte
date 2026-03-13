@@ -1,7 +1,10 @@
 <script lang="ts">
 	import LoadingSpinner from '$lib/components/LoadingSpinner.svelte';
 	import Modal from '$lib/components/Modal.svelte';
-	import { SDL } from '$lib/sdl/copypasta';
+	import {
+		buildDeploymentManifest,
+		type DeploymentManifest
+	} from '$lib/akash/manifest';
 	import type { DeploymentBid } from '$lib/types/types';
 	import type { CreateDeploymentMsg } from '$lib/wallet/types';
 	import { retry } from '$lib/utils/utils';
@@ -47,9 +50,7 @@
 	};
 
 	var dseq: number = 0;
-	var sdl: SDL;
-
-	var refreshInterval: NodeJS.Timeout;
+	var manifest: DeploymentManifest;
 
 	var bids: DeploymentBid[] | null = null;
 	var failureMessage: string | null = null;
@@ -114,7 +115,7 @@
 
 		const credentials = await $wallet.getVPNCredentials(dseq);
 
-		sdl = SDL.fromString(
+		manifest = await buildDeploymentManifest(
 			VPNSdlString.replace('PLACEHOLDER_USER', credentials.username).replace(
 				'PLACEHOLDER_PASSWORD',
 				credentials.password
@@ -157,7 +158,6 @@
 			case DeploymentStep.Completed:
 			case DeploymentStep.Cancelling:
 			case DeploymentStep.Failed:
-				clearInterval(refreshInterval);
 				closeInner();
 				setProgress(DeploymentStep.None);
 				return true;
@@ -179,12 +179,12 @@
 				},
 				sources: [1]
 			},
-			hash: await sdl.manifestVersion(),
+			hash: manifest.hash,
 			id: {
 				owner: $wallet.getAddress(),
 				dseq: dseq
 			},
-			groups: sdl.v3Groups() as any
+			groups: manifest.groupSpecs
 		};
 
 		await $wallet.createDeployment(msg);
@@ -210,7 +210,7 @@
 		await moveForward(
 			DeploymentStep.Completed,
 			Array.from(Array(15).keys()).map((x) => 1000),
-			() => $wallet.submitManifest(dseq, bid.provider, sdl)
+			() => $wallet.submitManifest(dseq, bid.provider, manifest.sortedManifest)
 		);
 
 		await close();
