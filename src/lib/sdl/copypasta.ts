@@ -38,6 +38,7 @@ import type {
 const Endpoint_SHARED_HTTP = 0;
 const Endpoint_RANDOM_PORT = 1;
 const Endpoint_LEASED_IP = 2;
+const AKASH_PRICE_DECIMALS = 18;
 export const GPU_SUPPORTED_VENDORS = ['nvidia', 'amd'];
 export const GPU_SUPPORTED_INTERFACES = ['pcie', 'sxm'];
 
@@ -47,6 +48,32 @@ function isArray<T>(obj: any): obj is Array<T> {
 
 function isString(str: any): str is string {
 	return typeof str === 'string';
+}
+
+function toAkashPriceAmount(amount: number | string | bigint | undefined) {
+	if (amount == null) {
+		return undefined;
+	}
+
+	const normalized = amount.toString().trim();
+	const match = normalized.match(/^(\d+)(?:\.(\d+))?$/);
+
+	if (!match) {
+		throw new Error(`Invalid Akash price amount: ${normalized}`);
+	}
+
+	const [, whole, fractional = ''] = match;
+
+	if (fractional.length > AKASH_PRICE_DECIMALS) {
+		throw new Error(
+			`Akash price amounts support up to ${AKASH_PRICE_DECIMALS} decimal places.`
+		);
+	}
+
+	const scale = 10n ** BigInt(AKASH_PRICE_DECIMALS);
+	const fractionalAtomics = fractional.padEnd(AKASH_PRICE_DECIMALS, '0');
+
+	return (BigInt(whole) * scale + BigInt(fractionalAtomics || '0')).toString();
 }
 
 type NetworkVersion = 'beta3';
@@ -458,9 +485,7 @@ export class SDL {
 
 	serviceResourceGpu(resource: v3ResourceGPU | undefined, asString: boolean) {
 		const value = resource?.units || 0;
-		const numVal = isString(value)
-			? new TextEncoder().encode(value)
-			: value;
+		const numVal = isString(value) ? new TextEncoder().encode(value) : value;
 		const strVal = !isString(value) ? value.toString() : value;
 
 		return resource?.attributes
@@ -999,7 +1024,7 @@ export class SDL {
 				const pricing = infra.pricing[svcdepl.profile];
 				const price = {
 					...pricing,
-					amount: pricing.amount?.toString()
+					amount: toAkashPriceAmount(pricing.amount)
 				};
 
 				let group = groups.get(placementName);
@@ -1096,7 +1121,7 @@ export class SDL {
 				const pricing = infra.pricing[svcdepl.profile];
 				const price = {
 					...pricing,
-					amount: pricing.amount.toString()
+					amount: toAkashPriceAmount(pricing.amount)
 				};
 
 				let group = groups[placementName];
