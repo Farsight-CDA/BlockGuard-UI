@@ -212,15 +212,24 @@ export class CosmJSWallet implements Wallet {
 	}
 
 	async getDeploymentBids(dseq: number): Promise<DeploymentBid[]> {
-		const res = await this.requireChainSdk().akash.market.v1beta5.getBids({
-			filters: {
-				owner: this.address,
-				dseq: dseq,
-				state: 'open'
-			}
-		});
+		const url = new URL('akash/market/v1beta5/bids/list', this.getRestUrl());
+		url.searchParams.set('filters.owner', this.address);
+		url.searchParams.set('filters.dseq', dseq.toString());
+		url.searchParams.set('filters.state', 'open');
 
-		return (res.bids ?? []).map((bid) => DeploymentBid.fromBidResponse(bid));
+		const response = await fetch(url);
+
+		if (!response.ok) {
+			throw new Error(
+				`Failed to load bids: HTTP ${response.status} ${response.statusText}`
+			);
+		}
+
+		const data = (await response.json()) as {
+			bids?: { bid?: any }[];
+		};
+
+		return (data.bids ?? []).map((bid) => DeploymentBid.fromBidResponse(bid));
 	}
 
 	async getProviderDetails(provider: string): Promise<ProviderDetails> {
